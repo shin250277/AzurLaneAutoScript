@@ -82,7 +82,7 @@ class Meta(UI, MapEventHandler):
 
 
 def _server_support():
-    return server.server in ['cn', 'en', 'jp', 'tw']
+    return server.server in ['cn', 'en', 'jp', 'tw', 'kr']
 
 
 def _server_support_dossier_auto_attack():

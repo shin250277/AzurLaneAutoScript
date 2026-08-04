@@ -6,7 +6,7 @@ from tqdm.contrib.concurrent import process_map
 
 from module.base.utils import get_bbox, get_color, image_size, load_image
 from module.config.config_manual import ManualConfig as AzurLaneConfig
-from module.config.server import VALID_SERVER
+from module.config.server import SERVER_ASSET_FALLBACK, VALID_SERVER
 from module.logger import logger
 
 MODULE_FOLDER = './module'
@@ -95,11 +95,12 @@ class ImageExtractor:
             self.button[server] = button
             self.file[server] = file
         else:
-            logger.attr(server, f'{self.name} not found, use cn server assets')
-            self.area[server] = self.area['cn']
-            self.color[server] = self.color['cn']
-            self.button[server] = self.button['cn']
-            self.file[server] = self.file['cn']
+            fallback = SERVER_ASSET_FALLBACK.get(server, 'cn')
+            logger.attr(server, f'{self.name} not found, use {fallback} server assets')
+            self.area[server] = self.area[fallback]
+            self.color[server] = self.color[fallback]
+            self.button[server] = self.button[fallback]
+            self.file[server] = self.file[fallback]
 
     @property
     def expression(self):

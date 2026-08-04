@@ -155,7 +155,7 @@ class PrivateQuarters(PQInteract, PQShop):
         if target_interact:
             # Ensure target is supported for server
             # Update `not_supported_filter` to enable a target
-            if target_ship in self.not_supported_filter[server.server]:
+            if target_ship in self.not_supported_filter.get(server.server, ()):
                 logger.info(f'Target ship:{target_ship} not supported for {server.server} server.')
                 return
 

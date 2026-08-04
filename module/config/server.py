@@ -4,12 +4,18 @@ Use 'import module.config.server as server' to import, don't use 'from xxx impor
 """
 server = 'cn'  # Setting default to cn, will avoid errors when using dev_tools
 
-VALID_SERVER = ['cn', 'en', 'jp', 'tw']
+VALID_SERVER = ['cn', 'en', 'jp', 'tw', 'kr']
+# Use an existing server's assets until server-specific screenshots are added.
+# The Korean client's button geometry is closest to CN in the screens verified so far.
+SERVER_ASSET_FALLBACK = {
+    'kr': 'cn',
+}
 VALID_PACKAGE = {
     'com.bilibili.azurlane': 'cn',
     'com.YoStarEN.AzurLane': 'en',
     'com.YoStarJP.AzurLane': 'jp',
     'com.hkmanjuu.azurlane.gp': 'tw',
+    'kr.txwy.and.blhx': 'kr',
 }
 VALID_CHANNEL_PACKAGE = {
     # App stores
@@ -44,6 +50,7 @@ DICT_PACKAGE_TO_ACTIVITY = {
     'com.YoStarEN.AzurLane': 'com.manjuu.azurlane.PrePermissionActivity',
     'com.YoStarJP.AzurLane': 'com.manjuu.azurlane.PrePermissionActivity',
     'com.hkmanjuu.azurlane.gp': 'com.manjuu.azurlane.PrePermissionActivity',
+    'kr.txwy.and.blhx': 'com.manjuu.azurlane.PrePermissionActivity',
     # App stores
     'com.bilibili.blhx.huawei': 'com.manjuu.azurlane.SplashActivity',
     'com.bilibili.blhx.mi': 'com.manjuu.azurlane.SplashActivity',

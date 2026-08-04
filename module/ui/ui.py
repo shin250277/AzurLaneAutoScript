@@ -1,3 +1,5 @@
+import module.config.server as server
+
 from module.base.button import Button
 from module.base.decorator import run_once
 from module.base.timer import Timer
@@ -17,7 +19,8 @@ from module.ocr.ocr import Ocr
 from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
 from module.raid.assets import *
 from module.ui.assets import *
-from module.ui.page import Page, page_academy, page_campaign, page_event, page_main, page_main_white, page_sp
+from module.ui.page import (Page, page_academy, page_campaign, page_campaign_menu, page_event, page_main,
+                            page_main_white, page_sp)
 from module.ui_white.assets import *
 
 
@@ -32,11 +35,24 @@ class UI(InfoHandler):
             interval:
         """
         if page == page_main:
+            if self.config.SERVER == 'kr':
+                # During page transitions the main screen may already be
+                # visible behind an overlay. A visible home icon means the
+                # foreground page has not closed yet.
+                if self.appear(GOTO_MAIN, offset=(5, 5), similarity=0.8):
+                    return False
+                # The fleet card also looks white on KR's campaign menu. The
+                # bottom dock tab is present only on the actual main page.
+                return self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40)
             if self.appear(page_main_white.check_button, offset=offset, interval=interval):
                 return True
             if self.appear(page_main.check_button, offset=(5, 5), interval=interval):
                 return True
             return False
+        if self.config.SERVER == 'kr' and page == page_campaign_menu:
+            # Layout and colors are shared, while text labels are localized and
+            # therefore cannot use template matching.
+            return self.appear(page.check_button, offset=0, interval=interval, threshold=15)
         # shitty EN localization changing font width of ACADEMY title,
         # check other buttons also
         if self.config.SERVER == 'en' and page == page_academy:
@@ -57,6 +73,12 @@ class UI(InfoHandler):
         Returns:
             bool: If clicked
         """
+        if self.config.SERVER == 'kr':
+            if self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40):
+                button = page_main_white.links[page]
+                self.device.click(button)
+                return True
+            return False
         if self.appear(page_main.check_button, offset=offset, interval=interval):
             button = page_main.links[page]
             self.device.click(button)
@@ -256,7 +278,19 @@ class UI(InfoHandler):
             for page in Page.iter_pages():
                 if page.parent is None or page.check_button is None:
                     continue
-                if self.appear(page.check_button, offset=offset, interval=5):
+                if page == page_main:
+                    # Main has both legacy and white/new layouts. Use the same
+                    # helper that selects the matching layout's click button;
+                    # KR uses the new layout while inheriting legacy assets.
+                    if self.ui_main_appear_then_click(page.parent, offset=offset, interval=5):
+                        logger.info(f'Page switch: {page} -> {page.parent}')
+                        if self.config.SERVER == 'kr':
+                            self.device.sleep(1)
+                        clicked = True
+                        break
+                    continue
+                appeared = self.ui_page_appear(page, offset=offset, interval=5)
+                if appeared:
                     logger.info(f'Page switch: {page} -> {page.parent}')
                     button = page.links[page.parent]
                     self.device.click(button)
@@ -375,11 +409,18 @@ class UI(InfoHandler):
             return True
         if self.appear_then_click(LOGIN_ANNOUNCE_2, offset=(30, 30), interval=3):
             return True
-        if self.appear_then_click(GET_ITEMS_1, offset=True, interval=3):
+        # KR keeps the same popup colors and layout, but localized text makes
+        # template matching fail. Color matching is sufficient on these two
+        # full-screen reward popups.
+        get_items_offset = False if server.server == 'kr' else True
+        if self.appear_then_click(GET_ITEMS_1, offset=get_items_offset, interval=3):
             return True
-        if self.appear_then_click(GET_ITEMS_2, offset=True, interval=3):
+        if self.appear_then_click(GET_ITEMS_2, offset=get_items_offset, interval=3):
             return True
-        if get_ship:
+        # GET_SHIP is only a 6x20 white color sample in the inherited assets.
+        # On KR it also matches the main-page chat control, so do not use it as
+        # a global popup detector until a KR-specific contextual asset exists.
+        if get_ship and server.server != 'kr':
             if self.appear_then_click(GET_SHIP, interval=5):
                 return True
         if self.appear_then_click(LOGIN_RETURN_SIGN, offset=(30, 30), interval=3):
@@ -389,10 +430,11 @@ class UI(InfoHandler):
             if self.appear_then_click(GOTO_MAIN, offset=(30, 30)):
                 return True
         # Monthly pass is about to expire
-        if self.appear_then_click(MONTHLY_PASS_NOTICE, offset=(30, 30), interval=3):
+        notice_offset = False if server.server == 'kr' else (30, 30)
+        if self.appear_then_click(MONTHLY_PASS_NOTICE, offset=notice_offset, interval=3):
             return True
         # Battle pass is about to expire and player has uncollected battle pass rewards
-        if self.appear_then_click(BATTLE_PASS_NOTICE, offset=(30, 30), interval=3):
+        if self.appear_then_click(BATTLE_PASS_NOTICE, offset=notice_offset, interval=3):
             return True
         # Popup that advertise you to buy battle pass
         # 2024.12.19, PURCHASE_POPUP at main page becomes BATTLE_PASS_NEW_SEASON

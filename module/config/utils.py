@@ -22,6 +22,7 @@ SERVER_TO_TIMEZONE = {
     'en': timedelta(hours=-7),
     'jp': timedelta(hours=9),
     'tw': timedelta(hours=8),
+    'kr': timedelta(hours=9),
 }
 DEFAULT_TIME = datetime(2020, 1, 1, 0, 0)
 
