@@ -8,9 +8,7 @@ from uiautomator2.xpath import XPath, XPathSelector
 
 import module.config.server as server
 from module.base.timer import Timer
-from module.base.utils import color_similarity_2d, crop, random_rectangle_point
-from module.exception import (GameStuckError, GameTooManyClickError,
-                              RequestHumanTakeover)
+from module.base.utils import color_similarity_2d, crop
 from module.handler.assets import *
 from module.logger import logger
 from module.map.assets import *
@@ -25,12 +23,19 @@ class LoginHandler(UI):
         Pages:
             in: Any page
             out: page_main
+
+        Raises:
+            GameStuckError:
+            GameTooManyClickError:
+            GameNotRunningError:
         """
         logger.hr('App login')
 
         confirm_timer = Timer(1.5, count=4).start()
         orientation_timer = Timer(5)
         login_success = False
+        self.device.stuck_record_clear()
+        self.device.click_record_clear()
 
         while 1:
             # Watch device rotation
@@ -55,6 +60,12 @@ class LoginHandler(UI):
                 if not login_success:
                     logger.info('Login success')
                     login_success = True
+            if self.appear(ANDROID_NO_RESPOND, offset=(30, 30), interval=5):
+                logger.warning('Emulator no respond')
+                self.device.click_record_add(ANDROID_NO_RESPOND)
+                self.device.click_record_check()
+                self.device.click(ANDROID_NO_RESPOND, control_check=False)
+                continue
             if self.appear_then_click(LOGIN_ANNOUNCE, offset=(30, 30), interval=5):
                 continue
             if self.appear_then_click(LOGIN_ANNOUNCE_2, offset=(30, 30), interval=5):
@@ -74,6 +85,8 @@ class LoginHandler(UI):
             if self.appear_then_click(LOGIN_RETURN_SIGN, offset=(30, 30), interval=5):
                 continue
             if self.appear_then_click(LOGIN_RETURN_INFO, offset=(30, 30), interval=5):
+                continue
+            if self.appear_then_click(AVATAR_EXPIRED, offset=(30, 30), interval=5):
                 continue
             # Popups
             if self.handle_popup_confirm('LOGIN'):
@@ -95,26 +108,29 @@ class LoginHandler(UI):
         if not self._user_agreement_timer.reached():
             return False
 
-        confirm = self.image_color_button(
+        right = self.image_color_button(
             area=(640, 360, 1280, 720), color=(78, 189, 234),
             color_threshold=245, encourage=25, name='AGREEMENT_CONFIRM')
-        if confirm is None:
+        if right is None:
             return False
-        scroll = self.image_color_button(
-            area=(640, 0, 1280, 720), color=(182, 189, 202),
-            color_threshold=245, encourage=5, name='AGREEMENT_SCROLL'
-        )
-        if scroll is not None:
+        # 2026.04.17 No scroll anymore, just bare swipe before clicking confirm
+        # if having blue button at right half of screen, but missing in left, it's a confirm button
+        # if having both, it's a blue button at middle confirming login
+        left = self.image_color_button(
+            area=(0, 360, 640, 720), color=(78, 189, 234),
+            color_threshold=245, encourage=25, name='AGREEMENT_CONFIRM')
+        if left is None:
             # User agreement
-            p1 = random_rectangle_point(scroll.button)
-            p2 = random_rectangle_point(scroll.move((0, 350)).button)
-            self.device.swipe(p1, p2, name='AGREEMENT_SCROLL')
-            self.device.click(confirm)
+            # just somewhere at the middle
+            box = (350, 230, 920, 430)
+            self.device.swipe_vector((0, -150), box, name='AGREEMENT_SCROLL')
+            self.device.swipe_vector((0, -150), box, name='AGREEMENT_SCROLL')
+            self.device.click(right)
             self._user_agreement_timer.reset()
             return True
         else:
             # User login
-            self.device.click(confirm)
+            self.device.click(right)
             self._user_agreement_timer.reset()
             return True
 
@@ -124,23 +140,16 @@ class LoginHandler(UI):
             bool: If login success
 
         Raises:
-            RequestHumanTakeover: If login failed more than 3
+            GameStuckError:
+            GameTooManyClickError:
+            GameNotRunningError:
         """
-        for _ in range(3):
-            self.device.stuck_record_clear()
-            self.device.click_record_clear()
-            try:
-                self._handle_app_login()
-                return True
-            except (GameTooManyClickError, GameStuckError) as e:
-                logger.warning(e)
-                self.device.app_stop()
-                self.device.app_start()
-                continue
-
-        logger.critical('Login failed more than 3')
-        logger.critical('Azur Lane server may be under maintenance, or you may lost network connection')
-        raise RequestHumanTakeover
+        logger.info('handle_app_login')
+        self.device.screenshot_interval_set(1.0)
+        try:
+            self._handle_app_login()
+        finally:
+            self.device.screenshot_interval_set()
 
     def app_stop(self):
         logger.hr('App stop')

@@ -41,16 +41,20 @@ class MetaDigitCounter(DigitCounter):
         if re.match(r'^[0123]3$', result):
             result = f'{result[0]}/{result[1]}'
 
+        # 1/40/1400 -> 140/1400
+        for suffix in ['/1400', '/200']:
+            if result.endswith(suffix):
+                point = result[:-len(suffix)]
+                point = point.replace('/', '')
+                result = point + suffix
+
         return result
 
 
 class Meta(UI, MapEventHandler):
 
     def digit_ocr_point_and_check(self, button: Button, check_number: int):
-        if server.server != 'jp':
-            point_ocr = MetaDigitCounter(button, letter=(235, 235, 235), threshold=160, name='POINT_OCR')
-        else:
-            point_ocr = MetaDigitCounter(button, letter=(192, 192, 192), threshold=160, name='POINT_OCR')
+        point_ocr = MetaDigitCounter(button, letter=(235, 235, 235), threshold=160, name='POINT_OCR')
         point, _, _ = point_ocr.ocr(self.device.image)
         if point >= check_number:
             return True
@@ -82,7 +86,7 @@ def _server_support():
 
 
 def _server_support_dossier_auto_attack():
-    return server.server in ['cn']
+    return server.server in ['cn', 'en']
 
 
 class OpsiAshBeacon(Meta):
@@ -122,6 +126,10 @@ class OpsiAshBeacon(Meta):
                     self._make_an_attack()
                     continue
             if MetaState.COMPLETE == state:
+                if self.appear(BEACON_LIST, offset=(20, 20)):
+                    self._meta_category = "beacon"
+                elif self.appear(DOSSIER_LIST, offset=(20, 20)):
+                    self._meta_category = "dossier"
                 self._handle_ash_beacon_reward()
                 if not self._meta_category in self._meta_receive:
                     self._meta_receive.append(self._meta_category)
@@ -172,11 +180,14 @@ class OpsiAshBeacon(Meta):
             else:
                 self.device.screenshot()
 
+            # End
+            if not self.appear(BEACON_REWARD, offset=(30, 30)):
+                if self._in_meta_page():
+                    break
+
             if self.appear_then_click(BEACON_REWARD, offset=(30, 30), interval=2):
                 logger.info('Reap meta rewards')
                 continue
-            if self._in_meta_page():
-                break
             # Finish random events
             if self.handle_map_event():
                 continue
@@ -241,22 +252,20 @@ class OpsiAshBeacon(Meta):
 
     def _pre_attack(self):
         """
-        Some pre_attack preparations, including recording meta category.
+        Some pre_attack preparations
         In beacon:
             ask for help if needed
         In dossier:
-            [cn]: auto attack if needed
+            ['cn', 'en']: auto attack if needed
             others: do nothing this version
         """
         # Page beacon or dossier
         if self.appear(BEACON_LIST, offset=(20, 20)):
-            self._meta_category = "beacon"
             if self.config.OpsiAshBeacon_OneHitMode or self.config.OpsiAshBeacon_RequestAssist:
                 if not self._ask_for_help():
                     return False
             return True
         if self.appear(DOSSIER_LIST, offset=(20, 20)):
-            self._meta_category = "dossier"
             # can auto attack but not auto attacking
             if _server_support_dossier_auto_attack() and self.config.OpsiAshBeacon_DossierAutoAttackMode \
                     and self.appear(META_AUTO_ATTACK_START, offset=(5, 5)):
@@ -310,11 +319,14 @@ class OpsiAshBeacon(Meta):
                 self.device.screenshot()
 
             # End
-            if self.appear(HELP_ENTER, offset=(30, 30)):
-                return True
-            if self.appear(BEACON_REWARD, offset=(30, 30)):
-                logger.info('META finished just after calling assist, ignore meta assist')
-                return False
+            # sometimes you have help popup without black-blurred background
+            # HELP_CONFIRM and HELP_ENTER appears
+            if not self.appear(HELP_CONFIRM, offset=(30, 30)):
+                if self.appear(HELP_ENTER, offset=(30, 30)):
+                    return True
+                if self.appear(BEACON_REWARD, offset=(30, 30)):
+                    logger.info('META finished just after calling assist, ignore meta assist')
+                    return False
             # Click
             if self.appear_then_click(HELP_CONFIRM, offset=(30, 30), interval=3):
                 continue

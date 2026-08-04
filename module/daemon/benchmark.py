@@ -39,7 +39,7 @@ class Benchmark(DaemonBase, CampaignUI):
         record = []
 
         for n in range(1, self.TEST_TOTAL + 1):
-            start = time.time()
+            start = time.perf_counter()
 
             try:
                 func(*args, **kwargs)
@@ -52,7 +52,7 @@ class Benchmark(DaemonBase, CampaignUI):
                 logger.warning(f'Benchmark tests failed on func: {func.__name__}')
                 return 'Failed'
 
-            cost = time.time() - start
+            cost = time.perf_counter() - start
             logger.attr(
                 f'{str(n).rjust(2, "0")}/{self.TEST_TOTAL}',
                 f'{float2str(cost)}'
@@ -165,6 +165,9 @@ class Benchmark(DaemonBase, CampaignUI):
         if click_result:
             self.show(test='Control', data=click_result, evaluate_func=self.evaluate_click)
             fastest = sorted(click_result, key=lambda item: compare(item))[0]
+            # Prefer MaaTouch if both minitouch and MaaTouch are fastest
+            if 'MaaTouch' in click and fastest[0] == 'minitouch':
+                fastest[0] = 'MaaTouch'
             logger.info(f'Recommend control method: {fastest[0]} ({float2str(fastest[1])})')
             fastest_click = fastest[0]
 
@@ -174,7 +177,7 @@ class Benchmark(DaemonBase, CampaignUI):
         device = self.config.Benchmark_DeviceType
         # device == 'emulator'
         screenshot = ['ADB', 'ADB_nc', 'uiautomator2', 'aScreenCap', 'aScreenCap_nc', 'DroidCast', 'DroidCast_raw']
-        click = ['ADB', 'uiautomator2', 'minitouch']
+        click = ['ADB', 'uiautomator2', 'minitouch', 'MaaTouch']
 
         def remove(*args):
             return [l for l in screenshot if l not in args]
@@ -191,10 +194,16 @@ class Benchmark(DaemonBase, CampaignUI):
         if device == 'android_phone_vmos':
             screenshot = ['ADB', 'aScreenCap', 'DroidCast', 'DroidCast_raw']
             click = ['ADB', 'Hermit', 'MaaTouch']
+        # Droidcast on SDK 23 (Android 6.0) to SDK 32 (Android 12)
+        if not (23 <= sdk <= 32):
+            screenshot = remove('DroidCast', 'DroidCast_raw')
+
         if self.device.nemu_ipc_available():
             screenshot.append('nemu_ipc')
         if self.device.ldopengl_available():
             screenshot.append('ldopengl')
+        if self.device.is_bluestacks_air:
+            screenshot = [l for l in screenshot if 'DroidCast' not in l]
 
         scene = self.config.Benchmark_TestScene
         if 'screenshot' not in scene:
