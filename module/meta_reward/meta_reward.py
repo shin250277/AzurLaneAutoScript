@@ -189,7 +189,7 @@ class BeaconReward(Combat, UI):
                 break
 
     def run(self):
-        if self.config.SERVER in ['cn', 'en', 'jp']:
+        if self.config.SERVER in ['cn', 'en', 'jp', 'kr']:
             pass
         else:
             logger.info(f'MetaReward is not supported in {self.config.SERVER}, please contact server maintainers')
@@ -301,7 +301,7 @@ class DossierReward(Combat, UI):
         return received
 
     def run(self):
-        if self.config.SERVER in ['cn', 'en', 'jp']:
+        if self.config.SERVER in ['cn', 'en', 'jp', 'kr']:
             pass
         else:
             logger.info(f'MetaReward is not supported in {self.config.SERVER}, please contact server maintainers')

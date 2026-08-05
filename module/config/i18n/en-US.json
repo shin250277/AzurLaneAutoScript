@@ -421,7 +421,11 @@
       "jp-14": "[JP] キール",
       "jp-15": "[JP] 若松",
       "jp-16": "[JP] オデッサ",
-      "jp-17": "[JP] スイートバン"
+      "jp-17": "[JP] スイートバン",
+      "kr-0": "[KR] 명량",
+      "kr-1": "[KR] 노량",
+      "kr-2": "[KR] 한산도",
+      "kr-3": "[KR] 옥계"
     },
     "ScreenshotMethod": {
       "name": "Screenshot Method",

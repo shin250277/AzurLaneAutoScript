@@ -23,6 +23,13 @@ from module.ui.page import (Page, page_academy, page_campaign, page_campaign_men
                             page_main_white, page_sp)
 from module.ui_white.assets import *
 
+KR_CAMPAIGN_MENU_CHECK = Button(
+    area=(355, 439, 501, 506),
+    color=(103, 106, 114),
+    button=(),
+    name='KR_CAMPAIGN_MENU_CHECK',
+)
+
 
 class UI(InfoHandler):
     ui_current: Page
@@ -52,7 +59,7 @@ class UI(InfoHandler):
         if self.config.SERVER == 'kr' and page == page_campaign_menu:
             # Layout and colors are shared, while text labels are localized and
             # therefore cannot use template matching.
-            return self.appear(page.check_button, offset=0, interval=interval, threshold=15)
+            return self.appear(KR_CAMPAIGN_MENU_CHECK, offset=0, interval=interval, threshold=15)
         # shitty EN localization changing font width of ACADEMY title,
         # check other buttons also
         if self.config.SERVER == 'en' and page == page_academy:

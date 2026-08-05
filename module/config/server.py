@@ -6,9 +6,11 @@ server = 'cn'  # Setting default to cn, will avoid errors when using dev_tools
 
 VALID_SERVER = ['cn', 'en', 'jp', 'tw', 'kr']
 # Use an existing server's assets until server-specific screenshots are added.
-# The Korean client's button geometry is closest to CN in the screens verified so far.
 SERVER_ASSET_FALLBACK = {
-    'kr': 'cn',
+    # KR follows the modern JP/EN client schedule. JP is the better default
+    # asset source because its CJK label geometry and campaign-menu hitboxes
+    # are also closer to the Korean client than CN/EN.
+    'kr': 'jp',
 }
 VALID_PACKAGE = {
     'com.bilibili.azurlane': 'cn',
@@ -99,6 +101,9 @@ VALID_SERVER_LIST = {
         'ルルイエ', 'サモア', '大湊', 'トラック', 'ラバウル',
         '鹿児島', 'マドラス', 'サンディエゴ', '竹敷', 'キール',
         '若松', 'オデッサ', 'スイートバン'
+    ],
+    'kr': [
+        '명량', '노량', '한산도', '옥계'
     ]
 }
 
