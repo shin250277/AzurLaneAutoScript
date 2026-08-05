@@ -20,8 +20,8 @@ from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_
 from module.raid.assets import *
 from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_dorm,
-                            page_event, page_main, page_main_white, page_meowfficer, page_meta, page_mission,
-                            page_research, page_reshmenu, page_shipyard, page_shop, page_sp, page_storage)
+                            page_event, page_fleet, page_guild, page_main, page_main_white, page_meowfficer, page_meta,
+                            page_mission, page_research, page_reshmenu, page_shipyard, page_shop, page_sp, page_storage)
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
@@ -147,6 +147,22 @@ KR_META_CHECK = Button(
     name='KR_META_CHECK',
 )
 
+KR_FLEET_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(60, 66, 91),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/FLEET_CHECK.png',
+    name='KR_FLEET_CHECK',
+)
+
+KR_GUILD_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(66, 72, 97),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/GUILD_CHECK.png',
+    name='KR_GUILD_CHECK',
+)
+
 KR_LOCALIZED_PAGE_CHECKS = {
     page_mission: KR_MISSION_CHECK,
     page_dock: KR_DOCK_CHECK,
@@ -159,6 +175,8 @@ KR_LOCALIZED_PAGE_CHECKS = {
     page_research: KR_RESEARCH_CHECK,
     page_shipyard: KR_SHIPYARD_CHECK,
     page_meta: KR_META_CHECK,
+    page_fleet: KR_FLEET_CHECK,
+    page_guild: KR_GUILD_CHECK,
 }
 
 
