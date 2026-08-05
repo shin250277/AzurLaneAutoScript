@@ -19,8 +19,9 @@ from module.ocr.ocr import Ocr
 from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
 from module.raid.assets import *
 from module.ui.assets import *
-from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_event,
-                            page_main, page_main_white, page_mission, page_reshmenu, page_shop, page_sp, page_storage)
+from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_dorm,
+                            page_event, page_main, page_main_white, page_meowfficer, page_mission, page_reshmenu,
+                            page_shop, page_sp, page_storage)
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
@@ -78,6 +79,50 @@ KR_BUILD_CHECK = Button(
     name='KR_BUILD_CHECK',
 )
 
+KR_DORM_CHECK = Button(
+    area=(949, 600, 1005, 654),
+    color=(255, 244, 209),
+    button=(),
+    name='KR_DORM_CHECK',
+)
+
+KR_DORM_INFO_CONFIRM = Button(
+    area=(1018, 596, 1194, 658),
+    color=(95, 140, 194),
+    button=(1018, 596, 1194, 658),
+    name='KR_DORM_INFO_CONFIRM',
+)
+
+KR_DORM_FEED_CANCEL = Button(
+    area=(419, 491, 621, 554),
+    color=(246, 206, 134),
+    button=(419, 491, 621, 554),
+    name='KR_DORM_FEED_CANCEL',
+)
+
+KR_MEOWFFICER_INFO_CONFIRM = Button(
+    area=(1078, 598, 1253, 658),
+    color=(233, 202, 92),
+    button=(1078, 598, 1253, 658),
+    name='KR_MEOWFFICER_INFO_CONFIRM',
+)
+
+KR_ACADEMY_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(59, 64, 82),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/ACADEMY_CHECK.png',
+    name='KR_ACADEMY_CHECK',
+)
+
+KR_MEOWFFICER_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(235, 230, 230),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/MEOWFFICER_CHECK.png',
+    name='KR_MEOWFFICER_CHECK',
+)
+
 KR_LOCALIZED_PAGE_CHECKS = {
     page_mission: KR_MISSION_CHECK,
     page_dock: KR_DOCK_CHECK,
@@ -85,6 +130,8 @@ KR_LOCALIZED_PAGE_CHECKS = {
     page_reshmenu: KR_RESHMENU_CHECK,
     page_shop: KR_SHOP_CHECK,
     page_build: KR_BUILD_CHECK,
+    page_academy: KR_ACADEMY_CHECK,
+    page_meowfficer: KR_MEOWFFICER_CHECK,
 }
 
 
@@ -105,6 +152,12 @@ class UI(InfoHandler):
                 # foreground page has not closed yet.
                 if self.appear(GOTO_MAIN, offset=(5, 5), similarity=0.8):
                     return False
+                # The dorm's bottom controls can resemble the white main
+                # navigation bar, so exclude it before checking the dock tab.
+                if self.appear(KR_DORM_CHECK, offset=0, threshold=15):
+                    return False
+                if self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8):
+                    return False
                 # The fleet card also looks white on KR's campaign menu. The
                 # bottom dock tab is present only on the actual main page.
                 return self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40)
@@ -117,6 +170,10 @@ class UI(InfoHandler):
             # Layout and colors are shared, while text labels are localized and
             # therefore cannot use template matching.
             return self.appear(KR_CAMPAIGN_MENU_CHECK, offset=0, interval=interval, threshold=15)
+        if self.config.SERVER == 'kr' and page == page_dorm:
+            # The manage button background is shared with JP, while its label
+            # is localized. Color matching remains stable over the animated room.
+            return self.appear(KR_DORM_CHECK, offset=0, interval=interval, threshold=15)
         if self.config.SERVER == 'kr' and page in KR_LOCALIZED_PAGE_CHECKS:
             # These page titles keep JP's geometry, but localized glyphs need
             # dedicated templates to distinguish screens with the same header.
@@ -604,6 +661,12 @@ class UI(InfoHandler):
             return True
 
         # Dorm popup
+        if server.server == 'kr':
+            # These confirmation labels are localized, while their large
+            # button backgrounds keep stable colors and geometry.
+            for button in (KR_DORM_INFO_CONFIRM, KR_DORM_FEED_CANCEL, KR_MEOWFFICER_INFO_CONFIRM):
+                if self.appear_then_click(button, offset=0, interval=3, threshold=18):
+                    return True
         if self.appear(DORM_INFO, offset=(30, 30), similarity=0.75, interval=3):
             self.device.click(DORM_INFO)
             return True
