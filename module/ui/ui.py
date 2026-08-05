@@ -19,8 +19,8 @@ from module.ocr.ocr import Ocr
 from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
 from module.raid.assets import *
 from module.ui.assets import *
-from module.ui.page import (Page, page_academy, page_campaign, page_campaign_menu, page_event, page_main,
-                            page_main_white, page_sp)
+from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_event,
+                            page_main, page_main_white, page_mission, page_reshmenu, page_shop, page_sp, page_storage)
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
@@ -29,6 +29,63 @@ KR_CAMPAIGN_MENU_CHECK = Button(
     button=(),
     name='KR_CAMPAIGN_MENU_CHECK',
 )
+
+KR_MISSION_CHECK = Button(
+    area=(120, 14, 173, 40),
+    color=(130, 144, 186),
+    button=(120, 14, 173, 40),
+    file='./assets/kr/ui/MISSION_CHECK.png',
+    name='KR_MISSION_CHECK',
+)
+
+KR_DOCK_CHECK = Button(
+    area=(120, 13, 176, 41),
+    color=(105, 116, 153),
+    button=(120, 13, 176, 41),
+    file='./assets/kr/retire/DOCK_CHECK.png',
+    name='KR_DOCK_CHECK',
+)
+
+KR_STORAGE_CHECK = Button(
+    area=(120, 13, 176, 41),
+    color=(112, 124, 162),
+    button=(120, 13, 176, 41),
+    file='./assets/kr/ui/STORAGE_CHECK.png',
+    name='KR_STORAGE_CHECK',
+)
+
+KR_RESHMENU_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(86, 94, 128),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/RESHMENU_CHECK.png',
+    name='KR_RESHMENU_CHECK',
+)
+
+KR_SHOP_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(48, 61, 79),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/SHOP_CHECK.png',
+    name='KR_SHOP_CHECK',
+)
+
+KR_BUILD_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(76, 83, 113),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/BUILD_CHECK.png',
+    name='KR_BUILD_CHECK',
+)
+
+KR_LOCALIZED_PAGE_CHECKS = {
+    page_mission: KR_MISSION_CHECK,
+    page_dock: KR_DOCK_CHECK,
+    page_storage: KR_STORAGE_CHECK,
+    page_reshmenu: KR_RESHMENU_CHECK,
+    page_shop: KR_SHOP_CHECK,
+    page_build: KR_BUILD_CHECK,
+}
 
 
 class UI(InfoHandler):
@@ -60,6 +117,10 @@ class UI(InfoHandler):
             # Layout and colors are shared, while text labels are localized and
             # therefore cannot use template matching.
             return self.appear(KR_CAMPAIGN_MENU_CHECK, offset=0, interval=interval, threshold=15)
+        if self.config.SERVER == 'kr' and page in KR_LOCALIZED_PAGE_CHECKS:
+            # These page titles keep JP's geometry, but localized glyphs need
+            # dedicated templates to distinguish screens with the same header.
+            return self.appear(KR_LOCALIZED_PAGE_CHECKS[page], offset=offset, interval=interval)
         # shitty EN localization changing font width of ACADEMY title,
         # check other buttons also
         if self.config.SERVER == 'en' and page == page_academy:
