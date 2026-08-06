@@ -1140,13 +1140,14 @@ class AlasGUI(Frame):
             run_js("location.reload()")
 
         with use_scope("content"):
-            put_text("Select your language / 选择语言").style("text-align: center")
+            put_text("Select your language / 选择语言 / 언어 선택").style("text-align: center")
             put_buttons(
                 [
                     {"label": "简体中文", "value": "zh-CN"},
                     {"label": "繁體中文", "value": "zh-TW"},
                     {"label": "English", "value": "en-US"},
                     {"label": "日本語", "value": "ja-JP"},
+                    {"label": "한국어", "value": "ko-KR"},
                 ],
                 onclick=lambda l: set_language(l),
             ).style("text-align: center")

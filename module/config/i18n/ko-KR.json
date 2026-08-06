@@ -1,0 +1,152 @@
+{
+  "Menu": {
+    "Alas": {
+      "name": "ALAS",
+      "help": ""
+    },
+    "Farm": {
+      "name": "파밍",
+      "help": ""
+    },
+    "Event": {
+      "name": "이벤트",
+      "help": ""
+    },
+    "EventDaily": {
+      "name": "이벤트 일일",
+      "help": ""
+    },
+    "Reward": {
+      "name": "보상",
+      "help": ""
+    },
+    "DailyMission": {
+      "name": "일일 임무",
+      "help": ""
+    },
+    "Opsi": {
+      "name": "대형 작전",
+      "help": ""
+    },
+    "Tool": {
+      "name": "도구",
+      "help": ""
+    }
+  },
+  "Gui": {
+    "Aside": {
+      "Install": "설치",
+      "Home": "홈",
+      "Develop": "개발",
+      "Performance": "성능",
+      "Setting": "설정",
+      "AddAlas": "추가"
+    },
+    "Button": {
+      "Start": "시작",
+      "Stop": "중지",
+      "ScrollON": "자동 스크롤 켜짐",
+      "ScrollOFF": "자동 스크롤 꺼짐",
+      "ClearLog": "로그 지우기",
+      "Setting": "설정",
+      "CheckUpdate": "업데이트 확인",
+      "ClickToUpdate": "눌러서 업데이트",
+      "RetryUpdate": "업데이트 재시도",
+      "CancelUpdate": "업데이트 취소"
+    },
+    "Toast": {
+      "DisableTranslateMode": "번역 모드를 끄려면 여기를 누르세요",
+      "ConfigSaved": "설정이 저장되었습니다",
+      "AlasIsRunning": "스케줄러가 이미 실행 중입니다",
+      "ClickToUpdate": "새 업데이트가 있습니다. 여기를 눌러 업데이트하세요"
+    },
+    "Status": {
+      "Running": "실행 중",
+      "Inactive": "대기 중",
+      "Warning": "경고",
+      "Updating": "업데이트 대기 중"
+    },
+    "MenuAlas": {
+      "Overview": "개요",
+      "Log": "로그"
+    },
+    "MenuDevelop": {
+      "HomePage": "홈",
+      "Translate": "번역",
+      "Update": "업데이터",
+      "Remote": "원격 접속",
+      "Utils": "유틸리티"
+    },
+    "Overview": {
+      "Scheduler": "스케줄러",
+      "Log": "로그",
+      "Running": "실행 중",
+      "Pending": "대기열",
+      "Waiting": "대기 중",
+      "NoTask": "작업 없음"
+    },
+    "AddAlas": {
+      "PopupTitle": "새 설정 추가",
+      "NewName": "새 이름",
+      "CopyFrom": "기존 설정에서 복사",
+      "Confirm": "추가",
+      "FileExist": "같은 이름의 설정이 있습니다. 다른 이름을 선택하세요",
+      "InvalidChar": "설정 이름에는 다음 문자를 사용할 수 없습니다: .\\/:*?\"<>|",
+      "InvalidPrefixTemplate": "설정 이름은 'template'로 시작할 수 없습니다",
+      "Manage": "관리"
+    },
+    "AppManage": {
+      "PageTitle": "설정 관리",
+      "TitleNew": "새 설정",
+      "NewName": "설정 이름",
+      "CopyFrom": "기존 설정에서 복사",
+      "NameExist": "같은 이름의 설정이 있습니다. 다른 이름을 선택하세요",
+      "InvalidChar": "설정 이름에는 다음 문자를 사용할 수 없습니다: .\\/:*?\"<>|",
+      "InvalidPrefixTemplate": "설정 이름은 'template'로 시작할 수 없습니다",
+      "Back": "뒤로",
+      "New": "새로 만들기",
+      "Import": "가져오기",
+      "Export": "내보내기",
+      "Delete": "삭제",
+      "OverrideWarning": "현재 설정을 덮어씁니다!",
+      "ImportSuccess": "가져오기에 성공했습니다",
+      "NewSuccess": "설정 추가에 성공했습니다",
+      "Name": "이름",
+      "Mod": "모듈",
+      "Actions": "작업"
+    },
+    "Update": {
+      "UpToDate": "최신 버전",
+      "HaveUpdate": "새 버전을 사용할 수 있습니다",
+      "UpdateStart": "업데이트 시작",
+      "UpdateWait": "모든 ALAS 작업이 끝나기를 기다리는 중",
+      "UpdateRun": "업데이트 중",
+      "UpdateSuccess": "업데이트 완료, 다시 시작하는 중",
+      "UpdateFailed": "업데이트에 실패했습니다. ./log/*_gui.txt에서 로그를 확인할 수 있습니다",
+      "UpdateChecking": "업데이트 확인 중",
+      "UpdateCancel": "업데이트 취소됨, ALAS를 다시 시작하는 중",
+      "UpdateFinish": "업데이트가 완료되었습니다. 수동으로 다시 시작하세요",
+      "Local": "로컬",
+      "Upstream": "업스트림",
+      "Author": "작성자",
+      "Time": "커밋 시간",
+      "Message": "커밋 메시지",
+      "DisabledWarn": "업데이터 모듈이 비활성화되어 있습니다. ALAS를 수동으로 다시 시작해야 합니다",
+      "DetailedHistory": "상세 커밋 기록"
+    },
+    "Remote": {
+      "Running": "원격 접속 켜짐",
+      "NotRunning": "실행되지 않음: 서버 연결이 끊겼거나 오프라인입니다",
+      "NotEnable": "비활성화됨: deploy.yaml에 WebUI 비밀번호를 설정하고 원격 접속을 활성화하세요",
+      "EntryPoint": "접속 주소:",
+      "ConfigureHint": "설정 안내:",
+      "SSHNotInstall": "시스템에 SSH 명령이 없습니다. 안내를 참고해 다운로드하거나 설치하세요"
+    },
+    "Text": {
+      "InvalidFeedBack": "잘못된 형식입니다. 예시: {0}",
+      "Clear": "지우기",
+      "EnterPassword": "비밀번호 입력",
+      "ChooseFile": "파일 선택"
+    }
+  }
+}

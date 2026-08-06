@@ -22,18 +22,8 @@ def translate():
         You can submit(Next) by press `Enter`.
     """)
 
-    dict_lang = {
-        "zh-CN": read_file(filepath_i18n('zh-CN')),
-        "zh-TW": read_file(filepath_i18n('zh-TW')),
-        "en-US": read_file(filepath_i18n('en-US')),
-        "ja-JP": read_file(filepath_i18n('ja-JP')),
-    }
-    modified = {
-        "zh-CN": {},
-        "zh-TW": {},
-        "en-US": {},
-        "ja-JP": {},
-    }
+    dict_lang = {language: read_file(filepath_i18n(language)) for language in LANGUAGES}
+    modified = {language: {} for language in LANGUAGES}
 
     list_path = []  # Menu.Task.name
     list_group = []  # Menu
