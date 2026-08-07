@@ -599,6 +599,183 @@
       "help": "시간당 컨디션 회복량 +10을 계산에 포함합니다."
     }
   },
+  "HpControl": {
+    "_info": {
+      "name": "체력 제어 설정",
+      "help": "편성 고정을 사용하지 않을 때만 적용됩니다."
+    },
+    "UseHpBalance": {
+      "name": "체력 균형 조정 사용",
+      "help": "전열 함선의 체력을 감시하고 필요하면 위치를 재배치합니다."
+    },
+    "UseEmergencyRepair": {
+      "name": "긴급 수리 사용",
+      "help": ""
+    },
+    "UseLowHpRetreat": {
+      "name": "체력 부족 시 후퇴",
+      "help": ""
+    },
+    "HpBalanceThreshold": {
+      "name": "체력 균형 임계값",
+      "help": "함선 간 체력 차이가 이 값보다 크면 ALAS가 함선 위치를 재배치합니다."
+    },
+    "HpBalanceWeight": {
+      "name": "체력 균형 가중치",
+      "help": "ALAS가 체력을 더 정확히 측정하는 데 사용합니다.\n함대 체력을 '맨 앞, 중앙, 맨 뒤' 순서로 입력하세요. 예: 6000, 3000, 4000"
+    },
+    "RepairUseSingleThreshold": {
+      "name": "긴급 수리 1개 사용 임계값",
+      "help": "함선 하나의 체력이 이 값보다 낮으면 수리 키트 1개를 사용합니다."
+    },
+    "RepairUseMultiThreshold": {
+      "name": "긴급 수리 전체 사용 임계값",
+      "help": "후열 또는 전열의 체력 합계가 이 값보다 낮으면 수리 키트를 모두 사용합니다."
+    },
+    "LowHpRetreatThreshold": {
+      "name": "체력 부족 후퇴 임계값",
+      "help": "후열 또는 전열의 체력 합계가 이 값보다 낮으면 후퇴합니다."
+    }
+  },
+  "EnemyPriority": {
+    "_info": {
+      "name": "적 우선순위",
+      "help": "교전할 적의 우선순위를 설정합니다."
+    },
+    "EnemyScaleBalanceWeight": {
+      "name": "적 우선순위",
+      "help": "보스 등장에 필요한 일반 적을 먼저 처치한 다음 설정한 우선순위에 따라 나머지 적을 처치합니다.",
+      "default_mode": "해역 파일 설정 사용",
+      "S3_enemy_first": "별 3개 적 우선",
+      "S1_enemy_first": "별 1개 적 우선"
+    }
+  },
+  "EquipmentCode": {
+    "_info": {
+      "name": "장비 코드",
+      "help": ""
+    },
+    "ExportToConfig": {
+      "name": "설정으로 내보내기",
+      "help": "해당 키에 값이 없을 때만 내보냅니다. 나중에 다시 갱신하려면 특정 행을 삭제하세요."
+    },
+    "Config": {
+      "name": "장비 코드 설정",
+      "help": "YAML 형식을 사용합니다."
+    }
+  },
+  "C11AffinityFarming": {
+    "_info": {
+      "name": "1-1 호감도 파밍 설정",
+      "help": "해역에 진입한 뒤 칸 사이를 반복해서 이동하며 매복 전투를 발생시킵니다."
+    },
+    "RunCount": {
+      "name": "조우 횟수",
+      "help": "후퇴 후 다시 시작하기 전까지의 조우 횟수입니다. 32 이상을 권장합니다."
+    }
+  },
+  "C72MysteryFarming": {
+    "_info": {
+      "name": "7-2 물음표 파밍 설정",
+      "help": "모든 물음표 칸을 획득하는 데 필요한 최소 전투만 수행한 뒤 후퇴하고 반복합니다."
+    },
+    "StepOnA3": {
+      "name": "A3 칸 이동",
+      "help": "A2의 물음표 칸이 막히는 것을 효과적으로 방지합니다."
+    }
+  },
+  "C122MediumLeveling": {
+    "_info": {
+      "name": "12-2 중형 적 육성 설정",
+      "help": "저전력 함대로 12-2에서 육성하며 대형이 아닌 호위 함대를 모두 처치한 뒤 후퇴합니다.\n함대 전력을 낮춰 경험치 대비 연료 효율을 높입니다."
+    },
+    "LargeEnemyTolerance": {
+      "name": "대형 적 허용 횟수",
+      "help": "후퇴하기 전에 허용할 대형 적 전투 횟수입니다."
+    }
+  },
+  "C124LargeLeveling": {
+    "_info": {
+      "name": "12-4 대형 적 육성 설정",
+      "help": "고전력 함대로 12-4에서 육성하며 호위 함대를 모두 처치한 뒤 후퇴합니다.\n함대 전력을 조정해 경험치 대비 연료 효율을 높입니다."
+    },
+    "NonLargeEnterTolerance": {
+      "name": "대형 적 미발견 허용 횟수",
+      "help": "대형 호위 함대를 찾지 못하면 설정한 전투 횟수 후 후퇴합니다."
+    },
+    "NonLargeRetreatTolerance": {
+      "name": "일반 적 추가 전투 허용 횟수",
+      "help": "남은 대형 호위 함대가 없을 때 허용할 일반 적 전투 횟수입니다."
+    },
+    "PickupAmmo": {
+      "name": "탄약 획득 시점",
+      "help": "탄약을 획득하기 전까지 수행할 전투 횟수입니다."
+    }
+  },
+  "DropRecord": {
+    "_info": {
+      "name": "드롭 기록 설정",
+      "help": ""
+    },
+    "SaveFolder": {
+      "name": "드롭 기록 저장 폴더",
+      "help": ""
+    },
+    "AzurStatsID": {
+      "name": "AzurStats ID",
+      "help": "<https://azur-stats.lyoko.io>에 업로드한 데이터를 식별하는 데 사용합니다. ID는 임의의 문자로 구성되며 언제든 변경할 수 있습니다."
+    },
+    "API": {
+      "name": "업로드 API",
+      "help": "중국에서 AzurStats에 연결할 수 없다면 역방향 프록시 사용을 권장합니다.",
+      "default": "기본값 (Cloudflare)",
+      "cn_gz_reverse_proxy": "역방향 프록시 (중국 광저우)"
+    },
+    "ResearchRecord": {
+      "name": "연구 기록",
+      "help": "",
+      "do_not": "아무것도 하지 않음",
+      "save": "저장",
+      "upload": "업로드",
+      "save_and_upload": "저장 및 업로드"
+    },
+    "CommissionRecord": {
+      "name": "의뢰 기록",
+      "help": "",
+      "do_not": "아무것도 하지 않음",
+      "save": "저장",
+      "upload": "업로드",
+      "save_and_upload": "저장 및 업로드"
+    },
+    "CombatRecord": {
+      "name": "전투 기록",
+      "help": "",
+      "do_not": "아무것도 하지 않음",
+      "save": "저장"
+    },
+    "OpsiRecord": {
+      "name": "대형 작전 기록",
+      "help": "",
+      "do_not": "아무것도 하지 않음",
+      "save": "저장",
+      "upload": "업로드",
+      "save_and_upload": "저장 및 업로드"
+    },
+    "MeowfficerBuy": {
+      "name": "지휘냥 구매 기록",
+      "help": "",
+      "do_not": "아무것도 하지 않음",
+      "save": "저장"
+    },
+    "MeowfficerTalent": {
+      "name": "지휘냥 특성 기록",
+      "help": "",
+      "do_not": "아무것도 하지 않음",
+      "save": "저장",
+      "upload": "업로드",
+      "save_and_upload": "저장 및 업로드"
+    }
+  },
   "Error": {
     "_info": {
       "name": "오류 처리 설정",
