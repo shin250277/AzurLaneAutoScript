@@ -126,6 +126,245 @@
       "help": ""
     }
   },
+  "Campaign": {
+    "_info": {
+      "name": "해역 설정",
+      "help": ""
+    },
+    "Name": {
+      "name": "해역 이름",
+      "help": "7-2, 12-4 또는 SP4 형식으로 입력합니다. 대소문자를 구분하지 않습니다. 해역이 없다면 다음 업데이트를 기다려 주세요."
+    },
+    "Event": {
+      "name": "이벤트 이름",
+      "help": "최신 이벤트를 자동으로 선택합니다."
+    },
+    "Mode": {
+      "name": "해역 모드",
+      "help": "메인 파밍 작업에서만 설정할 수 있습니다.",
+      "normal": "일반",
+      "hard": "어려움"
+    },
+    "UseClearMode": {
+      "name": "주회 모드 사용",
+      "help": ""
+    },
+    "UseFleetLock": {
+      "name": "편성 고정 사용",
+      "help": ""
+    },
+    "UseAutoSearch": {
+      "name": "자동 공략 사용",
+      "help": ""
+    },
+    "Use2xBook": {
+      "name": "고효율 작전 지령서 사용",
+      "help": "연료를 두 배로 소비하는 대신 경험치와 획득 보상도 두 배가 됩니다."
+    },
+    "AmbushEvade": {
+      "name": "매복 회피",
+      "help": ""
+    }
+  },
+  "StopCondition": {
+    "_info": {
+      "name": "종료 조건 설정",
+      "help": "다음 조건 중 하나라도 충족되면 현재 작업을 중지합니다."
+    },
+    "OilLimit": {
+      "name": "연료 X 이상 유지",
+      "help": "연료가 이 값보다 적으면 현재 작업을 연기합니다."
+    },
+    "RunCount": {
+      "name": "해역 X회 실행",
+      "help": "완료할 때마다 1씩 감소하며 0이 되면 현재 작업을 중지합니다. 0으로 저장하면 다른 종료 조건을 충족할 때까지 횟수 제한 없이 실행합니다."
+    },
+    "MapAchievement": {
+      "name": "해역 달성도",
+      "help": "해역이 100% 공략, 별 3개, 위협도 안전 또는 별 3개 없이 위협도 안전 상태가 되면 현재 작업을 중지합니다. 계속 실행은 달성도 조건 없이 다른 종료 조건을 충족할 때까지 반복합니다.",
+      "non_stop": "계속 실행",
+      "100_percent_clear": "100% 공략",
+      "map_3_stars": "100% 공략 + 별 3개",
+      "threat_safe": "100% 공략 + 별 3개 + 위협도 안전",
+      "threat_safe_without_3_stars": "100% 공략 + 위협도 안전"
+    },
+    "StageIncrease": {
+      "name": "연속 공략 활성화",
+      "help": "100% 공략에 적합합니다. 대상 해역 전체의 출격 조건을 만족하고 충분한 함대 전력이 필요합니다.\n지원 범위: 1-1~15-4, A1~A3, B1~B3, C1~C3, D1~D3, T1~T6, SP1~SP4"
+    },
+    "GetNewShip": {
+      "name": "신규 함선 획득",
+      "help": "새 함선을 획득한 것이 감지되면 현재 작업을 중지합니다."
+    },
+    "ReachLevel": {
+      "name": "레벨 X 도달",
+      "help": "레벨 X 미만인 함선 중 하나라도 레벨 X에 도달하면 현재 작업을 중지합니다. 0으로 저장하면 레벨 제한을 사용하지 않습니다."
+    }
+  },
+  "Fleet": {
+    "_info": {
+      "name": "함대 설정",
+      "help": "1함대는 일반 적 함대, 2함대는 보스 함대로 사용합니다."
+    },
+    "Fleet1": {
+      "name": "1함대 번호",
+      "help": ""
+    },
+    "Fleet1Formation": {
+      "name": "1함대 진형",
+      "help": "",
+      "line_ahead": "단종진",
+      "double_line": "복종진",
+      "diamond": "윤형진"
+    },
+    "Fleet1Mode": {
+      "name": "1함대 전투 방식",
+      "help": "",
+      "combat_auto": "자동 전투",
+      "combat_manual": "수동 전투",
+      "stand_still_in_the_middle": "화면 중앙에서 정지",
+      "hide_in_bottom_left": "왼쪽 아래로 이동",
+      "hide_in_upper_left": "왼쪽 위로 이동"
+    },
+    "Fleet1Step": {
+      "name": "1함대 이동 칸 수",
+      "help": "미공략 해역에서 한 번에 이동할 칸 수를 설정한 값으로 제한합니다."
+    },
+    "Fleet2": {
+      "name": "2함대 번호",
+      "help": "",
+      "0": "사용 안 함"
+    },
+    "Fleet2Formation": {
+      "name": "2함대 진형",
+      "help": "",
+      "line_ahead": "단종진",
+      "double_line": "복종진",
+      "diamond": "윤형진"
+    },
+    "Fleet2Mode": {
+      "name": "2함대 전투 방식",
+      "help": "",
+      "combat_auto": "자동 전투",
+      "combat_manual": "수동 전투",
+      "stand_still_in_the_middle": "화면 중앙에서 정지",
+      "hide_in_bottom_left": "왼쪽 아래로 이동",
+      "hide_in_upper_left": "왼쪽 위로 이동"
+    },
+    "Fleet2Step": {
+      "name": "2함대 이동 칸 수",
+      "help": "미공략 해역에서 한 번에 이동할 칸 수를 설정한 값으로 제한합니다."
+    },
+    "FleetOrder": {
+      "name": "함대 역할",
+      "help": "자동 공략을 사용하지 않으면 ALAS가 물음표 칸과 탄약을 획득합니다.\n자동 공략을 사용하지 않고 전투 횟수가 4회 이하이면 ALAS가 '1함대 전체 담당, 2함대 대기'를 강제로 사용합니다.",
+      "fleet1_mob_fleet2_boss": "1함대 일반 적, 2함대 보스",
+      "fleet1_boss_fleet2_mob": "1함대 보스, 2함대 일반 적",
+      "fleet1_all_fleet2_standby": "1함대 전체 담당, 2함대 대기",
+      "fleet1_standby_fleet2_all": "1함대 대기, 2함대 전체 담당"
+    }
+  },
+  "Submarine": {
+    "_info": {
+      "name": "잠수함 설정",
+      "help": ""
+    },
+    "Fleet": {
+      "name": "잠수함대 번호",
+      "help": "",
+      "0": "사용 안 함"
+    },
+    "Mode": {
+      "name": "잠수함 모드",
+      "help": "자동 공략을 사용하지 않을 때만 적용됩니다. '수색 및 보스'는 '수색만'과 '보스만'을 조합한 방식으로, 수색을 수행하고 가능하면 보스전에서 잠수함을 호출합니다.",
+      "do_not_use": "사용 안 함",
+      "hunt_only": "수색만",
+      "boss_only": "보스만",
+      "hunt_and_boss": "수색 및 보스",
+      "every_combat": "모든 전투"
+    },
+    "AutoSearchMode": {
+      "name": "자동 공략 중 잠수함 역할",
+      "help": "자동 공략에서만 적용됩니다.",
+      "sub_standby": "대기",
+      "sub_auto_call": "자동 호출"
+    },
+    "DistanceToBoss": {
+      "name": "보스전 전에 잠수함을 보스 근처로 이동",
+      "help": "잠수함 모드가 '보스만' 또는 '수색 및 보스'일 때만 적용됩니다.\n'보스까지 X칸'을 선택하면 잠수함의 수색 범위가 보스 위치까지 닿아야 합니다. 거리는 맨해튼 거리로 계산합니다. '대양 지원 사용'은 해당 스킬을 보유한 잠수함이 필요합니다.",
+      "to_boss_position": "보스 위치로 이동",
+      "1_grid_to_boss": "보스까지 1칸",
+      "2_grid_to_boss": "보스까지 2칸",
+      "use_open_ocean_support": "대양 지원 사용"
+    }
+  },
+  "Emotion": {
+    "_info": {
+      "name": "컨디션 설정",
+      "help": "'컨디션 소모 계산' 또는 '낮은 컨디션 경고 무시' 중 하나 이상을 선택해야 이 설정이 활성화됩니다."
+    },
+    "Mode": {
+      "name": "컨디션 관리 방식",
+      "help": "",
+      "calculate": "컨디션 소모 계산",
+      "ignore": "낮은 컨디션 경고 무시",
+      "calculate_ignore": "계산 + 경고 무시"
+    },
+    "Fleet1Value": {
+      "name": "1함대 컨디션 수치",
+      "help": ""
+    },
+    "Fleet1Record": {
+      "name": "1함대 컨디션 기록",
+      "help": ""
+    },
+    "Fleet1Control": {
+      "name": "1함대 컨디션 제어",
+      "help": "컨디션을 유지하기 위해 회복을 기다리거나, 기다리는 동안 다른 작업을 실행할 수 있으면 현재 작업을 중지합니다.",
+      "keep_exp_bonus": "경험치 보너스 유지 (>120)",
+      "prevent_green_face": "보통 이상 유지 (>40)",
+      "prevent_yellow_face": "기분 저하 방지 (>30)",
+      "prevent_red_face": "컨디션 고갈 방지 (>20)"
+    },
+    "Fleet1Recover": {
+      "name": "1함대 컨디션 회복 장소",
+      "help": "컨디션을 정확히 계산할 수 있도록 실제 배치에 맞게 설정하세요.",
+      "not_in_dormitory": "도크 (시간당 20)",
+      "dormitory_floor_1": "숙소 1층 (시간당 40)",
+      "dormitory_floor_2": "숙소 2층 (시간당 50)"
+    },
+    "Fleet1Oath": {
+      "name": "1함대 전원 서약",
+      "help": "시간당 컨디션 회복량 +10을 계산에 포함합니다."
+    },
+    "Fleet2Value": {
+      "name": "2함대 컨디션 수치",
+      "help": ""
+    },
+    "Fleet2Record": {
+      "name": "2함대 컨디션 기록",
+      "help": ""
+    },
+    "Fleet2Control": {
+      "name": "2함대 컨디션 제어",
+      "help": "컨디션을 유지하기 위해 회복을 기다리거나, 기다리는 동안 다른 작업을 실행할 수 있으면 현재 작업을 중지합니다.",
+      "keep_exp_bonus": "경험치 보너스 유지 (>120)",
+      "prevent_green_face": "보통 이상 유지 (>40)",
+      "prevent_yellow_face": "기분 저하 방지 (>30)",
+      "prevent_red_face": "컨디션 고갈 방지 (>20)"
+    },
+    "Fleet2Recover": {
+      "name": "2함대 컨디션 회복 장소",
+      "help": "",
+      "not_in_dormitory": "도크 (시간당 20)",
+      "dormitory_floor_1": "숙소 1층 (시간당 40)",
+      "dormitory_floor_2": "숙소 2층 (시간당 50)"
+    },
+    "Fleet2Oath": {
+      "name": "2함대 전원 서약",
+      "help": "시간당 컨디션 회복량 +10을 계산에 포함합니다."
+    }
+  },
   "Error": {
     "_info": {
       "name": "오류 처리 설정",
