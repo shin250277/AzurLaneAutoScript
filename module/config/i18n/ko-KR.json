@@ -33,6 +33,146 @@
       "help": ""
     }
   },
+  "Scheduler": {
+    "_info": {
+      "name": "스케줄러",
+      "help": ""
+    },
+    "Enable": {
+      "name": "작업 활성화",
+      "help": "이 작업을 스케줄러에 추가합니다.\n의뢰, 연구, 보상 작업은 항상 활성화됩니다.",
+      "True": "활성화",
+      "False": "비활성화"
+    },
+    "NextRun": {
+      "name": "다음 실행",
+      "help": "작업 완료 후 다음 예약 실행 시각으로 자동 갱신되므로 일반적으로 직접 수정할 필요가 없습니다.\n입력란을 비우면 즉시 실행되도록 강제로 예약할 수 있습니다."
+    },
+    "Command": {
+      "name": "명령",
+      "help": ""
+    },
+    "SuccessInterval": {
+      "name": "성공 후 간격",
+      "help": "성공하면 다음 실행을 X분 뒤로 미룹니다."
+    },
+    "FailureInterval": {
+      "name": "실패 후 간격",
+      "help": "실패하면 다음 실행을 X분 뒤로 미룹니다."
+    },
+    "ServerUpdate": {
+      "name": "서버 갱신 시간",
+      "help": "이 작업의 다음 실행을 결정하는 서버 갱신 시각 목록입니다. 해당 시간대로 자동 변환되므로 일반적으로 수정할 필요가 없습니다."
+    }
+  },
+  "Emulator": {
+    "_info": {
+      "name": "에뮬레이터 설정",
+      "help": ""
+    },
+    "Serial": {
+      "name": "ADB 시리얼",
+      "help": "일반적인 에뮬레이터 시리얼은 아래 목록에서 확인할 수 있습니다.\n에뮬레이터를 자동 감지하려면 \"auto\"를 사용하세요. 여러 에뮬레이터를 실행 중이거나 자동 감지를 지원하지 않는 경우에는 시리얼을 직접 입력해야 합니다.\n주요 에뮬레이터의 기본 시리얼:\n- BlueStacks 127.0.0.1:5555\n- BlueStacks4 Hyper-V는 \"bluestacks4-hyperv\", 다중 인스턴스는 \"bluestacks4-hyperv-2\"와 같은 형식을 사용\n- BlueStacks5 Hyper-V는 \"bluestacks5-hyperv\", 다중 인스턴스는 \"bluestacks5-hyperv-1\"과 같은 형식을 사용\n- NoxPlayer 127.0.0.1:62001\n- NoxPlayer64bit 127.0.0.1:59865\n- MuMuPlayer/MuMuPlayer X 127.0.0.1:7555\n- MuMuPlayer12 127.0.0.1:16384\n- MemuPlayer 127.0.0.1:21503\n- LDPlayer emulator-5554 또는 127.0.0.1:5555\n여러 인스턴스를 실행하면 하나만 기본 시리얼을 사용하고 나머지는 충돌 방지를 위해 다른 시리얼을 사용합니다.\nconsole.bat에서 `adb devices`를 실행하거나 에뮬레이터 공식 안내를 따라 시리얼을 확인하세요."
+    },
+    "PackageName": {
+      "name": "게임 서버",
+      "help": "에뮬레이터에 여러 게임 클라이언트가 설치되어 있으면 직접 선택해야 합니다.",
+      "auto": "자동 감지",
+      "com.bilibili.azurlane": "중국 서버",
+      "com.YoStarEN.AzurLane": "글로벌 서버",
+      "com.YoStarJP.AzurLane": "일본 서버",
+      "com.hkmanjuu.azurlane.gp": "대만 서버",
+      "kr.txwy.and.blhx": "한국 서버"
+    },
+    "ServerName": {
+      "name": "게임 내 서버",
+      "help": "서버 상태 감지를 사용하려면 게임에서 플레이 중인 서버를 선택하세요.\n서버가 점검 중이거나 네트워크가 끊기면 스크립트가 작업을 대기합니다.",
+      "disabled": "사용 안 함"
+    },
+    "ScreenshotMethod": {
+      "name": "스크린샷 방식",
+      "help": "자동 선택을 사용하면 벤치마크를 실행해 가장 빠른 스크린샷 방식으로 변경합니다.\n일반적인 속도: DroidCast_raw >> aScreenCap_nc > ADB_nc >>> aScreenCap > uiautomator2 ~= ADB.\n가장 빠른 방식을 찾으려면 도구 - 성능 테스트를 실행하세요.",
+      "auto": "가장 빠른 방식 자동 선택"
+    },
+    "ControlMethod": {
+      "name": "제어 방식",
+      "help": "속도: minitouch > Hermit >>> uiautomator2 ~= ADB\nminitouch 사용을 권장합니다. VMOS가 아니라면 Hermit은 권장하지 않습니다."
+    },
+    "ScreenshotDedithering": {
+      "name": "이미지 색상 디더링 제거",
+      "help": "휴대폰에서 ALAS를 실행할 때 활성화하세요."
+    },
+    "AdbRestart": {
+      "name": "장치를 찾지 못하면 ADB 재시작 시도",
+      "help": ""
+    }
+  },
+  "EmulatorInfo": {
+    "_info": {
+      "name": "에뮬레이터 정보",
+      "help": "다음 값은 ADB 시리얼에 따라 자동 입력됩니다. 정확히 알지 못한다면 수정하지 마세요."
+    },
+    "Emulator": {
+      "name": "에뮬레이터 종류",
+      "help": "",
+      "auto": "자동 감지"
+    },
+    "name": {
+      "name": "에뮬레이터 인스턴스 이름",
+      "help": ""
+    },
+    "path": {
+      "name": "에뮬레이터 설치 경로",
+      "help": ""
+    }
+  },
+  "Error": {
+    "_info": {
+      "name": "오류 처리 설정",
+      "help": ""
+    },
+    "HandleError": {
+      "name": "예외 처리 활성화",
+      "help": "일부 예외를 자동으로 처리하며, 전투 중이면 후퇴합니다."
+    },
+    "SaveError": {
+      "name": "예외 기록",
+      "help": "검토하거나 공유할 수 있도록 예외 정보와 로그를 디렉터리에 저장합니다."
+    },
+    "OnePushConfig": {
+      "name": "오류 알림 설정",
+      "help": "ALAS가 예외를 처리할 수 없을 때 OnePush로 메시지를 보냅니다. 설정 문서:\nhttps://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Onepush-configuration-%5BEN%5D"
+    },
+    "ScreenshotLength": {
+      "name": "스크린샷 기록 수",
+      "help": "예외 발생 시 저장할 스크린샷 수입니다."
+    }
+  },
+  "Optimization": {
+    "_info": {
+      "name": "성능 최적화 설정",
+      "help": ""
+    },
+    "ScreenshotInterval": {
+      "name": "스크린샷 촬영 간격(초)",
+      "help": "스크린샷 사이의 최소 간격입니다. 0.1~0.3초로 제한되며 고성능 PC의 CPU 사용량을 줄이는 데 도움이 됩니다."
+    },
+    "CombatScreenshotInterval": {
+      "name": "전투 중 스크린샷 촬영 간격(초)",
+      "help": "전투 중 스크린샷 사이의 최소 간격입니다. 0.3~1.0초로 제한되며 CPU 사용량을 줄이는 데 도움이 됩니다."
+    },
+    "TaskHoardingDuration": {
+      "name": "작업을 모아둘 시간(분)",
+      "help": "실행 가능한 작업을 바로 대기열에 추가하지 않고 모아 두었다가 한꺼번에 실행합니다.\n벽람항로 조작 빈도를 줄일 수 있습니다."
+    },
+    "WhenTaskQueueEmpty": {
+      "name": "작업 대기열이 비었을 때",
+      "help": "대기 중인 작업이 없을 때의 동작을 선택합니다. 게임을 종료하면 CPU 사용량을 줄일 수 있습니다.",
+      "stay_there": "현재 화면 유지",
+      "goto_main": "메인 화면으로 이동",
+      "close_game": "게임 종료"
+    }
+  },
   "Gui": {
     "Aside": {
       "Install": "설치",
