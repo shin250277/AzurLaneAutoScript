@@ -22,7 +22,7 @@ from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_dorm,
                             page_event, page_event_list, page_exercise, page_fleet, page_guild, page_main,
                             page_main_white, page_meowfficer, page_meta, page_mission, page_research, page_reshmenu,
-                            page_shipyard, page_shop, page_sp, page_storage)
+                            page_private_quarters, page_shipyard, page_shop, page_sp, page_storage)
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
@@ -180,6 +180,14 @@ KR_EVENT_LIST_CHECK = Button(
     name='KR_EVENT_LIST_CHECK',
 )
 
+KR_PRIVATE_QUARTERS_CHECK = Button(
+    area=(128, 20, 230, 48),
+    color=(92, 95, 98),
+    button=(128, 20, 230, 48),
+    file='./assets/kr/ui/PRIVATE_QUARTERS_CHECK.png',
+    name='KR_PRIVATE_QUARTERS_CHECK',
+)
+
 KR_LOCALIZED_PAGE_CHECKS = {
     page_mission: KR_MISSION_CHECK,
     page_dock: KR_DOCK_CHECK,
@@ -196,6 +204,7 @@ KR_LOCALIZED_PAGE_CHECKS = {
     page_guild: KR_GUILD_CHECK,
     page_exercise: KR_EXERCISE_CHECK,
     page_event_list: KR_EVENT_LIST_CHECK,
+    page_private_quarters: KR_PRIVATE_QUARTERS_CHECK,
 }
 
 
@@ -221,6 +230,8 @@ class UI(InfoHandler):
                 if self.appear(KR_DORM_CHECK, offset=0, threshold=15):
                     return False
                 if self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8):
+                    return False
+                if self.appear(KR_PRIVATE_QUARTERS_CHECK, offset=(10, 10), similarity=0.8):
                     return False
                 # The fleet card also looks white on KR's campaign menu. The
                 # bottom dock tab is present only on the actual main page.
