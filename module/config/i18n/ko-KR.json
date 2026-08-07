@@ -33,6 +33,240 @@
       "help": ""
     }
   },
+  "Task": {
+    "Alas": {
+      "name": "ALAS",
+      "help": ""
+    },
+    "General": {
+      "name": "일반 설정",
+      "help": ""
+    },
+    "Restart": {
+      "name": "재시작",
+      "help": ""
+    },
+    "Main": {
+      "name": "메인 파밍",
+      "help": ""
+    },
+    "Main2": {
+      "name": "메인 파밍-2",
+      "help": ""
+    },
+    "Main3": {
+      "name": "메인 파밍-3",
+      "help": ""
+    },
+    "GemsFarming": {
+      "name": "의뢰 파밍",
+      "help": ""
+    },
+    "EventGeneral": {
+      "name": "이벤트 공통 설정",
+      "help": ""
+    },
+    "Event": {
+      "name": "이벤트 파밍",
+      "help": ""
+    },
+    "Event2": {
+      "name": "이벤트 파밍-2",
+      "help": ""
+    },
+    "Raid": {
+      "name": "레이드",
+      "help": ""
+    },
+    "MaritimeEscort": {
+      "name": "해상 호위",
+      "help": ""
+    },
+    "WarArchives": {
+      "name": "작전문서",
+      "help": "작전문서 기능은 유지보수가 부족해 연속 공략이 정상 작동하지 않을 수 있습니다. ALAS가 비정상적으로 동작하면 수동으로 공략을 완료한 뒤 자동 공략을 사용하세요."
+    },
+    "EventA": {
+      "name": "이벤트 일일 A",
+      "help": ""
+    },
+    "EventB": {
+      "name": "이벤트 일일 B",
+      "help": ""
+    },
+    "EventC": {
+      "name": "이벤트 일일 C",
+      "help": ""
+    },
+    "EventD": {
+      "name": "이벤트 일일 D",
+      "help": ""
+    },
+    "EventSp": {
+      "name": "이벤트 일일 SP",
+      "help": ""
+    },
+    "RaidDaily": {
+      "name": "레이드 일일",
+      "help": ""
+    },
+    "Commission": {
+      "name": "의뢰",
+      "help": ""
+    },
+    "Tactical": {
+      "name": "전술 학원",
+      "help": ""
+    },
+    "Research": {
+      "name": "연구",
+      "help": ""
+    },
+    "Dorm": {
+      "name": "숙소",
+      "help": ""
+    },
+    "Meowfficer": {
+      "name": "지휘냥",
+      "help": ""
+    },
+    "Guild": {
+      "name": "대함대",
+      "help": ""
+    },
+    "Reward": {
+      "name": "보상",
+      "help": ""
+    },
+    "Awaken": {
+      "name": "인식 각성",
+      "help": ""
+    },
+    "Daily": {
+      "name": "일일 도전",
+      "help": ""
+    },
+    "Hard": {
+      "name": "어려움 해역",
+      "help": ""
+    },
+    "Exercise": {
+      "name": "연습전",
+      "help": ""
+    },
+    "ShopFrequent": {
+      "name": "상점 정기 구매",
+      "help": ""
+    },
+    "ShopOnce": {
+      "name": "상점 일회 구매",
+      "help": ""
+    },
+    "Shipyard": {
+      "name": "개발 도크",
+      "help": ""
+    },
+    "Gacha": {
+      "name": "건조",
+      "help": ""
+    },
+    "Freebies": {
+      "name": "무료 보상",
+      "help": ""
+    },
+    "Minigame": {
+      "name": "미니게임",
+      "help": "게임 코인을 받고 사용합니다."
+    },
+    "PrivateQuarters": {
+      "name": "개인 공간",
+      "help": ""
+    },
+    "OpsiGeneral": {
+      "name": "대형 작전 공통 설정",
+      "help": "벽람항로에서 다음 설정을 확인하세요.\nTB 안내 간소화: 켜기\n자동 공략 중 아이템 자동 사용: 켜기\n확보 해역 자동 모드: 끄기\n스토리 자동 재생: 켜기\n텍스트 자동 넘김 속도: 매우 빠름"
+    },
+    "OpsiAshBeacon": {
+      "name": "META전",
+      "help": ""
+    },
+    "OpsiAshAssist": {
+      "name": "META 지원",
+      "help": ""
+    },
+    "OpsiExplore": {
+      "name": "대형 작전 개척",
+      "help": ""
+    },
+    "OpsiShop": {
+      "name": "대형 작전 상점",
+      "help": ""
+    },
+    "OpsiVoucher": {
+      "name": "대형 작전 교환 상점",
+      "help": ""
+    },
+    "OpsiDaily": {
+      "name": "대형 작전 일일 임무",
+      "help": ""
+    },
+    "OpsiObscure": {
+      "name": "비밀 해역",
+      "help": ""
+    },
+    "OpsiAbyssal": {
+      "name": "심연 해역",
+      "help": ""
+    },
+    "OpsiArchive": {
+      "name": "기록 해역",
+      "help": "행동력을 소비하지 않는 기록 해역을 공략합니다.\n다음 조건을 충족해야 합니다.\n- 대형 작전 스토리와 연습 전투 완료\n- 대형 작전 개척 작업 활성화 또는 교환 상점에서 특수 레이더를 위해 연료 5000 소비"
+    },
+    "OpsiStronghold": {
+      "name": "세이렌 요새",
+      "help": ""
+    },
+    "OpsiMonthBoss": {
+      "name": "월간 보스",
+      "help": "월간 보스(일반/어려움)를 공략하려면 다음 조건을 충족해야 합니다.\n- 대형 작전 메인 임무 완료\n- 대형 작전 개척 작업 활성화 또는 전투 정보 기록 장치 사용\n일반 난이도에서 실패하면 잠수함 설정에 따라 공격을 반복하며, 어려움 난이도에서 실패하면 작업을 즉시 종료합니다."
+    },
+    "OpsiMeowfficerFarming": {
+      "name": "지휘냥 파밍",
+      "help": ""
+    },
+    "OpsiHazard1Leveling": {
+      "name": "위험도 1 육성",
+      "help": ""
+    },
+    "OpsiCrossMonth": {
+      "name": "월간 초기화 일일 작업",
+      "help": "ALAS가 대형 작전 초기화 10분 전에 진입해 화면을 나가지 않고 초기화를 기다립니다. 이후 일일 임무, 비밀 해역, 심연 해역, 지휘냥 파밍을 실행해 추가 강화 부품을 획득합니다. 일일 임무에는 '대형 작전 일일 임무' 작업 설정을 사용하며 나머지 기능은 동일합니다.\n중요: ALAS가 대형 작전 초기화를 기다리는 동안 게임을 조작하지 마세요."
+    },
+    "Daemon": {
+      "name": "일반 반자동",
+      "help": ""
+    },
+    "OpsiDaemon": {
+      "name": "대형 작전 반자동",
+      "help": ""
+    },
+    "EventStory": {
+      "name": "이벤트 스토리",
+      "help": ""
+    },
+    "Benchmark": {
+      "name": "성능 테스트",
+      "help": ""
+    },
+    "AzurLaneUncensored": {
+      "name": "[중국 서버] 검열 해제 패치",
+      "help": ""
+    },
+    "GameManager": {
+      "name": "게임 관리자(개발 중)",
+      "help": ""
+    }
+  },
   "Scheduler": {
     "_info": {
       "name": "스케줄러",
