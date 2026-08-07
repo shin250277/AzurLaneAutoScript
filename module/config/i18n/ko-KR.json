@@ -974,6 +974,186 @@
       "6": "일요일"
     }
   },
+  "Awaken": {
+    "_info": {
+      "name": "인식 각성 설정",
+      "help": "인지 칩과 인지 배열이 소진될 때까지 도크의 모든 함선을 인식 각성합니다."
+    },
+    "LevelCap": {
+      "name": "목표 레벨 상한",
+      "help": "",
+      "level120": "레벨 120",
+      "level125": "레벨 125"
+    },
+    "Favourite": {
+      "name": "즐겨찾기 함선만 각성",
+      "help": ""
+    }
+  },
+  "ControlExpOverflow": {
+    "_info": {
+      "name": "경험치 초과 제어 설정",
+      "help": "교본 등급별로 낭비를 허용할 경험치를 설정해 시간을 절약합니다.\n예를 들어 남은 경험치가 1100이면 경험치 100이 초과되더라도 T3 교본을 사용합니다."
+    },
+    "Enable": {
+      "name": "활성화",
+      "help": "모든 등급에서 경험치 초과를 허용하지 않으려면 비활성화하세요.\n등급별 허용량을 직접 설정하려면 활성화하세요."
+    },
+    "T4Allow": {
+      "name": "T4 경험치 초과 허용량",
+      "help": "0 이상의 정수를 입력합니다."
+    },
+    "T3Allow": {
+      "name": "T3 경험치 초과 허용량",
+      "help": "0 이상의 정수를 입력합니다."
+    },
+    "T2Allow": {
+      "name": "T2 경험치 초과 허용량",
+      "help": "0 이상의 정수를 입력합니다."
+    },
+    "T1Allow": {
+      "name": "T1 경험치 초과 허용량",
+      "help": "0 이상의 정수를 입력합니다."
+    }
+  },
+  "GeneralShop": {
+    "_info": {
+      "name": "일반 상점 설정",
+      "help": ""
+    },
+    "UseGems": {
+      "name": "다이아 사용",
+      "help": ""
+    },
+    "Refresh": {
+      "name": "상점 새로고침 허용",
+      "help": "새로고침 시 다이아 50개를 소비합니다."
+    },
+    "BuySkinBox": {
+      "name": "장비스킨 상자 구매",
+      "help": "유지보수 비용을 줄이기 위해 필터의 장비스킨 상자 선택지는 게임 업데이트에 맞춰 갱신되지 않습니다. ALAS는 수량이 1개이고 가격이 물자 7000인 알 수 없는 상품을 장비스킨 상자로 간주해 구매합니다."
+    },
+    "ConsumeCoins": {
+      "name": "초과 물자 소비",
+      "help": "물자가 550000을 초과하면 모든 상품을 구매합니다."
+    },
+    "Filter": {
+      "name": "상품 필터",
+      "help": "사용할 수 있는 모든 옵션은 <https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/reward_shop_filter_string>에 설명되어 있습니다."
+    }
+  },
+  "MedalShop2": {
+    "_info": {
+      "name": "훈장 상점 설정",
+      "help": ""
+    },
+    "Filter": {
+      "name": "상품 필터",
+      "help": "사용할 수 있는 모든 옵션은 <https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/reward_shop_filter_string>에 설명되어 있습니다.\n다른 상점과 달리 아래 선택지는 종류가 명확하지 않은 '개조 도면'과 '강화판' 상품을 보완합니다.\n강화판에는 특정 종류와 전체 종류가 모두 있습니다. 특정 종류를 원하면 'PlateGeneralT3 > PlateWildT3' 같은 조합을 사용하세요. 'PlateT3'은 판매 중인 모든 T3 강화판을 구매합니다.\n연구 개발 도면은 'DR > PR' 사용을 권장하며, 남는 도면은 프로토 코어로 변환하세요."
+    },
+    "RETROFIT_T1": {
+      "name": "T1 개조 도면 종류 우선순위",
+      "help": "",
+      "dd": "구축함",
+      "cl": "순양함",
+      "bb": "전함",
+      "cv": "항공모함"
+    },
+    "RETROFIT_T2": {
+      "name": "T2 개조 도면 종류 우선순위",
+      "help": "",
+      "dd": "구축함",
+      "cl": "순양함",
+      "bb": "전함",
+      "cv": "항공모함"
+    },
+    "RETROFIT_T3": {
+      "name": "T3 개조 도면 종류 우선순위",
+      "help": "",
+      "dd": "구축함",
+      "cl": "순양함",
+      "bb": "전함",
+      "cv": "항공모함"
+    },
+    "PLATE_T1": {
+      "name": "T1 강화판 종류 우선순위",
+      "help": "",
+      "general": "범용",
+      "gun": "함포",
+      "torpedo": "어뢰",
+      "antiair": "대공",
+      "plane": "함재기"
+    },
+    "PLATE_T2": {
+      "name": "T2 강화판 종류 우선순위",
+      "help": "",
+      "general": "범용",
+      "gun": "함포",
+      "torpedo": "어뢰",
+      "antiair": "대공",
+      "plane": "함재기"
+    },
+    "PLATE_T3": {
+      "name": "T3 강화판 종류 우선순위",
+      "help": "",
+      "general": "범용",
+      "gun": "함포",
+      "torpedo": "어뢰",
+      "antiair": "대공",
+      "plane": "함재기"
+    }
+  },
+  "MeritShop": {
+    "_info": {
+      "name": "공훈 상점 설정",
+      "help": ""
+    },
+    "Refresh": {
+      "name": "상점 새로고침 허용",
+      "help": "새로고침 시 다이아 50개를 소비합니다."
+    },
+    "Filter": {
+      "name": "상품 필터",
+      "help": "사용할 수 있는 모든 옵션은 <https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/reward_shop_filter_string>에 설명되어 있습니다."
+    }
+  },
+  "CoreShop": {
+    "_info": {
+      "name": "코어 상점 설정",
+      "help": ""
+    },
+    "Filter": {
+      "name": "상품 필터",
+      "help": "사용할 수 있는 모든 옵션은 <https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/reward_shop_filter_string>에 설명되어 있습니다.\n다른 상점과 달리 인지 칩과 인지 배열만 지원합니다.\nALAS는 이 두 상품 외에는 탐색하거나 스크롤하거나 인식하지 않습니다."
+    }
+  },
+  "Gacha": {
+    "_info": {
+      "name": "건조 설정",
+      "help": "일일 업적을 위해 새 건조를 시작합니다.\n최대한 많은 건조를 시작할 수 있도록 기존 건조를 먼저 완료 처리하며, 진행 중인 건조가 남아 있으면 쾌속건조재를 사용합니다.\n도크가 가득 차면 퇴역 설정을 적용합니다."
+    },
+    "Pool": {
+      "name": "건조 종류",
+      "help": "",
+      "light": "소형함 건조",
+      "heavy": "대형함 건조",
+      "special": "특형함 건조",
+      "event": "한정 건조",
+      "wishing_well": "소원의 샘"
+    },
+    "Amount": {
+      "name": "건조 횟수",
+      "help": ""
+    },
+    "UseTicket": {
+      "name": "건조 티켓 사용",
+      "help": "한정 건조에서는 건조 티켓을 먼저 사용합니다. 티켓이 부족하거나 일반 건조를 실행하면 큐브를 사용합니다."
+    },
+    "UseDrill": {
+      "name": "쾌속건조재 사용",
+      "help": "최근 시작한 건조를 즉시 완료합니다."
+    }
+  },
   "Error": {
     "_info": {
       "name": "오류 처리 설정",
