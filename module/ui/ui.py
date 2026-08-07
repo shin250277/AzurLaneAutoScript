@@ -21,9 +21,9 @@ from module.raid.assets import *
 from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_dorm,
                             page_event, page_event_list, page_exercise, page_fleet, page_guild, page_main,
-                            page_main_white, page_meowfficer, page_meta, page_mission, page_research, page_reshmenu,
-                            page_munitions, page_private_quarters, page_shipyard, page_shop, page_sp, page_storage,
-                            page_supply_pack)
+                            page_main_white, page_mail, page_meowfficer, page_meta, page_mission, page_research,
+                            page_reshmenu, page_munitions, page_private_quarters, page_shipyard, page_shop, page_sp,
+                            page_storage, page_supply_pack)
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
@@ -79,6 +79,14 @@ KR_BUILD_CHECK = Button(
     button=(116, 10, 220, 45),
     file='./assets/kr/ui/BUILD_CHECK.png',
     name='KR_BUILD_CHECK',
+)
+
+KR_MAIL_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(39, 45, 61),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/MAIL_CHECK.png',
+    name='KR_MAIL_CHECK',
 )
 
 KR_DORM_CHECK = Button(
@@ -212,6 +220,7 @@ KR_LOCALIZED_PAGE_CHECKS = {
     page_reshmenu: KR_RESHMENU_CHECK,
     page_shop: KR_SHOP_CHECK,
     page_build: KR_BUILD_CHECK,
+    page_mail: KR_MAIL_CHECK,
     page_academy: KR_ACADEMY_CHECK,
     page_meowfficer: KR_MEOWFFICER_CHECK,
     page_research: KR_RESEARCH_CHECK,
