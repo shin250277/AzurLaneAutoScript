@@ -22,7 +22,8 @@ from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_dorm,
                             page_event, page_event_list, page_exercise, page_fleet, page_guild, page_main,
                             page_main_white, page_meowfficer, page_meta, page_mission, page_research, page_reshmenu,
-                            page_private_quarters, page_shipyard, page_shop, page_sp, page_storage)
+                            page_munitions, page_private_quarters, page_shipyard, page_shop, page_sp, page_storage,
+                            page_supply_pack)
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
@@ -188,6 +189,22 @@ KR_PRIVATE_QUARTERS_CHECK = Button(
     name='KR_PRIVATE_QUARTERS_CHECK',
 )
 
+KR_MUNITIONS_CHECK = Button(
+    area=(15, 360, 165, 410),
+    color=(86, 181, 233),
+    button=(15, 360, 165, 410),
+    file='./assets/kr/ui/MUNITIONS_CHECK.png',
+    name='KR_MUNITIONS_CHECK',
+)
+
+KR_SUPPLY_PACK_CHECK = Button(
+    area=(15, 230, 165, 285),
+    color=(80, 179, 232),
+    button=(15, 230, 165, 285),
+    file='./assets/kr/ui/SUPPLY_PACK_CHECK.png',
+    name='KR_SUPPLY_PACK_CHECK',
+)
+
 KR_LOCALIZED_PAGE_CHECKS = {
     page_mission: KR_MISSION_CHECK,
     page_dock: KR_DOCK_CHECK,
@@ -205,6 +222,8 @@ KR_LOCALIZED_PAGE_CHECKS = {
     page_exercise: KR_EXERCISE_CHECK,
     page_event_list: KR_EVENT_LIST_CHECK,
     page_private_quarters: KR_PRIVATE_QUARTERS_CHECK,
+    page_munitions: KR_MUNITIONS_CHECK,
+    page_supply_pack: KR_SUPPLY_PACK_CHECK,
 }
 
 
@@ -249,6 +268,10 @@ class UI(InfoHandler):
             # The manage button background is shared with JP, while its label
             # is localized. Color matching remains stable over the animated room.
             return self.appear(KR_DORM_CHECK, offset=0, interval=interval, threshold=15)
+        if self.config.SERVER == 'kr' and page in (page_munitions, page_supply_pack):
+            # Both pages share the same localized shop menu. Detect the blue
+            # background of the active tab instead of matching inactive text.
+            return self.appear(KR_LOCALIZED_PAGE_CHECKS[page], offset=0, interval=interval, threshold=15)
         if self.config.SERVER == 'kr' and page in KR_LOCALIZED_PAGE_CHECKS:
             # These page titles keep JP's geometry, but localized glyphs need
             # dedicated templates to distinguish screens with the same header.
