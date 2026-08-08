@@ -2,6 +2,10 @@
 
 # AzurLaneAutoScript
 
+## 한국 서버 포크
+
+이 포크는 벽람항로 한국 서버와 한국어 WebUI를 지원합니다. 자동 업데이트가 한국 서버 지원을 공식 버전으로 덮어쓰지 않도록 기본 업데이트 저장소가 이 포크로 설정되어 있습니다.
+
 #### Discord [![](https://img.shields.io/discord/720789890354249748?logo=discord&logoColor=ffffff&color=4e4c97)](https://discord.gg/AQN6GeJ) QQ群  ![](https://img.shields.io/badge/QQ%20Group-1087735381-4e4c97)
 Azur Lane bot with GUI (Supports CN, EN, JP, TW, able to support other servers), designed for 24/7 running scenes, can take over almost all Azur Lane gameplay. Azur Lane, as a mobile game, has entered the late stage of its life cycle. During the period from now to the server down, please reduce the time spent on the Azur Lane and leave everything to Alas.
 
