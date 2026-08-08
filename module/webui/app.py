@@ -1151,7 +1151,7 @@ class AlasGUI(Frame):
                 ],
                 onclick=lambda l: set_language(l),
             ).style("text-align: center")
-            put_text("Change theme / 更改主题").style("text-align: center")
+            put_text("Change theme / 更改主题 / 테마 변경").style("text-align: center")
             put_buttons(
                 [
                     {"label": "Light", "value": "default", "color": "light"},
@@ -1165,7 +1165,8 @@ class AlasGUI(Frame):
                 """
             Alas is a free open source software, if you paid for Alas from any channel, please refund.
             Alas 是一款免费开源软件，如果你在任何渠道付费购买了Alas，请退款。
-            Project repository 项目地址：`https://github.com/LmeSzinc/AzurLaneAutoScript`
+            Alas는 무료 오픈 소스 소프트웨어입니다. 어떤 경로로든 Alas를 유료로 구매했다면 환불받으세요.
+            Project repository 项目地址 프로젝트 저장소：`https://github.com/LmeSzinc/AzurLaneAutoScript`
             """
             ).style("text-align: center")
 
