@@ -66,6 +66,10 @@
       "name": "이벤트 공통 설정",
       "help": ""
     },
+    "Coalition": {
+      "name": "연합 작전 이벤트",
+      "help": ""
+    },
     "Event": {
       "name": "이벤트 파밍",
       "help": ""
@@ -78,6 +82,10 @@
       "name": "레이드",
       "help": ""
     },
+    "Hospital": {
+      "name": "병원 이벤트",
+      "help": ""
+    },
     "MaritimeEscort": {
       "name": "해상 호위",
       "help": ""
@@ -85,6 +93,10 @@
     "WarArchives": {
       "name": "작전문서",
       "help": "작전문서 기능은 유지보수가 부족해 연속 공략이 정상 작동하지 않을 수 있습니다. ALAS가 비정상적으로 동작하면 수동으로 공략을 완료한 뒤 자동 공략을 사용하세요."
+    },
+    "CoalitionSp": {
+      "name": "연합 작전 이벤트 SP",
+      "help": ""
     },
     "EventA": {
       "name": "이벤트 일일 A",
@@ -2202,6 +2214,36 @@
     "Repository": {
       "name": "AzurLaneUncensored 저장소",
       "help": "수정할 필요가 없습니다.\nGitHub: <https://github.com/LmeSzinc/AzurLaneUncensored>\n중국 미러: <https://e.coding.net/llop18870/alas/AzurLaneUncensored.git>"
+    }
+  },
+  "Coalition": {
+    "_info": {
+      "name": "연합 작전 이벤트 설정",
+      "help": "실행 전에 게임에서 함대를 직접 편성해야 합니다."
+    },
+    "Mode": {
+      "name": "난이도",
+      "help": "SP 난이도는 이벤트 일일 SP 작업으로 실행해야 합니다.",
+      "easy": "쉬움",
+      "normal": "보통",
+      "hard": "어려움",
+      "sp": "SP"
+    },
+    "Fleet": {
+      "name": "전투 방식",
+      "help": "",
+      "single": "단독 도전",
+      "multi": "연합 작전"
+    }
+  },
+  "Hospital": {
+    "_info": {
+      "name": "병원 이벤트 설정",
+      "help": ""
+    },
+    "UseRecommendFleet": {
+      "name": "함대 추천 사용",
+      "help": "비활성화하면 15개 해역의 함대를 모두 미리 직접 편성해야 합니다."
     }
   },
   "Error": {
