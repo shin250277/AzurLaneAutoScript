@@ -216,11 +216,14 @@ class Benchmark(DaemonBase, CampaignUI):
     def run(self):
         self.config.override(Emulator_ScreenshotMethod='ADB')
         self.device.uninstall_minicap()
-        self.ensure_campaign_ui('7-2', mode='normal')
 
         logger.attr('DeviceType', self.config.Benchmark_DeviceType)
         logger.attr('TestScene', self.config.Benchmark_TestScene)
         screenshot, click = self.get_test_methods()
+        # Screenshot-only benchmarks do not need a prepared game scene and
+        # must not navigate or click through the game UI.
+        if click:
+            self.ensure_campaign_ui('7-2', mode='normal')
         self.benchmark(screenshot, click)
 
     def run_simple_screenshot_benchmark(self):
