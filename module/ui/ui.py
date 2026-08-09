@@ -22,8 +22,8 @@ from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_dock, page_dorm,
                             page_event, page_event_list, page_exercise, page_fleet, page_guild, page_main,
                             page_main_white, page_mail, page_meowfficer, page_meta, page_mission, page_research,
-                            page_reshmenu, page_munitions, page_private_quarters, page_shipyard, page_shop, page_sp,
-                            page_storage, page_supply_pack)
+                            page_reshmenu, page_munitions, page_private_quarters, page_reward, page_shipyard, page_shop,
+                            page_sp, page_storage, page_supply_pack)
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
@@ -269,6 +269,10 @@ class UI(InfoHandler):
                 if self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8):
                     return False
                 if self.appear(KR_PRIVATE_QUARTERS_CHECK, offset=(10, 10), similarity=0.8):
+                    return False
+                # KR's reward panel is an overlay over the main screen, so the
+                # bottom dock tab remains visible behind it.
+                if self.appear(page_reward.check_button, offset=offset):
                     return False
                 # The fleet card also looks white on KR's campaign menu. The
                 # bottom dock tab is present only on the actual main page.
