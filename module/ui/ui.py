@@ -33,6 +33,14 @@ KR_CAMPAIGN_MENU_CHECK = Button(
     name='KR_CAMPAIGN_MENU_CHECK',
 )
 
+KR_CAMPAIGN_CHECK = Button(
+    area=(184, 74, 214, 104),
+    color=(85, 95, 132),
+    button=(184, 74, 214, 104),
+    file='./assets/kr/ui/CAMPAIGN_CHECK.png',
+    name='KR_CAMPAIGN_CHECK',
+)
+
 KR_MISSION_CHECK = Button(
     area=(120, 14, 173, 40),
     color=(130, 144, 186),
@@ -214,6 +222,7 @@ KR_SUPPLY_PACK_CHECK = Button(
 )
 
 KR_LOCALIZED_PAGE_CHECKS = {
+    page_campaign: KR_CAMPAIGN_CHECK,
     page_mission: KR_MISSION_CHECK,
     page_dock: KR_DOCK_CHECK,
     page_storage: KR_STORAGE_CHECK,
