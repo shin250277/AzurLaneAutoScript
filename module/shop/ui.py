@@ -139,7 +139,7 @@ class ShopUI(UI):
             else:
                 self.device.screenshot()
 
-            if self.appear(page_munitions.check_button, offset=(20, 20)):
+            if self.ui_page_appear(page_munitions, offset=(20, 20)):
                 break
 
             # Large offset cause it camera in academy can be move around
