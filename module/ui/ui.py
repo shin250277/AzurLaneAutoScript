@@ -27,9 +27,10 @@ from module.ui.page import (Page, page_academy, page_build, page_campaign, page_
 from module.ui_white.assets import *
 
 KR_CAMPAIGN_MENU_CHECK = Button(
-    area=(355, 439, 501, 506),
-    color=(103, 106, 114),
-    button=(),
+    area=(170, 582, 312, 644),
+    color=(54, 56, 60),
+    button=(170, 582, 312, 644),
+    file='./assets/kr/ui/CAMPAIGN_MENU_CHECK.png',
     name='KR_CAMPAIGN_MENU_CHECK',
 )
 
@@ -292,9 +293,10 @@ class UI(InfoHandler):
                 return True
             return False
         if self.config.SERVER == 'kr' and page == page_campaign_menu:
-            # Layout and colors are shared, while text labels are localized and
-            # therefore cannot use template matching.
-            return self.appear(KR_CAMPAIGN_MENU_CHECK, offset=0, interval=interval, threshold=15)
+            # The old card-color check intermittently matched the animated KR
+            # game room. The localized War Archives button is fixed and unique
+            # to the campaign menu.
+            return self.appear(KR_CAMPAIGN_MENU_CHECK, offset=(5, 5), interval=interval, similarity=0.8)
         if self.config.SERVER == 'kr' and page == page_dorm:
             # The manage button background is shared with JP, while its label
             # is localized. Color matching remains stable over the animated room.
