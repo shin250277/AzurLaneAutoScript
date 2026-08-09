@@ -290,6 +290,13 @@ class UI(InfoHandler):
             # The manage button background is shared with JP, while its label
             # is localized. Color matching remains stable over the animated room.
             return self.appear(KR_DORM_CHECK, offset=0, interval=interval, threshold=15)
+        if self.config.SERVER == 'kr' and page == page_shop:
+            # Shop subpages keep the same localized header as the general
+            # shop. Exclude their active tabs before matching the shared title.
+            if self.appear(KR_MUNITIONS_CHECK, offset=0, threshold=15) \
+                    or self.appear(KR_SUPPLY_PACK_CHECK, offset=0, threshold=15):
+                return False
+            return self.appear(KR_SHOP_CHECK, offset=offset, interval=interval)
         if self.config.SERVER == 'kr' and page in (page_munitions, page_supply_pack):
             # Both pages share the same localized shop menu. Detect the blue
             # background of the active tab instead of matching inactive text.
