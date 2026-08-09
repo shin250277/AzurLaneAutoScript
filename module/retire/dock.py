@@ -22,11 +22,14 @@ DOCK_FAVOURITE.add_state('off', check_button=COMMON_SHIP_FILTER_DISABLE)
 CARD_GRIDS = ButtonGrid(
     origin=(93, 76), delta=(164 + 2 / 3, 227), button_shape=(138, 204), grid_shape=(7, 2), name='CARD')
 CARD_RARITY_GRIDS = CARD_GRIDS.crop(area=(0, 0, 138, 5), name='RARITY')
-if server.server != 'jp':
+if server.server not in ['jp', 'kr']:
     CARD_LEVEL_GRIDS = CARD_GRIDS.crop(area=(77, 5, 138, 27), name='LEVEL')
-    CARD_EMOTION_GRIDS = CARD_GRIDS.crop(area=(23, 29, 48, 52), name='EMOTION')
 else:
     CARD_LEVEL_GRIDS = CARD_GRIDS.crop(area=(74, 5, 136, 27), name='LEVEL')
+
+if server.server != 'jp':
+    CARD_EMOTION_GRIDS = CARD_GRIDS.crop(area=(23, 29, 48, 52), name='EMOTION')
+else:
     CARD_EMOTION_GRIDS = CARD_GRIDS.crop(area=(21, 29, 71, 48), name='EMOTION')
 
 DOCK_SCROLL = Scroll(DOCK_SCROLL, color=(247, 211, 66), name='DOCK_SCROLL')
