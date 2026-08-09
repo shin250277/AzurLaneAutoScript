@@ -572,10 +572,19 @@ class NemuIpc(Platform):
         if self.config.EmulatorInfo_path:
             index = NemuIpcImpl.serial_to_id(self.serial)
             if index is not None:
-                file = os.path.abspath(os.path.join(
-                    self.config.EmulatorInfo_path, f'../../vms/MuMuPlayer-12.0-{index}/configs/customer_config.json'))
-                if self.check_mumu_app_keep_alive_400(file):
-                    return True
+                # MuMu's international build stores instances under
+                # ``MuMuPlayerGlobal-*`` while sharing the same executable
+                # layout as the Chinese build. Only probe paths that exist so
+                # the first missing variant does not emit a misleading warning.
+                for instance_name in (
+                        f'MuMuPlayer-12.0-{index}',
+                        f'MuMuPlayerGlobal-12.0-{index}',
+                ):
+                    file = os.path.abspath(os.path.join(
+                        self.config.EmulatorInfo_path,
+                        f'../../vms/{instance_name}/configs/customer_config.json'))
+                    if os.path.exists(file) and self.check_mumu_app_keep_alive_400(file):
+                        return True
 
         # Search emulator instance
         if self.emulator_instance is None:
