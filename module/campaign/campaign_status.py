@@ -5,12 +5,36 @@ import numpy as np
 
 import module.config.server as server
 
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import color_similar, get_color
 from module.campaign.assets import OCR_COIN, OCR_EVENT_PT, OCR_OIL, OCR_OIL_CHECK
 from module.logger import logger
 from module.ocr.ocr import Digit, Ocr
 from module.ui.ui import UI
+
+if server.server == 'kr':
+    # KR's modern main UI places oil and coins further left than the inherited
+    # JP assets. Keep these overrides local so generated assets stay untouched.
+    OCR_COIN = Button(
+        area=(696, 21, 786, 52),
+        color=(61, 61, 73),
+        button=(696, 21, 786, 52),
+        name='KR_OCR_COIN',
+    )
+    OCR_OIL = Button(
+        area=(538, 21, 613, 52),
+        color=(64, 65, 79),
+        button=(538, 21, 613, 52),
+        name='KR_OCR_OIL',
+    )
+    OCR_OIL_CHECK = Button(
+        area=(493, 29, 513, 50),
+        color=(55, 53, 53),
+        button=(493, 29, 513, 50),
+        file='./assets/kr/campaign/OCR_OIL_CHECK.png',
+        name='KR_OCR_OIL_CHECK',
+    )
 
 if server.server != 'jp':
     OCR_COIN = Digit(OCR_COIN, name='OCR_COIN', letter=(239, 239, 239), threshold=128)
