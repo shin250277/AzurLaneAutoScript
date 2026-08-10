@@ -1,3 +1,6 @@
+import module.config.server as server
+
+from module.base.button import Button
 from module.base.timer import Timer
 from module.campaign.campaign_status import OCR_COIN
 from module.combat.assets import GET_SHIP
@@ -15,6 +18,21 @@ OCR_BUILD_CUBE_COUNT = Digit(BUILD_CUBE_COUNT, letter=(255, 247, 247), threshold
 OCR_BUILD_TICKET_COUNT = Digit(BUILD_TICKET_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_SUBMIT_COUNT = Digit(BUILD_SUBMIT_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_SUBMIT_WW_COUNT = Digit(BUILD_SUBMIT_WW_COUNT, letter=(255, 247, 247), threshold=64)
+
+if server.server == 'kr':
+    OCR_BUILD_COIN_COUNT = Digit(
+        Button(
+            area=(820, 20, 925, 52),
+            color=(77, 77, 88),
+            button=(820, 20, 925, 52),
+            name='KR_BUILD_COIN_COUNT',
+        ),
+        name='KR_BUILD_COIN_COUNT',
+        letter=(239, 239, 239),
+        threshold=128,
+    )
+else:
+    OCR_BUILD_COIN_COUNT = OCR_COIN
 
 
 class RewardGacha(GachaUI, Retirement):
@@ -298,7 +316,7 @@ class RewardGacha(GachaUI, Retirement):
         self.gacha_flush_queue()
 
         # OCR Gold and Cubes
-        self.build_coin_count = OCR_COIN.ocr(self.device.image)
+        self.build_coin_count = OCR_BUILD_COIN_COUNT.ocr(self.device.image)
         self.build_cube_count = OCR_BUILD_CUBE_COUNT.ocr(self.device.image)
 
         # Transition to appropriate target construction pool
