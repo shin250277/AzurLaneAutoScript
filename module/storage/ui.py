@@ -70,7 +70,7 @@ class StorageUI(UI):
                 self.interval_reset(STORAGE_CHECK)
                 continue
             # design -> material
-            if self.appear(STORAGE_CHECK, offset=(20, 20), interval=3):
+            if self.ui_page_appear(page_storage, offset=(20, 20), interval=3):
                 logger.info('DISASSEMBLE -> MATERIAL_ENTER')
                 self.device.click(MATERIAL_ENTER)
                 continue
@@ -104,7 +104,7 @@ class StorageUI(UI):
                 self.interval_reset(STORAGE_CHECK)
                 continue
             # design -> equipment
-            if self.appear(STORAGE_CHECK, offset=(20, 20), interval=3):
+            if self.ui_page_appear(page_storage, offset=(20, 20), interval=3):
                 logger.info('STORAGE_CHECK -> EQUIPMENT_ENTER')
                 self.device.click(EQUIPMENT_ENTER)
                 continue
@@ -140,7 +140,7 @@ class StorageUI(UI):
                 self.interval_reset(STORAGE_CHECK)
                 continue
             # design -> equipment
-            if self.appear(STORAGE_CHECK, offset=(20, 20), interval=3):
+            if self.ui_page_appear(page_storage, offset=(20, 20), interval=3):
                 logger.info('STORAGE_CHECK -> EQUIPMENT_ENTER')
                 self.device.click(EQUIPMENT_ENTER)
                 continue
@@ -153,7 +153,7 @@ class StorageUI(UI):
         for _ in self.loop():
             if self.appear(EQUIPMENT_FILTER_CONFIRM, offset=(20, 20)):
                 break
-            if self.appear(STORAGE_CHECK, offset=(20, 20), interval=3):
+            if self.ui_page_appear(page_storage, offset=(20, 20), interval=3):
                 self.device.click(EQUIPMENT_FILTER)
                 continue
             if self.appear(GET_ITEMS_1, offset=(5, 5), interval=3):
@@ -168,7 +168,11 @@ class StorageUI(UI):
     def _equipment_filter_confirm(self):
         logger.info('Equipment filter confirm')
         self.interval_clear(EQUIPMENT_FILTER_CONFIRM)
-        self.ui_click(EQUIPMENT_FILTER_CONFIRM, check_button=STORAGE_CHECK, skip_first_screenshot=True)
+        self.ui_click(
+            EQUIPMENT_FILTER_CONFIRM,
+            check_button=lambda: self.ui_page_appear(page_storage),
+            skip_first_screenshot=True,
+        )
         self._wait_until_storage_stable()
 
     def equipment_filter_set(self, rarity='all'):
