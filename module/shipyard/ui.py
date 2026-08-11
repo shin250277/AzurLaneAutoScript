@@ -7,7 +7,7 @@ from module.logger import logger
 from module.shipyard.ui_globals import *
 from module.ui.assets import SHIPYARD_CHECK
 from module.ui.navbar import Navbar
-from module.ui.page import page_main_white
+from module.ui.page import page_main_white, page_shipyard
 from module.ui.ui import UI
 
 
@@ -140,7 +140,7 @@ class ShipyardUI(UI):
         Returns:
             bool whether in appropriate shipyard ui area
         """
-        if self.appear(SHIPYARD_CHECK, offset=(20, 20)):
+        if self.ui_page_appear(page_shipyard):
             return True
         if self.appear(SHIPYARD_IN_DEV, offset=(20, 20)):
             return True
