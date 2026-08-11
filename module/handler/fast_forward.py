@@ -293,7 +293,15 @@ class FastForwardHandler(AutoSearchHandler):
 
         logger.info('Auto search setting')
         self.fleet_preparation_sidebar_ensure(3)
-        self.auto_search_setting_ensure(self.config.Fleet_FleetOrder)
+        fleet_order = self.config.Fleet_FleetOrder
+        if not self.config.FLEET_2 and fleet_order in (
+                'fleet1_mob_fleet2_boss', 'fleet1_boss_fleet2_mob'):
+            # One-fleet maps cannot assign mob and boss roles to separate
+            # fleets. The client rejects those options and keeps "all" active,
+            # so use the only valid fleet-1 role instead of retrying clicks.
+            logger.info(f'One-fleet map, use all-fleet role instead of {fleet_order}')
+            fleet_order = 'fleet1_all_fleet2_standby'
+        self.auto_search_setting_ensure(fleet_order)
         if self.config.SUBMARINE:
             self.auto_search_setting_ensure(self.config.Submarine_AutoSearchMode)
         return True
