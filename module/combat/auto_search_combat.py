@@ -311,6 +311,11 @@ class AutoSearchCombat(MapOperation, Combat, CampaignStatus):
                 raise CampaignEnd
 
             # Combat status
+            # The inherited GET_SHIP sample is only a tiny white patch. On KR
+            # it also matches combat skill effects and repeatedly taps the
+            # bottom-right skill buttons while the battle is still running.
+            if self.config.SERVER == 'kr' and self.is_combat_executing():
+                continue
             if self.handle_get_ship():
                 continue
             if self.handle_auto_search_map_option():
