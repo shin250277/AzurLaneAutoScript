@@ -35,9 +35,12 @@ KR_CAMPAIGN_MENU_CHECK = Button(
 )
 
 KR_CAMPAIGN_CHECK = Button(
-    area=(184, 74, 214, 104),
+    # Keep the template on the stable Korean chapter glyph. The wider box
+    # includes the animated chapter-header sheen and can fall below the
+    # default template threshold even though the campaign page is visible.
+    area=(184, 78, 202, 102),
     color=(85, 95, 132),
-    button=(184, 74, 214, 104),
+    button=(184, 78, 202, 102),
     file='./assets/kr/ui/CAMPAIGN_CHECK.png',
     name='KR_CAMPAIGN_CHECK',
 )
@@ -528,6 +531,7 @@ class UI(InfoHandler):
         self.interval_clear(list(Page.iter_check_buttons()))
 
         logger.hr(f"UI goto {destination}")
+        suppress_kr_campaign_popups = False
         while 1:
             GOTO_MAIN.clear_offset()
             if skip_first_screenshot:
@@ -562,12 +566,20 @@ class UI(InfoHandler):
                     button = page.links[page.parent]
                     self.device.click(button)
                     self.ui_button_interval_reset(button)
+                    if self.config.SERVER == 'kr' and page == page_campaign_menu \
+                            and destination == page_campaign:
+                        suppress_kr_campaign_popups = True
                     clicked = True
                     break
             if clicked:
                 continue
 
             # Additional
+            if suppress_kr_campaign_popups:
+                # The KR campaign transition itself can resemble inherited
+                # reward popups. There are no legitimate main-page popups in
+                # this short route, so wait only for the localized destination.
+                continue
             if self.ui_additional(get_ship=get_ship):
                 continue
 
@@ -667,6 +679,15 @@ class UI(InfoHandler):
         """
         Handle popups appear at page_main, page_reward
         """
+        if server.server == 'kr' and (
+                self.ui_page_appear(page_campaign_menu) or self.ui_page_appear(page_campaign)
+        ):
+            # KR campaign backgrounds share large color regions with the
+            # inherited reward and monthly-pass templates. Once either
+            # campaign page is visible these are foreground controls, not
+            # main-page popups, so never click them from the global handler.
+            return False
+
         # Guild popup
         if self.handle_guild_popup_cancel():
             return True

@@ -46,6 +46,12 @@ class EnemySearchingHandler(InfoHandler):
             return False
 
     def is_in_stage_page(self):
+        if self.config.SERVER == 'kr' and hasattr(self, 'ui_page_appear'):
+            # KR localizes all three page checks. Use the same localized
+            # detection as UI navigation so preparation cancellation can
+            # recognize that it has returned to the stage selection page.
+            from module.ui.page import page_campaign, page_event, page_sp
+            return any(self.ui_page_appear(page, offset=(20, 20)) for page in (page_campaign, page_event, page_sp))
         for check in [CAMPAIGN_CHECK, EVENT_CHECK, SP_CHECK]:
             if self.appear(check, offset=(20, 20)):
                 return True
