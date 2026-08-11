@@ -145,6 +145,14 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
             # Equip confirm
             if self.appear_then_click(EQUIP_CONFIRM, offset=(30, 30), interval=2):
                 continue
+            # KR asks which equipment to dismantle after one-click retirement.
+            # Leave that screen without selecting anything so all equipment is
+            # moved to storage instead of being destroyed automatically.
+            if self.config.SERVER == 'kr' and self.appear(EQUIP_CONFIRM_2, offset=(30, 30), interval=2):
+                logger.info('KR retirement: keep all equipment in storage')
+                self.device.adb_shell(['input', 'keyevent', '4'])
+                executed = True
+                continue
             if self.appear_then_click(EQUIP_CONFIRM_2, offset=(30, 30), interval=2):
                 self.interval_clear(GET_ITEMS_1)
                 executed = True
