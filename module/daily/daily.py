@@ -10,6 +10,22 @@ from module.ocr.ocr import Digit
 from module.ui.assets import BACK_ARROW, DAILY_CHECK
 from module.ui.page import page_campaign_menu, page_daily
 
+
+KR_DAILY_SKIP = Button(
+    area=(825, 295, 975, 351),
+    color=(128, 164, 210),
+    button=(817, 286, 981, 358),
+    file='./assets/kr/daily/DAILY_SKIP.png',
+    name='KR_DAILY_SKIP',
+)
+KR_DAILY_NORMAL_RUN = Button(
+    area=(408, 295, 560, 351),
+    color=(239, 176, 99),
+    button=(400, 286, 566, 358),
+    file='./assets/kr/daily/DAILY_NORMAL_RUN.png',
+    name='KR_DAILY_NORMAL_RUN',
+)
+
 DAILY_MISSION_LIST = [DAILY_MISSION_1, DAILY_MISSION_2, DAILY_MISSION_3]
 if server.server != 'jp':
     OCR_REMAIN = Digit(OCR_REMAIN, threshold=128, alphabet='01234')
@@ -177,6 +193,7 @@ class Daily(Combat):
                 self.device.click(BACK_ARROW)
             return self.appear(DAILY_ENTER_CHECK, threshold=30) or self.appear(BACK_ARROW, offset=(30, 30))
 
+        self._kr_daily_skip_returned = False
         self.ui_click(click_button=DAILY_ENTER, check_button=daily_enter_check, appear_button=DAILY_CHECK,
                       skip_first_screenshot=True)
         if self.appear(DAILY_LOCKED):
@@ -200,8 +217,14 @@ class Daily(Combat):
                                  next_button=DAILY_FLEET_NEXT, fast=False, skip_first_screenshot=True)
             self.combat(emotion_reduce=False, save_get_items=False, expected_end=daily_end, balance_hp=False)
 
-        self.ui_click(click_button=BACK_ARROW, check_button=DAILY_CHECK, additional=self.handle_daily_additional,
-                      skip_first_screenshot=True)
+        if self._kr_daily_skip_returned:
+            # The quick-battle selector closes directly to the daily list.
+            # Page detection is localized in UI and the inherited
+            # DAILY_CHECK asset cannot be used here.
+            self.device.sleep((0.5, 0.7))
+        else:
+            self.ui_click(click_button=BACK_ARROW, check_button=DAILY_CHECK, additional=self.handle_daily_additional,
+                          skip_first_screenshot=True)
         self.device.sleep((1, 1.2))
         return True
 
@@ -232,9 +255,15 @@ class Daily(Combat):
                 reward_received = True
                 continue
             if self.config.Daily_UseDailySkip:
+                if self.config.SERVER == 'kr' and self.appear_then_click(
+                        KR_DAILY_SKIP, offset=(20, 20), interval=5):
+                    continue
                 if self.appear_then_click(DAILY_SKIP, offset=(20, 20), interval=5):
                     continue
             else:
+                if self.config.SERVER == 'kr' and self.appear_then_click(
+                        KR_DAILY_NORMAL_RUN, offset=(20, 20), interval=5):
+                    continue
                 if self.appear_then_click(DAILY_NORMAL_RUN, offset=(20, 20), interval=5):
                     continue
             if self.handle_combat_automation_confirm():
@@ -245,8 +274,15 @@ class Daily(Combat):
                 continue
 
             # End
-            if self.appear(DAILY_SKIP, offset=(20, 20)):
+            if self.appear(DAILY_SKIP, offset=(20, 20)) or (
+                    self.config.SERVER == 'kr' and self.appear(KR_DAILY_SKIP, offset=(20, 20))):
                 if reward_received:
+                    # KR keeps the quick-battle selector open after rewards.
+                    # Close it before the caller tries to leave the daily
+                    # detail page; the blurred BACK_ARROW cannot be matched.
+                    if self.config.SERVER == 'kr':
+                        self.device.click(BACK_ARROW)
+                        self._kr_daily_skip_returned = True
                     return False
                 if self.info_bar_count():
                     return False
@@ -314,7 +350,15 @@ class Daily(Combat):
                 self.daily_check()
                 # The order of daily tasks will be disordered after execute a daily, exit and re-enter to reset.
                 # 打完一次之后每日任务的顺序会乱掉, 退出再进入来重置顺序.
-                self.ui_goto(page_campaign_menu)
+                if self.config.SERVER == 'kr' and self._kr_daily_skip_returned:
+                    # The localized daily page check is handled in UI, while
+                    # ui_goto's direct path starts from inherited DAILY_CHECK.
+                    self.device.click(BACK_ARROW)
+                    for _ in self.loop():
+                        if self.ui_page_appear(page_campaign_menu):
+                            break
+                else:
+                    self.ui_goto(page_campaign_menu)
                 break
 
     def daily_run(self):

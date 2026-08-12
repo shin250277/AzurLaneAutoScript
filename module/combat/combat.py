@@ -252,6 +252,11 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
                 continue
             if self.handle_battle_preparation():
                 continue
+            # Resource-cap warnings can appear after pressing battle start.
+            # They use the standard two-button confirmation dialog and must
+            # be acknowledged before the loading screen can begin.
+            if self.handle_popup_confirm('COMBAT_PREPARATION'):
+                continue
             if self.handle_combat_automation_confirm():
                 continue
             if self.handle_story_skip():
