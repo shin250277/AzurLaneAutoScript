@@ -323,6 +323,22 @@ class FleetPreparation(InfoHandler):
         if self.map_fleet_checked:
             return False
 
+        # KR hard mode uses a redesigned fleet-constraint screen without the
+        # legacy dropdown selector. Its orange "recommend" buttons populate
+        # fleets that satisfy the displayed stat and hull restrictions.
+        if self.config.SERVER == 'kr' and self.config.Campaign_Mode == 'hard' \
+                and self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET) \
+                and not self.appear(FLEET_1_CHOOSE, offset=FleetOperator.OFFSET):
+            logger.info('KR hard fleet selection: use recommended fleets')
+            if self.config.Fleet_Fleet1:
+                self.device.click(FLEET_1_CHOOSE)
+                self.device.sleep(1)
+            if self.config.Fleet_Fleet2:
+                self.device.click(FLEET_2_CHOOSE)
+                self.device.sleep(1)
+            self.map_is_hard_mode = True
+            return True
+
         if self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET):
             AUTO_SEARCH_SET_MOB.load_offset(FLEET_1_CLEAR)
             AUTO_SEARCH_SET_BOSS.load_offset(FLEET_1_CLEAR)
