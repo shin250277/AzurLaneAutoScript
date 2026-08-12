@@ -29,6 +29,11 @@ class NewYearChallenge(MinigameRun):
                                          NEW_YEAR_BATTLE_BLUE: NEW_YEAR_CHALLENGE_BLUE_BUTTON}
 
     def deal_specific_popup(self):
+        # KR minigame rewards use a different background treatment from the
+        # common GET_ITEMS_1 popup, so keep this match scoped to this game.
+        if self.config.SERVER == 'kr' and self.appear_then_click(
+                NEW_YEAR_CHALLENGE_GET_ITEMS, offset=(20, 20), interval=3):
+            return True
         # enter NEW_YEAR_BATTLE first time
         if self.appear(NEW_YEAR_CHALLENGE_FIRST_TIME, offset=(5, 5), interval=3):
             self.device.click(NEW_YEAR_CHALLENGE_SAFE_AREA)
