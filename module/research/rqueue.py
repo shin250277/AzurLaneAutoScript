@@ -50,6 +50,12 @@ class ResearchQueue(ResearchUI):
                 self.interval_reset(RESEARCH_QUEUE_ADD)
                 continue
 
+            # KR closes the detail panel immediately after joining the queue.
+            # The localized project-list title is a more reliable completion
+            # signal than the language-specific status-label templates.
+            if self.config.SERVER == 'kr' and self.is_in_research():
+                break
+
         self.ensure_research_center_stable()
         return True
 

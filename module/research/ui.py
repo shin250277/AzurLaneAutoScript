@@ -6,12 +6,13 @@ from module.research.assets import *
 from module.research.project import RESEARCH_STATUS
 from module.research.series import RESEARCH_SCALING
 from module.ui.assets import BACK_ARROW, RESEARCH_CHECK
+from module.ui.page import page_research
 from module.ui.ui import UI
 
 
 class ResearchUI(UI):
     def is_in_research(self, interval=0):
-        return self.appear(RESEARCH_CHECK, offset=(20, 20), interval=interval)
+        return self.ui_page_appear(page_research, offset=(20, 20), interval=interval)
 
     def is_in_queue(self, interval=0):
         return self.appear(QUEUE_CHECK, offset=(20, 20), interval=interval)

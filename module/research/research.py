@@ -192,6 +192,7 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
         self.interval_clear([RESEARCH_START])
         self.popup_interval_clear()
         available = False
+        start_confirmed = False
         click_timer = Timer(10)
         click_count = 0
         while 1:
@@ -215,6 +216,7 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                 available = True
                 continue
             if self.handle_popup_confirm('RESEARCH_START'):
+                start_confirmed = True
                 continue
 
             # End
@@ -223,6 +225,12 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                              'probably because there is a research running but requirements not satisfied, '
                              'or a research finished')
                 raise GameTooManyClickError
+            # KR returns directly to the project list after confirming a
+            # research instead of keeping the running-project detail open.
+            if self.config.SERVER == 'kr' and start_confirmed and self.is_in_research():
+                self.research_project_started = project
+                self._research_project_offset = (index - 2) % 5
+                return True
             if self.appear(RESEARCH_STOP, offset=(20, 20)):
                 # RESEARCH_STOP is a semi-transparent button,
                 # color will vary depending on the background.
@@ -310,7 +318,7 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                 else:
                     self.device.screenshot()
 
-                if self.appear(RESEARCH_CHECK, offset=(20, 20), interval=10):
+                if self.is_in_research(interval=10):
                     if self.research_has_finished():
                         self.device.click(RESEARCH_ENTRANCE[self._research_finished_index])
 
