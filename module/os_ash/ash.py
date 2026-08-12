@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+import module.config.server as server
 from module.base.utils import image_left_strip
 from module.combat.combat import BATTLE_PREPARATION, Combat
 from module.config.utils import DEFAULT_TIME
@@ -59,6 +60,8 @@ class AshCombat(Combat):
         if super().handle_battle_preparation():
             return True
 
+        if server.server == 'kr' and self.appear_then_click(ASH_INFO_CONFIRM, offset=(20, 20), interval=2):
+            return True
         if self.appear_then_click(ASH_START, offset=(30, 30), interval=2):
             return True
         if self.handle_get_items():
