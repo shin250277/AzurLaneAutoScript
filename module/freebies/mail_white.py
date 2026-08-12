@@ -259,10 +259,10 @@ class MailWhite(UI):
 
         # Must using white UI
         self.ui_ensure(page_main)
-        if self.appear(page_main_white.check_button, offset=(30, 30)):
+        if self.ui_page_appear(page_main_white):
             logger.info('At page_main_white')
             pass
-        elif self.appear(page_main.check_button, offset=(5, 5)):
+        elif self.ui_page_appear(page_main):
             logger.info('At page_main')
             pass
         else:

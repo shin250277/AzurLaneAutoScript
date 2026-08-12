@@ -234,9 +234,9 @@ KR_MUNITIONS_CHECK = Button(
 )
 
 KR_SUPPLY_PACK_CHECK = Button(
-    area=(15, 230, 165, 285),
+    area=(15, 295, 165, 350),
     color=(80, 179, 232),
-    button=(15, 230, 165, 285),
+    button=(15, 295, 165, 350),
     file='./assets/kr/ui/SUPPLY_PACK_CHECK.png',
     name='KR_SUPPLY_PACK_CHECK',
 )
