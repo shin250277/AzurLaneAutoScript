@@ -20,7 +20,7 @@ from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_
 from module.raid.assets import *
 from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_coalition,
-                            page_channel, page_dock, page_dorm, page_event, page_event_list, page_exercise, page_fleet,
+                            page_channel, page_commission, page_dock, page_dorm, page_event, page_event_list, page_exercise, page_fleet,
                             page_guild, page_main, page_main_white, page_mail, page_meowfficer, page_meta, page_mission,
                             page_munitions, page_private_quarters, page_research, page_reshmenu, page_reward,
                             page_shipyard, page_shop, page_sp, page_storage, page_supply_pack)
@@ -59,6 +59,14 @@ KR_MISSION_CHECK = Button(
     button=(120, 14, 173, 40),
     file='./assets/kr/ui/MISSION_CHECK.png',
     name='KR_MISSION_CHECK',
+)
+
+KR_COMMISSION_CHECK = Button(
+    area=(118, 14, 180, 42),
+    color=(131, 144, 184),
+    button=(118, 14, 180, 42),
+    file='./assets/kr/ui/COMMISSION_CHECK.png',
+    name='KR_COMMISSION_CHECK',
 )
 
 KR_DOCK_CHECK = Button(
@@ -237,6 +245,7 @@ KR_LOCALIZED_PAGE_CHECKS = {
     page_campaign: KR_CAMPAIGN_CHECK,
     page_coalition: KR_HORROR_COALITION_CHECK,
     page_mission: KR_MISSION_CHECK,
+    page_commission: KR_COMMISSION_CHECK,
     page_dock: KR_DOCK_CHECK,
     page_storage: KR_STORAGE_CHECK,
     page_reshmenu: KR_RESHMENU_CHECK,
@@ -344,6 +353,12 @@ class UI(InfoHandler):
             bool: If clicked
         """
         if self.config.SERVER == 'kr':
+            # The Korean reward overlay leaves the white main navigation bar
+            # visible.  Checking that bar alone therefore mistakes an open
+            # destination panel for page_main and repeatedly clicks its menu
+            # icon.  Never navigate when the requested page is already open.
+            if self.ui_page_appear(page, offset=(20, 20), interval=0):
+                return False
             if self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40):
                 button = page_main_white.links[page]
                 self.device.click(button)
