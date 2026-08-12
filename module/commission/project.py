@@ -320,6 +320,19 @@ class Commission:
             color -= [50, 30, 20]
         self.status = dic[int(np.argmax(color))]
 
+        # ALAS does not bundle a Korean OCR model. Keep Korean commissions
+        # usable by falling back to stable timing metadata after name lookup
+        # fails. Generic categories still allow duration-based ranking.
+        if self.config.SERVER == 'kr' and not self.valid:
+            if self.expire:
+                self.genre = 'urgent_drill'
+            elif self.duration >= timedelta(hours=8):
+                self.genre = 'major_comm'
+            else:
+                self.genre = 'extra_drill'
+            self.valid = True
+            logger.info(f'Korean commission fallback: {self.genre}, duration={self.duration}')
+
     def __str__(self):
         name = f'{self.name} | {self.suffix_hash}' if self.suffix_hash else self.name
         if not self.valid:
