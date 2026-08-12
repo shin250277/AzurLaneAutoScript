@@ -1,9 +1,21 @@
 import module.config.server as server
+from module.base.button import Button
 from module.ocr.ocr import Digit, DigitCounter
 from module.private_quarters.assets import *
 from module.shop.shop_status import ShopStatus
 
-if server.server in ['cn', 'jp', 'tw']:
+if server.server == 'kr':
+    # KR places its "remaining/total" counter farther to the left.
+    OCR_DAILY_COUNT = DigitCounter(
+        Button(
+            area=(112, 126, 149, 154),
+            color=(105, 109, 114),
+            button=(112, 126, 149, 154),
+            name='KR_PRIVATE_QUARTERS_DAILY_COUNT',
+        ),
+        letter=(255, 247, 247),
+    )
+elif server.server in ['cn', 'jp', 'tw']:
     OCR_DAILY_COUNT = DigitCounter(PRIVATE_QUARTERS_DAILY_COUNT, letter=(218, 219, 221))
 else:
     OCR_DAILY_COUNT = DigitCounter(PRIVATE_QUARTERS_DAILY_COUNT, letter=(255, 247, 247))

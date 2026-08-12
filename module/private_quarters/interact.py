@@ -1,3 +1,5 @@
+import module.config.server as server
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import random_rectangle_vector
 from module.handler.assets import POPUP_CANCEL
@@ -5,6 +7,15 @@ from module.logger import logger
 from module.private_quarters.assets import *
 from module.ui.page import page_private_quarters
 from module.ui.ui import UI
+
+
+KR_PRIVATE_QUARTERS_DIALOGUE_CHOICE = Button(
+    area=(558, 607, 724, 641),
+    color=(236, 234, 231),
+    button=(307, 596, 973, 654),
+    file='./assets/kr/private_quarters/PRIVATE_QUARTERS_DIALOGUE_CHOICE.png',
+    name='KR_PRIVATE_QUARTERS_DIALOGUE_CHOICE',
+)
 
 
 class PQInteract(UI):
@@ -35,12 +46,20 @@ class PQInteract(UI):
         def after_loading_state():
             return not self.appear(PRIVATE_QUARTERS_LOADING_CHECK, offset=(20, 20))
 
+        def dialogue_finished():
+            return self.appear(PRIVATE_QUARTERS_ROOM_CHECK, offset=(20, 20)) \
+                or self.ui_page_appear(page_private_quarters) \
+                or self.appear(PRIVATE_QUARTERS_PAGE_LOCALE_BEACH, offset=(20, 20))
+
         def additional():
+            if server.server == 'kr' and self.appear(
+                    KR_PRIVATE_QUARTERS_DIALOGUE_CHOICE, offset=0, similarity=0.85):
+                self.device.click(KR_PRIVATE_QUARTERS_DIALOGUE_CHOICE)
             return True
 
         self.ui_click(
             click_button=PRIVATE_QUARTERS_ROOM_SAFE_CLICK_AREA,
-            check_button=PRIVATE_QUARTERS_ROOM_CHECK,
+            check_button=dialogue_finished,
             appear_button=after_loading_state,
             additional=additional,
             confirm_wait=3,
@@ -190,7 +209,7 @@ class PQInteract(UI):
         self.ui_click(
             click_button=target_btn,
             check_button=self._pq_goto_room_check,
-            appear_button=page_private_quarters.check_button,
+            appear_button=lambda: self.ui_page_appear(page_private_quarters),
             offset=(20, 20),
             skip_first_screenshot=True)
 
@@ -226,7 +245,7 @@ class PQInteract(UI):
         self.interval_clear(PRIVATE_QUARTERS_ROOM_BACK)
         self.ui_click(
             click_button=PRIVATE_QUARTERS_ROOM_BACK,
-            check_button=page_private_quarters.check_button,
+            check_button=lambda: self.ui_page_appear(page_private_quarters),
             offset=(20, 20),
             retry_wait=3,
             skip_first_screenshot=True
