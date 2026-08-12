@@ -4,7 +4,7 @@ from module.config.utils import get_server_next_update
 from module.logger import logger
 from module.meowfficer.assets import *
 from module.ui.assets import MEOWFFICER_CHECK, MEOWFFICER_INFO
-from module.ui.ui import UI
+from module.ui.ui import KR_MEOWFFICER_CHECK, UI
 
 
 class MeowfficerBase(UI):
@@ -69,7 +69,11 @@ class MeowfficerBase(UI):
                 self.device.screenshot()
 
             # End
-            if self.match_template_color(MEOWFFICER_CHECK, offset=(20, 20)):
+            if self.config.SERVER == 'kr':
+                at_main = self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8)
+            else:
+                at_main = self.match_template_color(MEOWFFICER_CHECK, offset=(20, 20))
+            if at_main:
                 break
             else:
                 if click_timer.reached():
