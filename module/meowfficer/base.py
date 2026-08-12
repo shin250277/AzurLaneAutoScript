@@ -4,7 +4,7 @@ from module.config.utils import get_server_next_update
 from module.logger import logger
 from module.meowfficer.assets import *
 from module.ui.assets import MEOWFFICER_CHECK, MEOWFFICER_INFO
-from module.ui.ui import KR_MEOWFFICER_CHECK, UI
+from module.ui.ui import KR_MEOWFFICER_CHECK, KR_MEOWFFICER_INFO_CONFIRM, UI
 
 
 class MeowfficerBase(UI):
@@ -16,6 +16,9 @@ class MeowfficerBase(UI):
         Returns:
             bool:
         """
+        if self.config.SERVER == 'kr' and self.appear_then_click(
+                KR_MEOWFFICER_INFO_CONFIRM, offset=0, interval=3, threshold=18):
+            return True
         if self.appear_then_click(MEOWFFICER_INFO, offset=(30, 30), interval=3):
             return True
 
@@ -70,7 +73,10 @@ class MeowfficerBase(UI):
 
             # End
             if self.config.SERVER == 'kr':
-                at_main = self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8)
+                # The enhancement sub-page shares the same title art. The buy
+                # entrance is only visible on the actual meowfficer main page.
+                at_main = self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8) \
+                    and self.appear(MEOWFFICER_BUY_ENTER, offset=(20, 20))
             else:
                 at_main = self.match_template_color(MEOWFFICER_CHECK, offset=(20, 20))
             if at_main:
