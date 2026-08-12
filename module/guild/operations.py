@@ -75,7 +75,9 @@ class GuildOperations(GuildBase):
                 continue
 
             # End
-            if self.appear(GUILD_BOSS_ENTER) or self.appear(GUILD_OPERATIONS_ACTIVE_CHECK, offset=(20, 20)):
+            if (self.appear(GUILD_BOSS_ENTER)
+                    or self.appear(GUILD_OPERATIONS_ACTIVE_CHECK, offset=(20, 20))
+                    or self.appear(GUILD_OPERATIONS_NEW, offset=(20, 20))):
                 if not self.info_bar_count() and confirm_timer.reached():
                     return True
 
@@ -143,23 +145,31 @@ class GuildOperations(GuildBase):
             in: GUILD_OPERATIONS
             out: GUILD_OPERATIONS
         """
-        if self.appear(GUILD_OPERATIONS_INACTIVE_CHECK) and self.appear(GUILD_OPERATIONS_ACTIVE_CHECK):
-            logger.info(
-                'Mode: Operations Inactive, please contact your Elite/Officer/Leader seniors to select '
-                'an operation difficulty')
-            return 0
-        elif self.appear(GUILD_OPERATIONS_ACTIVE_CHECK):
-            logger.info('Mode: Operations Active, may proceed to scan and dispatch fleets')
-            return 1
-        elif self.appear(GUILD_BOSS_ENTER):
-            logger.info('Mode: Guild Raid Boss (GUILD_BOSS_ENTER)')
-            return 2
-        elif self.appear(GUILD_OPERATIONS_NEW, offset=(20, 20)):
-            logger.info('Mode: Guild Raid Boss (GUILD_OPERATIONS_NEW)')
-            return 2
-        else:
-            logger.warning('Operations interface is unrecognized')
-            return None
+        # The operation page keeps animating briefly after the side navigation
+        # becomes active. Retry with fresh screenshots instead of classifying
+        # that transitional frame as an unknown mode.
+        for attempt in range(3):
+            if attempt:
+                self.device.sleep(0.5)
+                self.device.screenshot()
+            if (self.appear(GUILD_OPERATIONS_INACTIVE_CHECK)
+                    and self.appear(GUILD_OPERATIONS_ACTIVE_CHECK, offset=(20, 20))):
+                logger.info(
+                    'Mode: Operations Inactive, please contact your Elite/Officer/Leader seniors to select '
+                    'an operation difficulty')
+                return 0
+            elif self.appear(GUILD_OPERATIONS_ACTIVE_CHECK, offset=(20, 20)):
+                logger.info('Mode: Operations Active, may proceed to scan and dispatch fleets')
+                return 1
+            elif self.appear(GUILD_BOSS_ENTER):
+                logger.info('Mode: Guild Raid Boss (GUILD_BOSS_ENTER)')
+                return 2
+            elif self.appear(GUILD_OPERATIONS_NEW, offset=(20, 20)):
+                logger.info('Mode: Guild Raid Boss (GUILD_OPERATIONS_NEW)')
+                return 2
+
+        logger.warning('Operations interface is unrecognized')
+        return None
 
     def _guild_operations_get_entrance(self):
         """

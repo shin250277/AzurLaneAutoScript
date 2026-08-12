@@ -1,5 +1,6 @@
 import re
 
+import module.config.server as server
 from module.base.button import ButtonGrid
 from module.base.decorator import Config, cached_property
 from module.base.filter import Filter
@@ -29,6 +30,12 @@ class ExchangeLimitOcr(Digit):
         Returns:
             np.ndarray: Shape (width, height)
         """
+        # The Korean client renders the counter as light text on a dark bar.
+        # The generic Digit preprocessing isolates that glyph cleanly, while
+        # the legacy grayscale inversion used by the other clients turns its
+        # zero into a different digit.
+        if server.server == 'kr':
+            return super().pre_process(image)
         return 255 - color_mapping(rgb2gray(image), max_multiply=2.5)
 
 
