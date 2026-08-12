@@ -733,11 +733,17 @@ class UI(InfoHandler):
             if self.appear_then_click(GOTO_MAIN, offset=(30, 30)):
                 return True
         # Monthly pass is about to expire
-        notice_offset = False if server.server == 'kr' else (30, 30)
-        if self.appear_then_click(MONTHLY_PASS_NOTICE, offset=notice_offset, interval=3):
+        # The inherited monthly/battle-pass notice samples are broad blue
+        # rectangles. On KR they also match normal event banners and can open
+        # the event list instead of dismissing a popup. Keep these handlers
+        # disabled until localized notice assets are available.
+        notice_offset = (30, 30)
+        if server.server != 'kr' and self.appear_then_click(
+                MONTHLY_PASS_NOTICE, offset=notice_offset, interval=3):
             return True
         # Battle pass is about to expire and player has uncollected battle pass rewards
-        if self.appear_then_click(BATTLE_PASS_NOTICE, offset=notice_offset, interval=3):
+        if server.server != 'kr' and self.appear_then_click(
+                BATTLE_PASS_NOTICE, offset=notice_offset, interval=3):
             return True
         # Popup that advertise you to buy battle pass
         # 2024.12.19, PURCHASE_POPUP at main page becomes BATTLE_PASS_NEW_SEASON

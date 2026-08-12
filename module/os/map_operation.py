@@ -118,6 +118,24 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         name = name.rstrip('安全隱秘塞壬要塞深淵海域一')
         return name
 
+    @Config.when(SERVER='kr')
+    def get_zone_name(self):
+        # The bundled OCR models do not recognize Hangul reliably, but the
+        # Korean client keeps the latin direction prefix/suffix in zone names
+        # (for example, "NA해역 사우스웨스트C"). Resolve those stable parts
+        # against the existing zone table.
+        ocr = Ocr(MAP_NAME, lang='azur_lane', letter=(206, 223, 247), threshold=96,
+                  name='OCR_OS_MAP_NAME')
+        name = ''.join(ocr.ocr(self.device.image).upper().split())
+        suffix = name[-1] if name and name[-1] in 'ABCDEFGH' else ''
+        # The azur_lane model renders 사우스웨스트 consistently as an
+        # AFTATIIA-like sequence. Require that distinctive sequence instead
+        # of guessing from the final sector letter; other compass regions use
+        # the same A-E suffixes and must fall back to globe detection.
+        if name.startswith('NA') and suffix and 'AFTATIIA' in name:
+            return f'NA Ocean SW Sector {suffix}'
+        return name
+
     @Config.when(SERVER=None)
     def get_zone_name(self):
         # For CN only
@@ -196,7 +214,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 continue
             # Handle mission complete header, can block
             # map name or mis-read OCR due to extra text
-            if self.is_in_map() and \
+            if self.config.SERVER != 'kr' and self.is_in_map() and \
                     not self.appear(OS_CHECK, offset=(20, 20)):
                 self.wait_until_appear(OS_CHECK)
                 timeout.reset()

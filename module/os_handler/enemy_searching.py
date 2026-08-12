@@ -1,11 +1,24 @@
 from module.handler.enemy_searching import EnemySearchingHandler as EnemySearchingHandler_
+from module.base.button import Button
 from module.logger import logger
 from module.os.assets import MAP_GOTO_GLOBE_FOG
 from module.os_handler.assets import AUTO_SEARCH_REWARD, IN_MAP, ORDER_ENTER
 
 
+KR_IN_MAP = Button(
+    area=(917, 635, 1030, 700),
+    color=(216, 190, 130),
+    button=(917, 635, 1030, 700),
+    file='./assets/kr/os_handler/IN_MAP.png',
+    name='KR_IN_MAP',
+)
+
+
 class EnemySearchingHandler(EnemySearchingHandler_):
     def is_in_map(self):
+        if self.config.SERVER == 'kr' and KR_IN_MAP.match_luma(
+                self.device.image, offset=(40, 15)):
+            return True
         if IN_MAP.match_luma(self.device.image, offset=(200, 5)):
             return True
         if self.match_template_color(MAP_GOTO_GLOBE_FOG, offset=(5, 5)):
