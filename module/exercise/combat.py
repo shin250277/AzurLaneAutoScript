@@ -3,11 +3,12 @@ from module.exercise.assets import *
 from module.exercise.hp_daemon import HpDaemon
 from module.exercise.opponent import OPPONENT, OpponentChoose
 from module.ui.assets import EXERCISE_CHECK
+from module.ui.page import page_exercise
 
 
 class ExerciseCombat(HpDaemon, OpponentChoose, Combat):
     def _in_exercise(self):
-        return self.appear(EXERCISE_CHECK, offset=(20, 20))
+        return self.ui_page_appear(page_exercise)
 
     def _combat_preparation(self, skip_first_screenshot=True):
         logger.info('Combat preparation')
