@@ -57,6 +57,10 @@ class CoalitionCombat(CoalitionUI, CampaignBase):
     def auto_search_combat_end(self):
         if self.appear(BATTLE_STATUS, offset=(80, 20)):
             return True
+        # The final coalition summary skips the regular battle-status page.
+        # Detect it here so coalition_combat_re_enter() can claim and close it.
+        if self.appear(COALITION_REWARD_CONFIRM, offset=(20, 20)):
+            return True
         return False
 
     def coalition_combat(self):
