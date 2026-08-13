@@ -28,7 +28,11 @@ ARCHIVES_PREFIX = {
     'cn': '档案 ',
     'en': 'archives ',
     'jp': '檔案 ',
-    'tw': '檔案 '
+    'tw': '檔案 ',
+    # The KR release follows JP most closely, with EN as a secondary source.
+    # Event rows do not have a dedicated KR column, so generate KR options
+    # from those two schedules instead of leaving option_kr empty.
+    'kr': '기록보관소 '
 }
 MAINS = ['Main', 'Main2', 'Main3']
 EVENTS = ['Event', 'Event2', 'EventA', 'EventB', 'EventC', 'EventD', 'EventSp']
@@ -44,6 +48,8 @@ class Event:
     def __init__(self, text):
         self.date, self.directory, self.name, self.cn, self.en, self.jp, self.tw \
             = [x.strip() for x in text.strip('| \n').split('|')]
+
+        self.kr = self.jp if self.jp != '-' else self.en
 
         self.directory = self.directory.replace(' ', '_')
         self.cn = self.cn.replace('、', '')
