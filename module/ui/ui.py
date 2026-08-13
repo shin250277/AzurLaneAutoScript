@@ -901,6 +901,10 @@ class UI(InfoHandler):
         # Login
         if self.appear_then_click(LOGIN_CHECK, offset=(30, 30), interval=3):
             return True
+        if server.server == 'kr' and self.appear(MAINTENANCE_ANNOUNCE, offset=(30, 30), interval=3):
+            logger.info('KR server maintenance detected, retry in 30 minutes')
+            self.config.task_delay(minute=30)
+            self.config.task_stop('KR server maintenance')
         if self.appear_then_click(MAINTENANCE_ANNOUNCE, offset=(30, 30), interval=3):
             return True
 
