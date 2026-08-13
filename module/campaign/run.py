@@ -164,6 +164,7 @@ class CampaignRun(CampaignEvent):
             str, str: name, folder
         """
         name = to_map_file_name(name)
+        requested_name = name
         # For GemsFarming, auto choose events or main chapters
         if self.config.task.command == 'GemsFarming':
             if self.stage_is_main(name):
@@ -320,6 +321,22 @@ class CampaignRun(CampaignEvent):
         if folder == 'event_20240829_cn':
             if name == 'tp':
                 name = 'sp'
+        # D3 is the shared default for War Archives, but older archives use
+        # several incompatible stage schemes (D1-D2, HT1-HT3, T1-T6, or
+        # SP1-SP5).  Only repair that untouched default; explicit user input
+        # must still fail loudly when the requested stage does not exist.
+        if folder.startswith('war_archives_') and requested_name == 'd3':
+            files = map_files(folder)
+            if name not in files:
+                for prefix in ['d', 'ht', 't', 'sp']:
+                    candidates = [
+                        file for file in files
+                        if file.startswith(prefix) and file[len(prefix):].isdigit()
+                    ]
+                    if candidates:
+                        name = max(candidates, key=lambda file: int(file[len(prefix):]))
+                        logger.info(f'War Archives default stage D3 redirected to {name.upper()}')
+                        break
         # Stage loop
         for alias, stages in self.config.STAGE_LOOP_ALIAS.items():
             alias_folder, alias = alias
