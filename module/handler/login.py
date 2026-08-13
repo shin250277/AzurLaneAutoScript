@@ -74,6 +74,13 @@ class LoginHandler(UI):
                 self.device.click(BACK_ARROW)
                 continue
             # Updates and maintenance
+            if server.server == 'kr' and self.appear(MAINTENANCE_ANNOUNCE, offset=(30, 30), interval=5):
+                # The public server checker does not provide KR status.  Use
+                # the in-game notice as the authoritative signal and avoid a
+                # tight close/login/restart loop while maintenance is active.
+                logger.info('KR server maintenance detected, retry in 30 minutes')
+                self.config.task_delay(minute=30)
+                self.config.task_stop('KR server maintenance')
             if self.appear_then_click(MAINTENANCE_ANNOUNCE, offset=(30, 30), interval=5):
                 continue
             if self.appear_then_click(LOGIN_GAME_UPDATE, offset=(30, 30), interval=5):
