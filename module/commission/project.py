@@ -190,7 +190,14 @@ class Commission:
         # NB装備輸送 -> NYB装備輸送
         result = result.replace('NB', 'BYB').replace('BW', 'BIW')
         self.name = result
-        self.genre = self.commission_name_parse(self.name)
+        # KR currently falls back to JP assets, but the bundled JP OCR model
+        # turns Korean names into arbitrary CJK glyphs. Those glyphs can
+        # accidentally match a JP commission and produce a worse result than
+        # an explicit generic classification.
+        if self.config.SERVER == 'kr':
+            self.genre = ''
+        else:
+            self.genre = self.commission_name_parse(self.name)
 
         # Suffix
         self.suffix_image = crop_suffix_image(self.image, self.button.area)
@@ -225,6 +232,19 @@ class Commission:
         if self.genre == 'daily_event':
             color -= [50, 30, 20]
         self.status = dic[int(np.argmax(color))]
+
+        # ALAS does not bundle a Korean OCR model. Keep Korean commissions
+        # usable with stable timing metadata and never infer reward type from
+        # the JP model's mojibake output.
+        if self.config.SERVER == 'kr':
+            if self.expire:
+                self.genre = 'urgent_drill'
+            elif self.duration >= timedelta(hours=8):
+                self.genre = 'major_comm'
+            else:
+                self.genre = 'extra_drill'
+            self.valid = True
+            logger.info(f'Korean commission fallback: {self.genre}, duration={self.duration}')
 
     @Config.when(SERVER='tw')
     def commission_parse(self):
@@ -319,19 +339,6 @@ class Commission:
         if self.genre == 'daily_event':
             color -= [50, 30, 20]
         self.status = dic[int(np.argmax(color))]
-
-        # ALAS does not bundle a Korean OCR model. Keep Korean commissions
-        # usable by falling back to stable timing metadata after name lookup
-        # fails. Generic categories still allow duration-based ranking.
-        if self.config.SERVER == 'kr' and not self.valid:
-            if self.expire:
-                self.genre = 'urgent_drill'
-            elif self.duration >= timedelta(hours=8):
-                self.genre = 'major_comm'
-            else:
-                self.genre = 'extra_drill'
-            self.valid = True
-            logger.info(f'Korean commission fallback: {self.genre}, duration={self.duration}')
 
     def __str__(self):
         name = f'{self.name} | {self.suffix_hash}' if self.suffix_hash else self.name
