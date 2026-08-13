@@ -1,4 +1,4 @@
-from module.base.button import ButtonGrid
+from module.base.button import Button, ButtonGrid
 from module.base.decorator import cached_property
 from module.base.timer import Timer
 from module.combat.assets import *
@@ -8,6 +8,22 @@ from module.ui.navbar import Navbar
 from module.ui.page import page_main, page_mission, page_reward
 from module.ui.ui import UI
 from module.ui_white.assets import MISSION_NOTICE_WHITE
+
+
+KR_MISSION_SINGLE = Button(
+    # Inner fill of the top diamond button, excluding the blue page banner.
+    area=(1120, 120, 1210, 170),
+    color=(90, 130, 205),
+    button=(1080, 70, 1245, 215),
+    name='KR_MISSION_SINGLE',
+)
+
+KR_MISSION_UNFINISH = Button(
+    area=(1120, 120, 1210, 170),
+    color=(150, 160, 180),
+    button=(1080, 70, 1245, 215),
+    name='KR_MISSION_UNFINISH',
+)
 
 
 class Reward(UI):
@@ -57,6 +73,15 @@ class Reward(UI):
     def _reward_get_state(self):
         if self.appear(MISSION_MULTI, offset=(20, 20)):
             return MISSION_MULTI
+        if self.config.SERVER == 'kr':
+            if self.image_color_count(
+                    KR_MISSION_SINGLE, color=KR_MISSION_SINGLE.color,
+                    threshold=220, count=1000):
+                return KR_MISSION_SINGLE
+            if self.image_color_count(
+                    KR_MISSION_UNFINISH, color=KR_MISSION_UNFINISH.color,
+                    threshold=220, count=150):
+                return KR_MISSION_UNFINISH
         if self.match_template_color(MISSION_SINGLE, offset=(50, 200)):
             return MISSION_SINGLE
         if self.appear(MISSION_EMPTY, offset=(20, 20)):
@@ -89,7 +114,18 @@ class Reward(UI):
                     click_interval.reset()
                     clicked = True
                     continue
+                if self.config.SERVER == 'kr' and self.image_color_count(
+                        KR_MISSION_SINGLE, color=KR_MISSION_SINGLE.color,
+                        threshold=220, count=1000):
+                    self.device.click(KR_MISSION_SINGLE)
+                    click_interval.reset()
+                    clicked = True
+                    continue
                 if self.appear(MISSION_UNFINISH, offset=(50, 200)):
+                    return clicked
+                if self.config.SERVER == 'kr' and self.image_color_count(
+                        KR_MISSION_UNFINISH, color=KR_MISSION_UNFINISH.color,
+                        threshold=220, count=150):
                     return clicked
 
     def _reward_mission_claim_receive(self):
@@ -162,10 +198,10 @@ class Reward(UI):
             if state == 'timeout':
                 logger.warning('Reward wait mission list timeout')
                 return state
-            if state in [MISSION_EMPTY, MISSION_UNFINISH]:
+            if state in [MISSION_EMPTY, MISSION_UNFINISH, KR_MISSION_UNFINISH]:
                 logger.info('Mission collect finished')
                 break
-            elif state in [MISSION_MULTI, MISSION_SINGLE]:
+            elif state in [MISSION_MULTI, MISSION_SINGLE, KR_MISSION_SINGLE]:
                 # Clear any existing interval for the following assets
                 self.interval_clear([GET_ITEMS_1, GET_ITEMS_2, MISSION_MULTI, MISSION_SINGLE, GET_SHIP])
                 self._reward_mission_claim_click()
