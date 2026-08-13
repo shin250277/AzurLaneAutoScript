@@ -53,6 +53,23 @@ KR_HORROR_COALITION_CHECK = Button(
     name='KR_HORROR_COALITION_CHECK',
 )
 
+# The newer KR event hub uses a round home icon instead of GOTO_MAIN.
+# Check two small, stable strokes so the animated event background does not
+# turn this into a broad brightness heuristic.
+KR_EVENT_HOME_LIGHT = Button(
+    area=(1229, 33, 1232, 36),
+    color=(173, 171, 175),
+    button=(1204, 7, 1270, 73),
+    name='KR_EVENT_HOME_LIGHT',
+)
+
+KR_EVENT_HOME_EDGE = Button(
+    area=(1220, 42, 1223, 45),
+    color=(170, 178, 182),
+    button=(1204, 7, 1270, 73),
+    name='KR_EVENT_HOME_EDGE',
+)
+
 KR_MISSION_CHECK = Button(
     area=(120, 14, 173, 40),
     color=(130, 144, 186),
@@ -509,6 +526,11 @@ class UI(InfoHandler):
                 timeout.reset()
                 continue
             if self.appear_then_click(RPG_HOME, offset=(30, 30), interval=2):
+                timeout.reset()
+                continue
+            if self.config.SERVER == 'kr' \
+                    and self.appear(KR_EVENT_HOME_LIGHT, threshold=20) \
+                    and self.appear_then_click(KR_EVENT_HOME_EDGE, threshold=20, interval=2):
                 timeout.reset()
                 continue
             if self.ui_additional():

@@ -43,15 +43,21 @@ COALITIONS = ['Coalition', 'CoalitionSp']
 MARITIME_ESCORTS = ['MaritimeEscort']
 HOSPITAL = ['Hospital']
 
+# campaign/Readme.md has no KR column. Keep verified Korean live-event names
+# here and fall back to JP/EN for entries that have not been localized yet.
+KR_EVENT_NAMES = {
+    'coalition_20260723': '\uad34\ub2f4\uc2e4\ub85d',
+}
+
 
 class Event:
     def __init__(self, text):
         self.date, self.directory, self.name, self.cn, self.en, self.jp, self.tw \
             = [x.strip() for x in text.strip('| \n').split('|')]
 
-        self.kr = self.jp if self.jp != '-' else self.en
-
         self.directory = self.directory.replace(' ', '_')
+        self.kr = KR_EVENT_NAMES.get(self.directory, self.jp if self.jp != '-' else self.en)
+
         self.cn = self.cn.replace('、', '')
         self.en = self.en.replace(',', '').replace('\'', '').replace('\\', '')
         self.jp = self.jp.replace('、', '')
@@ -305,6 +311,8 @@ class ConfigGenerator:
         # Names come from SameLanguageServer > en > cn > jp > tw
         events = {}
         for event in self.event:
+            if lang == 'ko-KR' and event.directory in KR_EVENT_NAMES:
+                deep_default(events, keys=event.directory, value=KR_EVENT_NAMES[event.directory])
             if lang in LANG_TO_SERVER:
                 name = event.__getattribute__(LANG_TO_SERVER[lang])
                 if name:
