@@ -11,6 +11,27 @@ from module.os_handler.assets import CLICK_SAFE_AREA as OS_CLICK_SAFE_AREA
 from module.ui_white.assets import POPUP_CANCEL_WHITE, POPUP_CONFIRM_WHITE, POPUP_SINGLE_WHITE
 
 
+KR_GET_MISSION = Button(
+    # KR uses a wider localized confirm button than the inherited JP asset.
+    # The same dialog layout is also used for a lost connection, so the text
+    # checker below must also match before this button is clicked.
+    area=(552, 482, 728, 542),
+    color=(86, 135, 195),
+    button=(552, 482, 728, 542),
+    name='KR_GET_MISSION',
+)
+
+KR_GET_MISSION_TEXT = Button(
+    # First glyph of the localized "[근해 ...] 긴급 의뢰 발생!" text.
+    # Connection-lost dialogs share the window and confirm button, but not
+    # this text stroke.
+    area=(481, 332, 486, 338),
+    color=(172, 177, 178),
+    button=(),
+    name='KR_GET_MISSION_TEXT',
+)
+
+
 def info_letter_preprocess(image):
     """
     Args:
@@ -163,13 +184,21 @@ class InfoHandler(ModuleBase):
         Returns:
             bool:
         """
-        appear = self.appear(GET_MISSION, offset=True, interval=2)
+        if self.config.SERVER == 'kr':
+            # Both dialogs share the same blue confirm button, so require a
+            # stable stroke from the localized urgent-commission message.
+            appear = self.appear(KR_GET_MISSION_TEXT, threshold=25) \
+                and self.appear(KR_GET_MISSION, threshold=20, interval=2)
+            mission_button = KR_GET_MISSION
+        else:
+            appear = self.appear(GET_MISSION, offset=True, interval=2)
+            mission_button = GET_MISSION
         if appear:
             logger.info('Get urgent commission')
             if drop:
                 self.handle_info_bar()
                 drop.add(self.device.image)
-            self.device.click(GET_MISSION)
+            self.device.click(mission_button)
             self._hot_fix_check_wait.reset()
 
         # Check game client existence after 3s to 6s
