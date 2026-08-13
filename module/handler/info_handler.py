@@ -135,6 +135,13 @@ class InfoHandler(ModuleBase):
 
         return False
 
+    def handle_connection_lost(self, interval=2):
+        """Restart the game promptly when the KR client drops to its login screen."""
+        if self.config.SERVER == 'kr' \
+                and self.appear(CONNECTION_LOST, offset=(20, 20), interval=interval):
+            raise GameNotRunningError('Connection to the game server was lost')
+        return False
+
     def handle_popup_single_white(self, interval=2):
         if self.appear_then_click(POPUP_SINGLE_WHITE, offset=(20, 20), interval=interval):
             return True
