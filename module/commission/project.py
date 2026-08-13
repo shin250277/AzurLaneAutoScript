@@ -186,9 +186,14 @@ class Commission:
         button = Button(area=area, color=(), button=area, name='COMMISSION')
         ocr = Ocr(button, letter=(201, 201, 201), lang='jp')
         self.button = button
-        result = ocr.ocr(self.image).upper()
-        # NB装備輸送 -> NYB装備輸送
-        result = result.replace('NB', 'BYB').replace('BW', 'BIW')
+        if self.config.SERVER == 'kr':
+            # No Korean model is bundled. Avoid mojibake in logs (and on
+            # legacy Windows consoles) instead of running the JP model.
+            result = 'KR_COMMISSION'
+        else:
+            result = ocr.ocr(self.image).upper()
+            # NB装備輸送 -> NYB装備輸送
+            result = result.replace('NB', 'BYB').replace('BW', 'BIW')
         self.name = result
         # KR currently falls back to JP assets, but the bundled JP OCR model
         # turns Korean names into arbitrary CJK glyphs. Those glyphs can
@@ -202,6 +207,8 @@ class Commission:
         # Suffix
         self.suffix_image = crop_suffix_image(self.image, self.button.area)
         self.suffix_hash = image_hash(self.suffix_image)
+        if self.config.SERVER == 'kr':
+            self.name = f'KR_COMMISSION_{self.suffix_hash[:8]}'
 
         # Duration time
         area = area_offset((290, 68, 390, 95), self.area[0:2])
