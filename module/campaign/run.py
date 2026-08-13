@@ -226,6 +226,25 @@ class CampaignRun(CampaignEvent):
             'war_archives_20240725_cn',
         ]:
             name = convert.get(name, name)
+        # These events expose three normal and three hard stages while still
+        # accepting the usual A/C/D stage names in the UI.  Do this before
+        # the six-stage conversion below so D3 resolves to ht3, not ht6.
+        if folder in [
+            'event_20260625_cn',
+            'war_archives_20240725_cn',
+        ]:
+            convert_three_stage = {
+                'a1': 't1',
+                'a2': 't2',
+                'a3': 't3',
+                'c1': 'ht1',
+                'c2': 'ht2',
+                'c3': 'ht3',
+                'd1': 'ht1',
+                'd2': 'ht2',
+                'd3': 'ht3',
+            }
+            name = convert_three_stage.get(name, name)
         # Convert between A/B/C/D and T/HT
         convert = {
             'a1': 't1',
