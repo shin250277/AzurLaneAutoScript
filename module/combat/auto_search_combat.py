@@ -263,6 +263,8 @@ class AutoSearchCombat(MapOperation, Combat, CampaignStatus):
             # bunch of popup handlers
             if self.handle_popup_confirm('AUTO_SEARCH_COMBAT_EXECUTE'):
                 continue
+            if self.handle_popup_single('AUTO_SEARCH_COMBAT_EXECUTE'):
+                continue
             if self.handle_urgent_commission():
                 continue
             if self.handle_story_skip():
@@ -323,6 +325,8 @@ class AutoSearchCombat(MapOperation, Combat, CampaignStatus):
                 continue
             # bunch of popup handlers
             if self.handle_popup_confirm('AUTO_SEARCH_COMBAT_STATUS'):
+                continue
+            if self.handle_popup_single('AUTO_SEARCH_COMBAT_STATUS'):
                 continue
             if self.handle_urgent_commission():
                 continue
