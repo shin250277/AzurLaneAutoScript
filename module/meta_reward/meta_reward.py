@@ -113,6 +113,11 @@ class BeaconReward(Combat, UI):
             if self.appear(REWARD_ENTER, offset=(20, 20)):
                 logger.info('meta_sync_receive ends at REWARD_ENTER')
                 break
+            # KR uses localized sync-button artwork, so the shared SYNC_ENTER
+            # template no longer matches after the reward popup closes.
+            if self.config.SERVER == 'kr' and received and self.ui_page_appear(page_meta):
+                logger.info('meta_sync_receive ends at KR meta main page')
+                break
 
             if self.config.SERVER == 'en':
                 if self.appear(SYNC_ENTER, offset=(20, 20)):

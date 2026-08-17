@@ -1,5 +1,6 @@
 import numpy as np
 
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import color_similar, get_color
 from module.combat.assets import *
@@ -16,6 +17,14 @@ from module.retire.retirement import Retirement
 from module.statistics.azurstats import DropImage
 from module.template.assets import TEMPLATE_COMBAT_LOADING
 from module.ui.assets import BACK_ARROW, EXERCISE_CHECK, MUNITIONS_CHECK
+
+
+KR_QUIT = Button(
+    area=(300, 500, 370, 525),
+    color=(255, 104, 104),
+    button=(280, 494, 584, 535),
+    name='KR_QUIT',
+)
 
 
 class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatManual, AutoSearchHandler):
@@ -142,6 +151,14 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         timer = self.get_interval_timer(QUIT, interval=interval)
         if not timer.reached():
             return False
+        # KR uses a wider localized label that does not match the shared
+        # QUIT_New/QUIT_Cyber luma templates. The button fill is stable across
+        # the battle UI themes, so detect a text-free part of the red button.
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                KR_QUIT, color=KR_QUIT.color, threshold=245, count=1000):
+            self.device.click(KR_QUIT)
+            timer.reset()
+            return True
         if QUIT.match_luma(self.device.image, offset=offset):
             self.device.click(QUIT)
             timer.reset()
@@ -514,6 +531,12 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
             self.device.sleep((0.25, 0.5))
             return True
         if self.appear_then_click(EXP_INFO_B):
+            self.device.sleep((0.25, 0.5))
+            return True
+        if self.appear_then_click(EXP_INFO_C):
+            self.device.sleep((0.25, 0.5))
+            return True
+        if self.appear_then_click(EXP_INFO_D):
             self.device.sleep((0.25, 0.5))
             return True
 

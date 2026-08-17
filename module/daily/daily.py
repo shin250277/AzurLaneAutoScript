@@ -1,6 +1,7 @@
 import numpy as np
 
 import module.config.server as server
+from module.base.button import Button
 from module.base.utils import get_color
 from module.combat.assets import BATTLE_PREPARATION
 from module.combat.combat import Combat
@@ -24,6 +25,12 @@ KR_DAILY_NORMAL_RUN = Button(
     button=(400, 286, 566, 358),
     file='./assets/kr/daily/DAILY_NORMAL_RUN.png',
     name='KR_DAILY_NORMAL_RUN',
+)
+KR_DAILY_INFO_CONFIRM = Button(
+    area=(615, 497, 665, 529),
+    color=(109, 151, 205),
+    button=(552, 496, 728, 555),
+    name='KR_DAILY_INFO_CONFIRM',
 )
 
 DAILY_MISSION_LIST = [DAILY_MISSION_1, DAILY_MISSION_2, DAILY_MISSION_3]
@@ -207,6 +214,18 @@ class Daily(Combat):
             logger.hr(f'Count {n + 1}')
             result = self.daily_enter(button)
             if not result:
+                # KR quick battle consumes one attempt and returns directly to
+                # the daily list. Re-enter the same daily until all attempts
+                # observed at the start have been consumed.
+                if self.config.SERVER == 'kr' and self._kr_daily_skip_returned and n + 1 < remain:
+                    self._kr_daily_skip_returned = False
+                    self.ui_click(
+                        click_button=DAILY_ENTER,
+                        check_button=daily_enter_check,
+                        appear_button=DAILY_CHECK,
+                        skip_first_screenshot=True,
+                    )
+                    continue
                 break
             if self.daily_current == self.supply_line_disruption_index:
                 logger.info('Submarine daily skip not unlocked, skip')
@@ -253,6 +272,13 @@ class Daily(Combat):
                 continue
             if self.handle_get_items():
                 reward_received = True
+                continue
+            # KR shows a first-use auto-battle tutorial over the quick-battle
+            # selector. Handle it before looking for the dimmed selector below.
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_DAILY_INFO_CONFIRM, color=KR_DAILY_INFO_CONFIRM.color,
+                    threshold=235, count=700):
+                self.device.click(KR_DAILY_INFO_CONFIRM)
                 continue
             if self.config.Daily_UseDailySkip:
                 if self.config.SERVER == 'kr' and self.appear_then_click(
