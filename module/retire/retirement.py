@@ -1,4 +1,4 @@
-from module.base.button import ButtonGrid
+from module.base.button import Button, ButtonGrid
 from module.base.timer import Timer
 from module.base.utils import color_similar, get_color, resize
 from module.combat.assets import GET_ITEMS_1
@@ -23,6 +23,9 @@ CARD_RARITY_COLORS = {
     'SSR': (248, 223, 107)
     # Not support marriage cards.
 }
+KR_RETIRE_SR_SSR_CONFIRM = Button(
+    area=(706, 471, 881, 533), color=(83, 143, 207),
+    button=(706, 471, 881, 533), name='KR_RETIRE_SR_SSR_CONFIRM')
 
 RETIRE_CONFIRM_SCROLL = Scroll(RETIRE_CONFIRM_SCROLL_AREA, color=(74, 77, 110), name='STRATEGIC_SEARCH_SCROLL')
 RETIRE_CONFIRM_SCROLL.color_threshold = 240  # Background color is (66, 72, 77), so default (256-221)=35 is not enough to dintinguish.
@@ -118,6 +121,14 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
                     or self.config.OldRetire_SR \
                     or self.config.OldRetire_SSR \
                     or self.config.Retirement_RetireMode == 'one_click_retire':
+                if self.config.SERVER == 'kr' and self.image_color_count(
+                        KR_RETIRE_SR_SSR_CONFIRM,
+                        color=KR_RETIRE_SR_SSR_CONFIRM.color,
+                        threshold=210, count=1200):
+                    self.device.click(KR_RETIRE_SR_SSR_CONFIRM)
+                    self.interval_reset([SHIP_CONFIRM, SHIP_CONFIRM_2])
+                    self.interval_reset([EQUIP_CONFIRM, EQUIP_CONFIRM_2])
+                    continue
                 if self.handle_popup_confirm(name='RETIRE_SR_SSR', offset=(20, 50)):
                     # Avoid clicking the undelying SHIP_CONFIRM again
                     self.interval_reset([SHIP_CONFIRM, SHIP_CONFIRM_2])

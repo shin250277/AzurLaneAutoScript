@@ -14,6 +14,12 @@ from module.retire.retirement import Retirement
 
 RECORD_GACHA_OPTION = ('RewardRecord', 'gacha')
 RECORD_GACHA_SINCE = (0,)
+KR_BUILD_GET_SHIP = Button(
+    area=(540, 180, 740, 230), color=(100, 180, 255),
+    button=(550, 500, 730, 660), name='KR_BUILD_GET_SHIP')
+KR_GACHA_SUBMIT_CONFIRM = Button(
+    area=(699, 451, 875, 512), color=(83, 143, 207),
+    button=(699, 451, 875, 512), name='KR_GACHA_SUBMIT_CONFIRM')
 OCR_BUILD_CUBE_COUNT = Digit(BUILD_CUBE_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_TICKET_COUNT = Digit(BUILD_TICKET_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_SUBMIT_COUNT = Digit(BUILD_SUBMIT_COUNT, letter=(255, 247, 247), threshold=64)
@@ -253,6 +259,12 @@ class RewardGacha(GachaUI, Retirement):
                 self.device.click(STORY_SKIP)  # Fast forward for multiple orders
                 confirm_timer.reset()
                 continue
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_BUILD_GET_SHIP, color=KR_BUILD_GET_SHIP.color,
+                    threshold=210, count=1200):
+                self.device.click(KR_BUILD_GET_SHIP)
+                confirm_timer.reset()
+                continue
             if self.handle_get_items_ship():
                 continue
 
@@ -284,6 +296,12 @@ class RewardGacha(GachaUI, Retirement):
             else:
                 self.device.screenshot()
 
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_GACHA_SUBMIT_CONFIRM,
+                    color=KR_GACHA_SUBMIT_CONFIRM.color,
+                    threshold=210, count=1200):
+                self.device.click(KR_GACHA_SUBMIT_CONFIRM)
+                continue
             if self.appear(POPUP_CONFIRM, offset=(20, 80), interval=3):
                 # Alter asset name for click
                 POPUP_CONFIRM.name = POPUP_CONFIRM.name + '_' + 'GACHA_ORDER'

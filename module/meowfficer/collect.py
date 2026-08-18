@@ -13,6 +13,9 @@ MEOWFFICER_TALENT_GRID_2 = MEOWFFICER_TALENT_GRID_1.move(vector=(-40, -20),
 MEOWFFICER_SHIFT_DETECT = Button(
     area=(1260, 669, 1280, 720), color=(117, 106, 84), button=(1260, 669, 1280, 720),
     name='MEOWFFICER_SHIFT_DETECT')
+KR_MEOWFFICER_TRAIN_EVALUATE = Button(
+    area=(1100, 25, 1260, 62), color=(255, 198, 71),
+    button=(1100, 20, 1270, 70), name='KR_MEOWFFICER_TRAIN_EVALUATE')
 
 SWITCH_LOCK = Switch(name='Meowfficer_Lock', offset=(40, 40))
 SWITCH_LOCK.add_state(
@@ -28,6 +31,18 @@ SWITCH_LOCK.add_state(
 
 
 class MeowfficerCollect(MeowfficerBase):
+    def _handle_meow_train_evaluate(self, interval=3):
+        if self.appear(MEOWFFICER_TRAIN_EVALUATE, offset=(20, 20), interval=interval):
+            self.device.click(MEOWFFICER_TRAIN_EVALUATE)
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                KR_MEOWFFICER_TRAIN_EVALUATE,
+                color=KR_MEOWFFICER_TRAIN_EVALUATE.color,
+                threshold=210, count=2500):
+            self.device.click(KR_MEOWFFICER_TRAIN_EVALUATE)
+            return True
+        return False
+
     def _meow_detect_shift(self, skip_first_screenshot=True):
         """
         Serves as innate wait mechanism for loading
@@ -149,8 +164,7 @@ class MeowfficerCollect(MeowfficerBase):
         """
 
         def additional():
-            if self.appear(MEOWFFICER_TRAIN_EVALUATE, offset=(20, 20), interval=3):
-                self.device.click(MEOWFFICER_TRAIN_EVALUATE)
+            if self._handle_meow_train_evaluate():
                 return True
             return False
 
@@ -211,8 +225,7 @@ class MeowfficerCollect(MeowfficerBase):
             elif self.appear(MEOWFFICER_CANCEL, offset=(40, 20), interval=3):
                 self.device.click(MEOWFFICER_CONFIRM)
                 continue
-            if self.appear(MEOWFFICER_TRAIN_EVALUATE, offset=(20, 20), interval=3):
-                self.device.click(MEOWFFICER_TRAIN_EVALUATE)
+            if self._handle_meow_train_evaluate():
                 continue
 
         self.device.click_record.pop()
@@ -291,8 +304,7 @@ class MeowfficerCollect(MeowfficerBase):
                     continue
 
             # If click MEOWFFICER_TRAIN_FINISH_ALL, will enter evaluate page
-            if self.appear(MEOWFFICER_TRAIN_EVALUATE, offset=(20, 20), interval=3):
-                self.device.click(MEOWFFICER_TRAIN_EVALUATE)
+            if self._handle_meow_train_evaluate():
                 continue
 
     def meow_collect(self, collect_all=True):

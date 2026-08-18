@@ -1,5 +1,5 @@
 import module.config.server as server
-from module.base.button import ButtonGrid, color_similar, get_color
+from module.base.button import Button, ButtonGrid, color_similar, get_color
 from module.base.decorator import cached_property
 from module.base.timer import Timer
 from module.combat.assets import GET_ITEMS_1
@@ -10,6 +10,7 @@ from module.retire.assets import *
 from module.ui.scroll import Scroll
 from module.ui.setting import Setting
 from module.ui.switch import Switch
+from module.ui.page import page_dock
 
 DOCK_SORTING = Switch('Dork_sorting')
 DOCK_SORTING.add_state('Ascending', check_button=SORT_ASC, click_button=SORTING_CLICK)
@@ -35,9 +36,25 @@ else:
 DOCK_SCROLL = Scroll(DOCK_SCROLL, color=(247, 211, 66), name='DOCK_SCROLL')
 
 OCR_DOCK_SELECTED = DigitCounter(DOCK_SELECTED, threshold=64, name='OCR_DOCK_SELECTED')
+KR_DOCK_FILTER = Button(
+    area=(1100, 7, 1190, 57), color=(74, 106, 166),
+    button=(1100, 7, 1190, 57), name='KR_DOCK_FILTER')
+KR_DOCK_FILTER_CONFIRM = Button(
+    area=(712, 642, 888, 703), color=(83, 143, 207),
+    button=(712, 642, 888, 703), name='KR_DOCK_FILTER_CONFIRM')
 
 
 class Dock(Equipment):
+    def _dock_filter_confirm_appear(self, interval=0):
+        if self.appear(DOCK_FILTER_CONFIRM, offset=(20, 60), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                KR_DOCK_FILTER_CONFIRM,
+                color=KR_DOCK_FILTER_CONFIRM.color,
+                threshold=210, count=1200):
+            return True
+        return False
+
     def handle_dock_cards_loading(self, skip_first_screenshot=True):
         # Poor implementation
         # confirm_timer method cannot be used
@@ -86,10 +103,14 @@ class Dock(Equipment):
         logger.info('Dock filter enter')
         self.interval_clear(DOCK_CHECK)
         for _ in self.loop():
-            if self.appear(DOCK_FILTER_CONFIRM, offset=(20, 60)):
+            if self._dock_filter_confirm_appear():
                 break
-            if self.appear(DOCK_CHECK, offset=(20, 20), interval=5):
-                self.device.click(DOCK_FILTER)
+            if self.appear(DOCK_CHECK, offset=(20, 20), interval=5) or (
+                    self.config.SERVER == 'kr' and self.ui_page_appear(page_dock)):
+                if self.config.SERVER == 'kr':
+                    self.device.click(KR_DOCK_FILTER)
+                else:
+                    self.device.click(DOCK_FILTER)
                 continue
             # slow popups from last retirement
             # Equip confirm
@@ -118,10 +139,16 @@ class Dock(Equipment):
             # End
             # sometimes you have dock filter without black-blurred background
             # DOCK_FILTER_CONFIRM and DOCK_CHECK appears
-            if not self.appear(DOCK_FILTER_CONFIRM, offset=(20, 60)):
+            if self.config.SERVER == 'kr' and self.ui_page_appear(page_dock):
+                break
+            if not self._dock_filter_confirm_appear():
                 if self.appear(DOCK_CHECK, offset=(20, 20)):
                     break
-            if self.appear_then_click(DOCK_FILTER_CONFIRM, offset=(20, 60), interval=3):
+            if self._dock_filter_confirm_appear(interval=3):
+                if self.config.SERVER == 'kr':
+                    self.device.click(KR_DOCK_FILTER_CONFIRM)
+                else:
+                    self.device.click(DOCK_FILTER_CONFIRM)
                 continue
 
         if wait_loading:
