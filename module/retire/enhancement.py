@@ -51,7 +51,7 @@ class Enhancement(Dock):
         else:
             self.dock_filter_set(extra='enhanceable')
 
-        if self.appear(DOCK_EMPTY, offset=(30, 30)):
+        if self.dock_empty_appear():
             return False
 
         return self.dock_enter_first()

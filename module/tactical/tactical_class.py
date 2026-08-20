@@ -36,6 +36,9 @@ KR_ADD_NEW_STUDENT = [
 KR_REWARD_GOTO_TACTICAL = Button(
     area=(402, 299, 528, 339), color=(50, 184, 235),
     button=(402, 299, 528, 339), name='KR_REWARD_GOTO_TACTICAL')
+KR_REWARD_GOTO_TACTICAL_COMPLETE = Button(
+    area=(402, 413, 529, 454), color=(254, 176, 54),
+    button=(402, 413, 529, 454), name='KR_REWARD_GOTO_TACTICAL_COMPLETE')
 KR_SHIP_CONFIRM = Button(
     area=(935, 610, 1110, 700), color=(64, 123, 194),
     button=(935, 610, 1110, 700), name='KR_SHIP_CONFIRM')
@@ -541,6 +544,13 @@ class RewardTacticalClass(Dock):
             if self.appear_then_click(REWARD_GOTO_TACTICAL_WHITE, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_GOTO_TACTICAL)
                 kr_reward_entry_pending = self.config.SERVER == 'kr'
+                continue
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_REWARD_GOTO_TACTICAL_COMPLETE,
+                    color=KR_REWARD_GOTO_TACTICAL_COMPLETE.color,
+                    threshold=230, count=2000):
+                self.device.click(KR_REWARD_GOTO_TACTICAL_COMPLETE)
+                kr_reward_entry_pending = False
                 continue
             if kr_reward_entry_pending and self.image_color_count(
                     KR_REWARD_GOTO_TACTICAL,

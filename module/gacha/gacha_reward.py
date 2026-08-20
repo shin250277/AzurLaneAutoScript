@@ -259,6 +259,13 @@ class RewardGacha(GachaUI, Retirement):
                 self.device.click(STORY_SKIP)  # Fast forward for multiple orders
                 confirm_timer.reset()
                 continue
+            # The KR result screen uses a broad blue title area instead of the
+            # templates available for other servers.  The build pool banner can
+            # contain the same colour, so finish detection must take precedence.
+            if self.appear(BUILD_SUBMIT_ORDERS) or self.appear(BUILD_SUBMIT_WW_ORDERS):
+                if confirm_timer.reached():
+                    break
+                continue
             if self.config.SERVER == 'kr' and self.image_color_count(
                     KR_BUILD_GET_SHIP, color=KR_BUILD_GET_SHIP.color,
                     threshold=210, count=1200):

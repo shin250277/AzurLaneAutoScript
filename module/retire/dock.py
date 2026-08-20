@@ -42,9 +42,26 @@ KR_DOCK_FILTER = Button(
 KR_DOCK_FILTER_CONFIRM = Button(
     area=(712, 642, 888, 703), color=(83, 143, 207),
     button=(712, 642, 888, 703), name='KR_DOCK_FILTER_CONFIRM')
+KR_DOCK_EMPTY_TEXT = Button(
+    area=(85, 340, 430, 385), color=(238, 235, 239),
+    button=(85, 340, 430, 385), name='KR_DOCK_EMPTY_TEXT')
+KR_DOCK_EMPTY_ICON = Button(
+    area=(1080, 290, 1210, 430), color=(173, 54, 59),
+    button=(1080, 290, 1210, 430), name='KR_DOCK_EMPTY_ICON')
 
 
 class Dock(Equipment):
+    def dock_empty_appear(self):
+        if self.appear(DOCK_EMPTY, offset=(20, 20)):
+            return True
+        if self.config.SERVER == 'kr':
+            return self.image_color_count(
+                KR_DOCK_EMPTY_TEXT, color=KR_DOCK_EMPTY_TEXT.color,
+                threshold=220, count=700) and self.image_color_count(
+                KR_DOCK_EMPTY_ICON, color=KR_DOCK_EMPTY_ICON.color,
+                threshold=200, count=900)
+        return False
+
     def _dock_filter_confirm_appear(self, interval=0):
         if self.appear(DOCK_FILTER_CONFIRM, offset=(20, 60), interval=interval):
             return True
@@ -66,7 +83,7 @@ class Dock(Equipment):
                 self.device.screenshot()
 
             # Quick exit if dock is empty
-            if self.appear(DOCK_EMPTY):
+            if self.dock_empty_appear():
                 logger.info('Dock empty')
                 break
             # Otherwise we just wait 1.2s
@@ -357,7 +374,7 @@ class Dock(Equipment):
             # End
             if self.appear(SHIP_DETAIL_CHECK, offset=(20, 20)):
                 return True
-            if self.appear(DOCK_EMPTY, offset=(20, 20)):
+            if self.dock_empty_appear():
                 logger.info('Dock empty')
                 return False
 
