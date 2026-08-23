@@ -172,7 +172,10 @@ class GuildLogistics(GuildBase):
             #     logger.info('Guild mission choose not found')
             #     return False
         else:
-            logger.info('Unknown guild mission condition. Skipped.')
+            if self.config.SERVER == 'kr':
+                logger.info('Guild mission is in progress')
+            else:
+                logger.info('Unknown guild mission condition. Skipped.')
             return False
 
     @Config.when(SERVER=None)
