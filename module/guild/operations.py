@@ -292,6 +292,7 @@ class GuildOperations(GuildBase):
         """
         timer_1 = Timer(2, count=5)
         timer_2 = Timer(2, count=5)
+        no_entrance_timer = Timer(3).start()
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
@@ -301,6 +302,7 @@ class GuildOperations(GuildBase):
             if self._guild_operations_active_appear():
                 entrance_1, entrance_2 = self._guild_operations_get_entrance()
                 if len(entrance_1):
+                    no_entrance_timer.reset()
                     if timer_1.reached():
                         self.device.click(entrance_1[0])
                         timer_1.reset()
@@ -314,6 +316,9 @@ class GuildOperations(GuildBase):
                                 timer_1.reset()
                                 timer_2.reset()
                                 break
+                elif no_entrance_timer.reached():
+                    logger.info('No active guild operation dispatch remains')
+                    return False
 
             # End. Check this before the KR quick-dispatch fallback because
             # the fleet confirmation button uses a similar blue background.

@@ -6,11 +6,18 @@ from module.shop.shop_status import ShopStatus
 
 if server.server == 'kr':
     # KR places its "remaining/total" counter farther to the left.
-    OCR_DAILY_COUNT = DigitCounter(
+    class KRDailyCount(DigitCounter):
+        def after_process(self, result):
+            # The small slash is commonly discarded by the OCR model.
+            if result.isdigit() and len(result) == 2:
+                result = f'{result[0]}/{result[1]}'
+            return super().after_process(result)
+
+    OCR_DAILY_COUNT = KRDailyCount(
         Button(
-            area=(112, 126, 149, 154),
+            area=(100, 125, 155, 157),
             color=(105, 109, 114),
-            button=(112, 126, 149, 154),
+            button=(100, 125, 155, 157),
             name='KR_PRIVATE_QUARTERS_DAILY_COUNT',
         ),
         letter=(255, 247, 247),

@@ -238,7 +238,18 @@ class MedalShop2_250814(ShopClerk, ShopStatus):
         Returns:
             bool: whether interface was detected and handled
         """
-        if self.appear(SHOP_BUY_CONFIRM_SELECT, offset=(20, 20), interval=3):
+        # The refreshed medal shop lists coloured books and generic PR/DR
+        # strengthening units as already-specific items, so they use the
+        # amount dialog.  Retrofit blueprints, plates and faction boxes still
+        # open the variant grid.  The two KR confirm assets overlap enough that
+        # choosing the handler by item group is required.
+        needs_variant = (
+            item.group == 'box'
+            or (item.group == 'retrofit' and item.sub_genre is None)
+            or (item.group == 'plate' and item.sub_genre == 'wild')
+        )
+        if needs_variant and self.appear(
+                SHOP_BUY_CONFIRM_SELECT, offset=(20, 20), interval=3):
             self.shop_buy_select_execute(item)
             self.interval_reset(SHOP_BUY_CONFIRM_SELECT)
             return True

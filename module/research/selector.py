@@ -8,7 +8,7 @@ from module.config.config_generated import GeneratedConfig
 from module.logger import logger
 from module.research.assets import *
 from module.research.preset import *
-from module.research.project import research_detect, research_jp_detect
+from module.research.project import research_detect, research_jp_detect, research_kr_detect
 from module.research.ui import ResearchUI
 
 RESEARCH_ENTRANCE = [ENTRANCE_1, ENTRANCE_2, ENTRANCE_3, ENTRANCE_4, ENTRANCE_5]
@@ -58,7 +58,7 @@ class ResearchSelector(ResearchUI):
                 self.wait_until_appear(RESEARCH_COST_CHECKER, offset=(20, 20), skip_first_screenshot=True)
                 break
 
-    def _research_jp_detect(self, skip_first_screenshot=True):
+    def _research_detail_detect(self, detector=research_jp_detect, skip_first_screenshot=True):
         """
         Wraps research_jp_detect() with error handling
 
@@ -80,7 +80,7 @@ class ResearchSelector(ResearchUI):
                 timeout.reset()
                 continue
 
-            project = research_jp_detect(self.device.image)
+            project = detector(self.device.image)
             if project.duration == '0':
                 logger.warning(f'Invalid research duration: {project}')
                 continue
@@ -89,6 +89,13 @@ class ResearchSelector(ResearchUI):
 
     @Config.when(SERVER='jp')
     def research_detect(self):
+        self._research_detect_from_details(research_jp_detect)
+
+    @Config.when(SERVER='kr')
+    def research_detect(self):
+        self._research_detect_from_details(research_kr_detect)
+
+    def _research_detect_from_details(self, detector):
         """
         We do not need a screenshot here actually. 'image' is a null argument.
         Adding this argument is just to eusure all "research_detect" have the same arguments.
@@ -107,7 +114,7 @@ class ResearchSelector(ResearchUI):
             'image' is a null argument as described above.
             What we need here is the current screen 'self.device.image'.
             """
-            project = self._research_jp_detect()
+            project = self._research_detail_detect(detector)
             logger.attr('Project', project)
             projects.append(project)
             self.research_detail_quit()

@@ -341,6 +341,12 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                         logger.info(f'{appear_button} appeared')
                         record_button = appear_button
                         confirm_timer.reset()
+                # Multi-row KR research rewards can briefly stop matching the
+                # generic GET_ITEMS template after their entrance animation.
+                # Once the popup has been positively identified, waiting for
+                # the same stabilization interval is sufficient.
+                elif record_button is not None and confirm_timer.reached():
+                    break
 
             # Take screenshots of items
             self.drop_record(drop=record)

@@ -2,6 +2,7 @@ from datetime import timedelta
 
 from scipy import signal
 
+from module.base.button import Button
 from module.base.decorator import cached_property
 from module.base.utils import *
 from module.device.method.utils import removesuffix
@@ -16,6 +17,10 @@ RESEARCH_SERIES = (SERIES_1, SERIES_2, SERIES_3, SERIES_4, SERIES_5)
 RESEARCH_STATUS = [STATUS_1, STATUS_2, STATUS_3, STATUS_4, STATUS_5]
 OCR_RESEARCH = [OCR_RESEARCH_1, OCR_RESEARCH_2, OCR_RESEARCH_3, OCR_RESEARCH_4, OCR_RESEARCH_5]
 OCR_RESEARCH = Ocr(OCR_RESEARCH, name='RESEARCH', threshold=64, alphabet='0123456789BCDEGHQTMIULRF-')
+OCR_RESEARCH_DETAIL_KR = Ocr(
+    Button(area=(285, 285, 550, 355), color=(255, 255, 255), button=(285, 285, 550, 355),
+           name='RESEARCH_DETAIL_CODE_KR'),
+    name='RESEARCH_DETAIL_CODE_KR', threshold=64, alphabet='0123456789BCDEGHQTMIULRF-')
 RESEARCH_DETAIL_GENRE = [DETAIL_GENRE_B, DETAIL_GENRE_C, DETAIL_GENRE_D, DETAIL_GENRE_E, DETAIL_GENRE_G,
                          DETAIL_GENRE_H_0, DETAIL_GENRE_H_1, DETAIL_GENRE_Q, DETAIL_GENRE_T]
 
@@ -285,6 +290,17 @@ def get_research_genre_jp(image):
     return genre
 
 
+def get_research_genre_kr(image):
+    """Read the Latin project code shown on the Korean detail panel."""
+    code = OCR_RESEARCH_DETAIL_KR.ocr(image).upper()
+    result = re.search(r'([BCDEGHQT])\s*-?\s*\d', code)
+    if result:
+        return result.group(1)
+
+    logger.warning(f'Not able to recognize Korean research genre from: {code}')
+    return get_research_genre_jp(image)
+
+
 def get_research_cost_jp(image):
     """
     When the research has 1 cost item, the size of it is 78*78.
@@ -371,6 +387,27 @@ def research_jp_detect(image):
     costs = get_research_cost_jp(image)
     for cost in costs:
         project.__setattr__(cost, costs[cost])
+    if project.genre.lower() == 'd':
+        project.ship = get_research_ship_jp(image).lower()
+    if project.ship:
+        project.ship_rarity = 'dr' if project.ship in project.DR_SHIP else 'pry'
+    project.name = f'{project.series}-{project.genre}-{project.duration}{project.ship}'
+    if not project.check_valid():
+        logger.warning(f'Invalid research {project}')
+    return project
+
+
+def research_kr_detect(image):
+    """Detect a Korean-server project from its detail panel."""
+    project = ResearchProjectJp()
+    project.series = get_research_series_jp(image)
+    project.duration = removesuffix(str(get_research_duration_jp(image) / 3600), '.0')
+    if project.duration == '':
+        project.duration = '0'
+    project.genre = get_research_genre_kr(image)
+    costs = get_research_cost_jp(image)
+    for cost, required in costs.items():
+        project.__setattr__(cost, required)
     if project.genre.lower() == 'd':
         project.ship = get_research_ship_jp(image).lower()
     if project.ship:

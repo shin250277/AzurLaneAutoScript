@@ -324,6 +324,13 @@ class OpsiAshBeacon(Meta):
             if not self.appear(HELP_CONFIRM, offset=(30, 30)):
                 if self.appear(HELP_ENTER, offset=(30, 30)):
                     return True
+                # The KR client changes the support button styling after a
+                # successful request, so its HELP_ENTER template may no longer
+                # match.  The beacon detail page with an available battle
+                # button is also a valid completed state.
+                if self.appear(BEACON_LIST, offset=(20, 20)) \
+                        and self.appear(ASH_START, offset=(20, 20)):
+                    return True
                 if self.appear(BEACON_REWARD, offset=(30, 30)):
                     logger.info('META finished just after calling assist, ignore meta assist')
                     return False

@@ -120,11 +120,13 @@ class PortHandler(OSShop):
             if repaired and self.appear(PORT_DOCK_CHECK, offset=(20, 20)):
                 break
 
-            # PORT_DOCK_CHECK is button to repair all.
-            if self.appear_then_click(PORT_DOCK_CHECK, offset=(20, 20), interval=2):
-                continue
             if self.handle_popup_confirm('DOCK_REPAIR'):
                 repaired = True
+                continue
+            # Check the confirmation before the repair button. The Korean
+            # confirmation is translucent, so the button remains visible in
+            # the background and would otherwise be clicked repeatedly.
+            if self.appear_then_click(PORT_DOCK_CHECK, offset=(20, 20), interval=2):
                 continue
 
         self.ui_back(appear_button=PORT_DOCK_CHECK, check_button=PORT_CHECK, skip_first_screenshot=True)

@@ -5,7 +5,7 @@ from module.config.utils import get_os_reset_remain
 from module.exception import GameStuckError, ScriptError
 from module.logger import logger
 from module.os_shop.akashi_shop import AkashiShop
-from module.os_shop.assets import PORT_SUPPLY_CHECK, SHOP_BUY_CONFIRM
+from module.os_shop.assets import PORT_SUPPLY_CHECK, SHOP_BUY_CONFIRM, SHOP_BUY_CONFIRM_INFO
 from module.os_shop.port_shop import PortShop
 from module.os_shop.ui import OS_SHOP_SCROLL
 from module.shop.assets import AMOUNT_MAX, AMOUNT_MINUS, AMOUNT_PLUS, SHOP_BUY_CONFIRM_AMOUNT, SHOP_BUY_CONFIRM as OS_SHOP_BUY_CONFIRM, SHOP_CLICK_SAFE_AREA
@@ -26,7 +26,7 @@ class OSShop(PortShop, AkashiShop):
         amount_finish = False
         self.interval_clear([
             PORT_SUPPLY_CHECK, SHOP_BUY_CONFIRM_AMOUNT,
-            SHOP_BUY_CONFIRM, OS_SHOP_BUY_CONFIRM, GET_ITEMS_1,
+            SHOP_BUY_CONFIRM, SHOP_BUY_CONFIRM_INFO, OS_SHOP_BUY_CONFIRM, GET_ITEMS_1,
             SHOP_CLICK_SAFE_AREA
         ])
         set_amount_retry = 0
@@ -44,6 +44,10 @@ class OSShop(PortShop, AkashiShop):
 
             if self.appear_then_click(SHOP_BUY_CONFIRM, offset=(20, 20), interval=3):
                 self.interval_reset(SHOP_BUY_CONFIRM)
+                continue
+
+            if self.appear_then_click(SHOP_BUY_CONFIRM_INFO, offset=(20, 20), interval=3):
+                self.interval_reset(SHOP_BUY_CONFIRM_INFO)
                 continue
 
             if self.appear_then_click(OS_SHOP_BUY_CONFIRM, offset=(20, 20), interval=3):

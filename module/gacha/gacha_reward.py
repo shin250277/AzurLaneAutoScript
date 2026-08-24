@@ -20,6 +20,11 @@ KR_BUILD_GET_SHIP = Button(
 KR_GACHA_SUBMIT_CONFIRM = Button(
     area=(699, 451, 875, 512), color=(83, 143, 207),
     button=(699, 451, 875, 512), name='KR_GACHA_SUBMIT_CONFIRM')
+KR_GACHA_NEW_SHIP = Button(
+    area=(40, 360, 85, 410), color=(120, 124, 132),
+    button=(550, 500, 730, 660),
+    file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png',
+    name='KR_GACHA_NEW_SHIP')
 OCR_BUILD_CUBE_COUNT = Digit(BUILD_CUBE_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_TICKET_COUNT = Digit(BUILD_TICKET_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_SUBMIT_COUNT = Digit(BUILD_SUBMIT_COUNT, letter=(255, 247, 247), threshold=64)
@@ -297,23 +302,32 @@ class RewardGacha(GachaUI, Retirement):
             out: BUILD_FINISH_ORDERS
         """
         logger.info('Submit gacha')
+        submitted = False
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
-            if self.config.SERVER == 'kr' and self.image_color_count(
+            # KR opens the ship-introduction page immediately after a build.
+            # Its left-side comment icon is stable and absent from build pools.
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
+                self.device.click(KR_GACHA_NEW_SHIP)
+                continue
+            if not submitted and self.config.SERVER == 'kr' and self.image_color_count(
                     KR_GACHA_SUBMIT_CONFIRM,
                     color=KR_GACHA_SUBMIT_CONFIRM.color,
                     threshold=210, count=1200):
                 self.device.click(KR_GACHA_SUBMIT_CONFIRM)
+                submitted = True
                 continue
-            if self.appear(POPUP_CONFIRM, offset=(20, 80), interval=3):
+            if not submitted and self.appear(POPUP_CONFIRM, offset=(20, 80), interval=3):
                 # Alter asset name for click
                 POPUP_CONFIRM.name = POPUP_CONFIRM.name + '_' + 'GACHA_ORDER'
                 self.device.click(POPUP_CONFIRM)
                 POPUP_CONFIRM.name = POPUP_CONFIRM.name[:-len('GACHA_ORDER') - 1]
+                submitted = True
                 continue
 
             # End

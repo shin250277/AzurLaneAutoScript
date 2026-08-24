@@ -84,6 +84,12 @@ class MapOrderHandler(MapOperation, ActionPointHandler, MapEventHandler, ZoneMan
 
             if self.appear_then_click(button, interval=3):
                 continue
+            if button == ORDER_SCAN and self.appear_then_click(
+                    ORDER_SCAN_CONFIRM, offset=(20, 20), interval=3):
+                continue
+            if button == ORDER_SUBMARINE and self.appear_then_click(
+                    ORDER_SUBMARINE_CONFIRM, offset=(20, 20), interval=3):
+                continue
             if self.handle_popup_confirm(button.name):
                 continue
             if self.handle_map_event():
