@@ -202,6 +202,12 @@ class OSFleet(OSCamera, Combat, Fleet, OSAsh):
         """
         Whether low resolve debuff appears on current fleet
         """
+        if self.config.SERVER == 'kr':
+            # KR places the low-resolve icon one slot to the right of the
+            # common layout because its status row includes an extra icon.
+            return self.image_color_count(
+                (344, 76, 389, 121), color=FLEET_LOW_RESOLVE.color,
+                threshold=221, count=250)
         return self.image_color_count(
             FLEET_LOW_RESOLVE, color=FLEET_LOW_RESOLVE.color, threshold=221, count=250)
 

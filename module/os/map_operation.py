@@ -1,3 +1,4 @@
+from module.base.button import Button
 from module.base.decorator import Config
 from module.base.timer import Timer
 from module.base.utils import *
@@ -13,6 +14,10 @@ from module.os_handler.mission import MissionHandler
 from module.os_handler.port import PortHandler
 from module.os_handler.storage import StorageHandler
 from module.ui.assets import BACK_ARROW, OS_CHECK
+
+KR_MAP_EXIT_CONFIRM = Button(
+    area=(702, 481, 878, 543), color=(90, 137, 195),
+    button=(760, 500, 820, 525), name='KR_MAP_EXIT_CONFIRM')
 
 
 class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandler, OSFleetSelector):
@@ -275,6 +280,14 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 continue
             if self.handle_popup_confirm('MAP_EXIT'):
                 self.interval_reset(MAP_EXIT)
+                continue
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_MAP_EXIT_CONFIRM, color=KR_MAP_EXIT_CONFIRM.color,
+                    threshold=20, count=5000) and self.get_interval_timer(
+                        KR_MAP_EXIT_CONFIRM, interval=3, renew=True).reached():
+                self.device.click(KR_MAP_EXIT_CONFIRM)
+                self.interval_reset(MAP_EXIT)
+                self.interval_reset(KR_MAP_EXIT_CONFIRM)
                 continue
             if self.appear_then_click(AUTO_SEARCH_REWARD, offset=(50, 50)):
                 # Sometimes appeared

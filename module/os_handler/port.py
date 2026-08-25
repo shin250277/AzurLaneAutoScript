@@ -1,3 +1,4 @@
+from module.base.button import Button
 from module.base.timer import Timer
 from module.logger import logger
 from module.os_handler.assets import *
@@ -8,6 +9,9 @@ from module.os_shop.shop import OSShop
 # Red axis ports have PORT_GOTO_SUPPLY.
 # Use PORT_GOTO_SUPPLY as checker.
 PORT_CHECK = PORT_GOTO_SUPPLY
+KR_PORT_DOCK_CONFIRM = Button(
+    area=(702, 481, 878, 543), color=(90, 137, 195),
+    button=(760, 500, 820, 525), name='KR_PORT_DOCK_CONFIRM')
 
 
 class PortHandler(OSShop):
@@ -121,6 +125,14 @@ class PortHandler(OSShop):
                 break
 
             if self.handle_popup_confirm('DOCK_REPAIR'):
+                repaired = True
+                continue
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_PORT_DOCK_CONFIRM, color=KR_PORT_DOCK_CONFIRM.color,
+                    threshold=20, count=5000) and self.get_interval_timer(
+                        KR_PORT_DOCK_CONFIRM, interval=3, renew=True).reached():
+                self.device.click(KR_PORT_DOCK_CONFIRM)
+                self.interval_reset(KR_PORT_DOCK_CONFIRM)
                 repaired = True
                 continue
             # Check the confirmation before the repair button. The Korean
