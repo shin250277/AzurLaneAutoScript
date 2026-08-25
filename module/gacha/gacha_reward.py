@@ -15,8 +15,15 @@ from module.retire.retirement import Retirement
 RECORD_GACHA_OPTION = ('RewardRecord', 'gacha')
 RECORD_GACHA_SINCE = (0,)
 KR_BUILD_GET_SHIP = Button(
-    area=(540, 180, 740, 230), color=(100, 180, 255),
-    button=(550, 500, 730, 660), name='KR_BUILD_GET_SHIP')
+    area=(566, 181, 747, 221), color=(154, 195, 240),
+    button=(550, 500, 730, 660),
+    file='./assets/kr/gacha/KR_BUILD_GET_SHIP.png',
+    name='KR_BUILD_GET_SHIP')
+KR_GACHA_FINISH_CONFIRM = Button(
+    area=(491, 294, 789, 326), color=(110, 120, 128),
+    button=(735, 493, 845, 531),
+    file='./assets/kr/gacha/KR_GACHA_FINISH_CONFIRM.png',
+    name='KR_GACHA_FINISH_CONFIRM')
 KR_GACHA_SUBMIT_CONFIRM = Button(
     area=(699, 451, 875, 512), color=(83, 143, 207),
     button=(699, 451, 875, 512), name='KR_GACHA_SUBMIT_CONFIRM')
@@ -259,6 +266,11 @@ class RewardGacha(GachaUI, Retirement):
                     confirm_mode = False
                 confirm_timer.reset()
                 continue
+            if self.config.SERVER == 'kr' and self.appear_then_click(
+                    KR_GACHA_FINISH_CONFIRM, offset=(3, 3),
+                    interval=3, similarity=0.75):
+                confirm_timer.reset()
+                continue
 
             if self.appear(GET_SHIP, interval=1):
                 self.device.click(STORY_SKIP)  # Fast forward for multiple orders
@@ -271,9 +283,8 @@ class RewardGacha(GachaUI, Retirement):
                 if confirm_timer.reached():
                     break
                 continue
-            if self.config.SERVER == 'kr' and self.image_color_count(
-                    KR_BUILD_GET_SHIP, color=KR_BUILD_GET_SHIP.color,
-                    threshold=210, count=1200):
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_BUILD_GET_SHIP, offset=(3, 3), similarity=0.72):
                 self.device.click(KR_BUILD_GET_SHIP)
                 confirm_timer.reset()
                 continue
