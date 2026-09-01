@@ -2,6 +2,7 @@ import time
 
 import inflection
 
+from module.base.button import Button
 from module.base.timer import Timer
 from module.config.utils import get_os_reset_remain
 from module.exception import CampaignEnd, GameTooManyClickError, MapWalkError, RequestHumanTakeover, ScriptError
@@ -17,6 +18,14 @@ from module.os_handler.assets import AUTO_SEARCH_OS_MAP_OPTION_OFF, AUTO_SEARCH_
 from module.os_handler.strategic import StrategicSearchHandler
 from module.ui.assets import GOTO_MAIN
 from module.ui.page import page_os
+
+
+KR_OS_MISSION_COMPLETE = Button(
+    area=(470, 340, 655, 365),
+    color=(48, 48, 53),
+    button=(422, 449, 623, 486),
+    file='./assets/kr/os_handler/KR_OS_MISSION_COMPLETE.png',
+)
 
 
 class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
@@ -528,6 +537,11 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
             if self.handle_retirement():
                 # Retire will interrupt auto search, need a retry
                 self.ash_popup_canceled = True
+                continue
+            if self.config.SERVER == 'kr' and self.appear_then_click(
+                    KR_OS_MISSION_COMPLETE, offset=(20, 20), interval=2):
+                # Korean OpSi displays a mission-completion notice over the
+                # tactical map. Close it without leaving auto-search.
                 continue
             if self.combat_appear():
                 self.on_auto_search_battle_count_add()

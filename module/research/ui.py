@@ -1,3 +1,4 @@
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import crop, rgb2gray
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2, GET_ITEMS_3, GET_ITEMS_3_CHECK
@@ -8,6 +9,12 @@ from module.research.series import RESEARCH_SCALING
 from module.ui.assets import BACK_ARROW, RESEARCH_CHECK
 from module.ui.page import page_research
 from module.ui.ui import UI
+
+KR_RESEARCH_GET_ITEMS = Button(
+    area=(565, 127, 748, 171), color=(135, 164, 206),
+    button=(570, 535, 710, 585),
+    file='./assets/kr/research/KR_RESEARCH_GET_ITEMS.png',
+    name='KR_RESEARCH_GET_ITEMS')
 
 
 class ResearchUI(UI):
@@ -55,6 +62,12 @@ class ResearchUI(UI):
                 logger.info(f'{GET_ITEMS_1} -> {GET_ITEMS_RESEARCH_SAVE}')
                 self.device.click(GET_ITEMS_RESEARCH_SAVE)
                 continue
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_RESEARCH_GET_ITEMS, offset=(3, 3),
+                    interval=3, similarity=0.75):
+                logger.info(f'{KR_RESEARCH_GET_ITEMS} -> {GET_ITEMS_RESEARCH_SAVE}')
+                self.device.click(GET_ITEMS_RESEARCH_SAVE)
+                continue
 
         self.ensure_research_center_stable()
 
@@ -63,6 +76,9 @@ class ResearchUI(UI):
         Returns:
             Button:
         """
+        if self.config.SERVER == 'kr' and self.appear(
+                KR_RESEARCH_GET_ITEMS, offset=(3, 3), similarity=0.75):
+            return KR_RESEARCH_GET_ITEMS
         if self.appear(GET_ITEMS_3, offset=(5, 5)):
             if self.image_color_count(GET_ITEMS_3_CHECK, color=(255, 255, 255), threshold=221, count=100):
                 return GET_ITEMS_3
