@@ -48,6 +48,12 @@ KR_SKILL_CONFIRM = Button(
 KR_TACTICAL_CLASS_START = Button(
     area=(1023, 590, 1198, 650), color=(64, 123, 194),
     button=(1023, 590, 1198, 650), name='KR_TACTICAL_CLASS_START')
+KR_TACTICAL_FINISH_HEADER = Button(
+    area=(580, 174, 890, 215), color=(73, 117, 175),
+    button=(), name='KR_TACTICAL_FINISH_HEADER')
+KR_TACTICAL_FINISH_CONFIRM = Button(
+    area=(556, 486, 723, 537), color=(64, 123, 194),
+    button=(570, 492, 710, 532), name='KR_TACTICAL_FINISH_CONFIRM')
 
 
 class ExpOnBookSelect(DigitCounter):
@@ -223,6 +229,29 @@ class RewardTacticalClass(Dock):
     books: SelectedGrids
     tactical_finish = []
     dock_select_index = 0
+
+    def handle_kr_tactical_finish(self):
+        # KR's level-up receipt has a single blue button higher than the
+        # ordinary skill-selection dialog. Restrict this to Tactical and
+        # require both the information header and the receipt button.
+        if self.config.SERVER != 'kr':
+            return False
+        if not self.image_color_count(
+                KR_TACTICAL_FINISH_HEADER, color=KR_TACTICAL_FINISH_HEADER.color,
+                threshold=220, count=3000):
+            return False
+        if not self.image_color_count(
+                KR_TACTICAL_FINISH_CONFIRM, color=KR_TACTICAL_FINISH_CONFIRM.color,
+                threshold=220, count=1500):
+            return False
+        self.device.click(KR_TACTICAL_FINISH_CONFIRM)
+        return True
+
+    def ui_additional(self, get_ship=True):
+        # Also recover when a run is restarted on this receipt.
+        if self.handle_kr_tactical_finish():
+            return True
+        return super().ui_additional(get_ship=get_ship)
 
     def _tactical_skill_confirm_appear(self, interval=0):
         if self.appear(SKILL_CONFIRM, offset=(20, 20), interval=interval):
@@ -472,6 +501,9 @@ class RewardTacticalClass(Dock):
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
+
+            if self.handle_kr_tactical_finish():
+                continue
 
             # End
             if received and self.appear(REWARD_CHECK, offset=(20, 20)):
