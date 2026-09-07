@@ -4,13 +4,14 @@ from module.base.button import Button
 from module.base.timer import Timer
 from module.campaign.campaign_status import OCR_COIN
 from module.combat.assets import GET_SHIP
-from module.exception import ScriptError
+from module.exception import RequestHumanTakeover, ScriptError
 from module.gacha.assets import *
 from module.gacha.ui import GachaUI
 from module.handler.assets import POPUP_CONFIRM, STORY_SKIP
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.retire.retirement import Retirement
+from module.ui.page import page_build, page_shop
 
 RECORD_GACHA_OPTION = ('RewardRecord', 'gacha')
 RECORD_GACHA_SINCE = (0,)
@@ -58,6 +59,19 @@ class RewardGacha(GachaUI, Retirement):
     build_cube_count = 0
     build_ticket_count = 0
 
+    def ui_additional(self, get_ship=True):
+        if self.config.SERVER == 'kr' and self.appear(
+                KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
+            self.device.click(KR_GACHA_NEW_SHIP)
+            return True
+        return super().ui_additional(get_ship=get_ship)
+
+    def gacha_guard_shop(self):
+        """Never handle purchase confirmations after an unexpected shop redirect."""
+        if self.ui_page_appear(page_shop):
+            logger.critical('Construction unexpectedly entered the shop; stop without purchasing')
+            raise RequestHumanTakeover
+
     def gacha_prep(self, target, skip_first_screenshot=True):
         """
         Initiate preparation to submit build orders.
@@ -96,6 +110,7 @@ class RewardGacha(GachaUI, Retirement):
             else:
                 self.device.screenshot()
 
+            self.gacha_guard_shop()
             if self.appear_then_click(BUILD_SUBMIT_ORDERS, interval=3):
                 ocr_submit = OCR_BUILD_SUBMIT_COUNT
                 confirm_timer.reset()
@@ -236,20 +251,29 @@ class RewardGacha(GachaUI, Retirement):
         # and end up in Gacha/Build page
         confirm_timer = Timer(1, count=2).start()
         confirm_mode = True  # Drill, Lock Ship
+        empty_timer = Timer(1, count=3).start()
         # Clear button offset, or will click at the PLUS button of gems or HOME button
         STORY_SKIP.clear_offset()
-        queue_clean = True
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
-            if self.appear(BUILD_QUEUE_EMPTY, offset=(20, 20)) and queue_clean:
-                self.gacha_side_navbar_ensure(upper=1)
-                break
-            else:
-                queue_clean = False
+            self.gacha_guard_shop()
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
+                self.device.click(KR_GACHA_NEW_SHIP)
+                empty_timer.reset()
+                continue
+            # The empty-slot image can also match a fading acquisition screen.
+            # Require the build header and a stable empty queue before leaving.
+            if self.ui_page_appear(page_build) and self.appear(BUILD_QUEUE_EMPTY, offset=(20, 20)):
+                if empty_timer.reached():
+                    self.gacha_side_navbar_ensure(upper=1)
+                    break
+                continue
+            empty_timer.reset()
 
             if self.appear_then_click(BUILD_FINISH_ORDERS, interval=3):
                 confirm_timer.reset()
@@ -273,7 +297,9 @@ class RewardGacha(GachaUI, Retirement):
                 continue
 
             if self.appear(GET_SHIP, interval=1):
-                self.device.click(STORY_SKIP)  # Fast forward for multiple orders
+                # The KR top bar can return before the result template fades.
+                # Never fast-forward at the currency/shop shortcut coordinates.
+                self.device.click(GET_SHIP if self.config.SERVER == 'kr' else STORY_SKIP)
                 confirm_timer.reset()
                 continue
             # The KR result screen uses a broad blue title area instead of the
@@ -320,6 +346,7 @@ class RewardGacha(GachaUI, Retirement):
             else:
                 self.device.screenshot()
 
+            self.gacha_guard_shop()
             # KR opens the ship-introduction page immediately after a build.
             # Its left-side comment icon is stable and absent from build pools.
             if self.config.SERVER == 'kr' and self.appear(

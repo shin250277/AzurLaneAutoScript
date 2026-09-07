@@ -26,6 +26,10 @@ CARD_RARITY_COLORS = {
 KR_RETIRE_SR_SSR_CONFIRM = Button(
     area=(706, 471, 881, 533), color=(83, 143, 207),
     button=(706, 471, 881, 533), name='KR_RETIRE_SR_SSR_CONFIRM')
+KR_RETIRE_RARITY_WARNING = Button(
+    area=(441, 250, 835, 278), color=(126, 140, 140), button=(441, 250, 835, 278),
+    file='./assets/kr/retire/KR_RETIRE_RARITY_WARNING.png',
+    name='KR_RETIRE_RARITY_WARNING')
 
 RETIRE_CONFIRM_SCROLL = Scroll(RETIRE_CONFIRM_SCROLL_AREA, color=(74, 77, 110), name='STRATEGIC_SEARCH_SCROLL')
 RETIRE_CONFIRM_SCROLL.color_threshold = 240  # Background color is (66, 72, 77), so default (256-221)=35 is not enough to dintinguish.
@@ -37,6 +41,14 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
 
     # From MapOperation
     map_cat_attack_timer = Timer(2)
+
+    def _kr_retirement_confirmation_appear(self):
+        # Blue ship-card artwork is not a confirmation dialog.
+        return self.config.SERVER == 'kr' \
+            and self.appear(KR_RETIRE_RARITY_WARNING, offset=(3, 3), similarity=0.85) \
+            and self.image_color_count(
+                KR_RETIRE_SR_SSR_CONFIRM, color=KR_RETIRE_SR_SSR_CONFIRM.color,
+                threshold=210, count=1200)
 
     @property
     def retire_keep_common_cv(self):
@@ -121,10 +133,7 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
                     or self.config.OldRetire_SR \
                     or self.config.OldRetire_SSR \
                     or self.config.Retirement_RetireMode == 'one_click_retire':
-                if self.config.SERVER == 'kr' and self.image_color_count(
-                        KR_RETIRE_SR_SSR_CONFIRM,
-                        color=KR_RETIRE_SR_SSR_CONFIRM.color,
-                        threshold=210, count=1200):
+                if self._kr_retirement_confirmation_appear():
                     self.device.click(KR_RETIRE_SR_SSR_CONFIRM)
                     self.interval_reset([SHIP_CONFIRM, SHIP_CONFIRM_2])
                     self.interval_reset([EQUIP_CONFIRM, EQUIP_CONFIRM_2])
