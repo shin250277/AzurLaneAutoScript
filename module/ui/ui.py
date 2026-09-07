@@ -14,7 +14,7 @@ from module.handler.info_handler import InfoHandler
 from module.logger import logger
 from module.map.assets import (FLEET_PREPARATION, MAP_PREPARATION,
                                MAP_PREPARATION_CANCEL, WITHDRAW)
-from module.meowfficer.assets import MEOWFFICER_BUY
+from module.meowfficer.assets import MEOWFFICER_BUY, MEOWFFICER_TRAIN_START
 from module.ocr.ocr import Ocr
 from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
 from module.raid.assets import *
@@ -376,7 +376,9 @@ class UI(InfoHandler):
             # icon.  Never navigate when the requested page is already open.
             if self.ui_page_appear(page, offset=(20, 20), interval=0):
                 return False
-            if self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40):
+            # Reuse the foreground-page exclusions (dorm, meowfficer, etc.).
+            # Their bottom controls can match the main dock tab by color.
+            if self.ui_page_appear(page_main, offset=offset, interval=interval):
                 button = page_main_white.links[page]
                 self.device.click(button)
                 return True
@@ -882,6 +884,12 @@ class UI(InfoHandler):
             return True
 
         # Meowfficer popup
+        if self.config.SERVER == 'kr' and self.appear(
+                MEOWFFICER_TRAIN_START, offset=(20, 20), interval=3):
+            # Close the training overlay without claiming or accelerating it.
+            # This is the same safe header used by meow_menu_close().
+            self.device.click(MEOWFFICER_CHECK)
+            return True
         if self.appear_then_click(MEOWFFICER_INFO, offset=(30, 30), interval=3):
             self.interval_reset(GET_SHIP)
             return True
