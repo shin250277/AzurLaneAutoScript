@@ -486,6 +486,13 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
 
         if mode == 'one_click_retire':
             total = self.retire_ships_one_click()
+            if not total and self.config.SERVER == 'kr':
+                # KR dock-filter reset is not reliably recognized. Broadening
+                # the selection after an empty result can include UR ships.
+                # Preserve the user's filters and fail closed instead.
+                raise RequestHumanTakeover(
+                    'KR quick retirement found no eligible ships; '
+                    'review dock and quick-retire filters before continuing')
             if not total:
                 logger.warning(
                     'No ship retired, trying to reset dock filter and disable favourite, then retire again')
