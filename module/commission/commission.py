@@ -367,8 +367,9 @@ class RewardCommission(UI, InfoHandler):
             if self.config.SERVER == 'kr' and self.appear(
                     COMMISSION_START, offset=(5, 20), similarity=0.97, interval=1):
                 self.device.click(COMMISSION_START)
-                self.device.sleep(2)
-                return True
+                self.interval_reset(COMMISSION_ADVICE)
+                comm_timer.reset()
+                continue
             if self.match_template_color(COMMISSION_START, offset=(5, 20), interval=7):
                 self.device.click(COMMISSION_START)
                 self.interval_reset(COMMISSION_ADVICE)
