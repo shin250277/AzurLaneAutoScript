@@ -8,6 +8,13 @@ from module.ui.page import page_private_quarters, page_dormmenu
 
 
 class PrivateQuarters(PQInteract, PQShop):
+    def ui_additional(self, get_ship=True):
+        if self.config.SERVER == 'kr' and self.appear(
+                PRIVATE_QUARTERS_SHOP_CHECK, offset=(3, 3)):
+            self.device.click(PRIVATE_QUARTERS_SHOP_BACK)
+            return True
+        return super().ui_additional(get_ship=get_ship)
+
     # Key: str, server name
     # Value: list[str]
     not_supported_filter = {
@@ -61,7 +68,7 @@ class PrivateQuarters(PQInteract, PQShop):
         self.ui_click(
             click_button=PRIVATE_QUARTERS_SHOP_ENTER,
             check_button=PRIVATE_QUARTERS_SHOP_CHECK,
-            appear_button=page_private_quarters.check_button,
+            appear_button=lambda: self.ui_page_appear(page_private_quarters),
             offset=(20, 20),
             skip_first_screenshot=True
         )
@@ -78,7 +85,7 @@ class PrivateQuarters(PQInteract, PQShop):
         """
         self.ui_click(
             click_button=PRIVATE_QUARTERS_SHOP_BACK,
-            check_button=page_private_quarters.check_button,
+            check_button=lambda: self.ui_page_appear(page_private_quarters),
             appear_button=PRIVATE_QUARTERS_SHOP_CHECK,
             offset=(20, 20),
             skip_first_screenshot=True

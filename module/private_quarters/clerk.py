@@ -1,11 +1,28 @@
+from module.base.button import Button
 from module.base.timer import Timer
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.private_quarters.assets import *
 from module.private_quarters.ui import PQShopUI
 from module.shop.clerk import ShopClerk
 
+KR_GIFT_PURCHASE_CONFIRM = Button(
+    area=(790, 577, 842, 600), color=(92, 195, 252),
+    button=(731, 573, 901, 603),
+    file='./assets/kr/private_quarters/KR_GIFT_PURCHASE_CONFIRM.png',
+    name='KR_GIFT_PURCHASE_CONFIRM')
+KR_GIFT_PURCHASE_COIN = Button(
+    area=(394, 426, 425, 455), color=(215, 181, 72),
+    button=(394, 426, 425, 455),
+    file='./assets/kr/private_quarters/KR_GIFT_PURCHASE_CONFIRM.png',
+    name='KR_GIFT_PURCHASE_COIN')
+
 
 class PQShopClerk(ShopClerk, PQShopUI):
+    def _kr_gift_purchase_is_coin(self, item):
+        return item.sub_genre == 'roses' and item.cost == 'Coins' \
+            and self.appear(KR_GIFT_PURCHASE_COIN, offset=(3, 3), similarity=0.9)
+
     def shop_interval_clear(self):
         """
         Override in variant class
@@ -41,6 +58,7 @@ class PQShopClerk(ShopClerk, PQShopUI):
 
         self.shop_interval_clear()
         PRIVATE_QUARTERS_SHOP_CHECK.clear_offset()
+        amount_selected = False
 
         for _ in self.loop():
 
@@ -51,7 +69,16 @@ class PQShopClerk(ShopClerk, PQShopUI):
             if self.appear(PRIVATE_QUARTERS_SHOP_CHECK, interval=3):
                 self.device.click(item)
                 continue
-            if self.appear_then_click(PRIVATE_QUARTERS_SHOP_AMOUNT_MAX, offset=(20, 20), interval=1):
+            if not amount_selected and self.appear_then_click(
+                    PRIVATE_QUARTERS_SHOP_AMOUNT_MAX, offset=(20, 20), interval=1):
+                amount_selected = True
+                continue
+            if self.config.SERVER == 'kr':
+                if amount_selected and self.appear(KR_GIFT_PURCHASE_CONFIRM, offset=(3, 3), interval=2):
+                    if not self._kr_gift_purchase_is_coin(item):
+                        logger.critical('KR gift purchase currency is not verified as coins; stop')
+                        raise RequestHumanTakeover
+                    self.device.click(KR_GIFT_PURCHASE_CONFIRM)
                 continue
             if self.appear_then_click(PRIVATE_QUARTERS_SHOP_CONFIRM_AMOUNT, offset=(20, 20), interval=1):
                 continue
