@@ -1,6 +1,7 @@
 from module.base.timer import Timer
 from module.base.utils import *
 from module.logger import logger
+from module.exception import RequestHumanTakeover
 from module.os.assets import *
 from module.os_handler.action_point import ActionPointHandler
 from module.os_handler.assets import AUTO_SEARCH_REWARD
@@ -208,12 +209,17 @@ class GlobeOperation(ActionPointHandler):
             in: is_zone_pinned
             out: is_zone_pinned
         """
-        if not self.zone_has_switch():
-            logger.info('Zone has no type to select, skip')
-            return True
-
         if isinstance(types, str):
             types = [types]
+
+        if not self.zone_has_switch():
+            pinned = self.get_zone_pinned_name()
+            if self.config.SERVER == 'kr' and pinned not in types:
+                logger.error(f'KR zone type mismatch: expected={types}, detected={pinned!r}')
+                raise RequestHumanTakeover(
+                    f'Cannot verify requested KR zone type: expected={types}, detected={pinned!r}')
+            logger.info('Zone has no type to select, skip')
+            return True
 
         def get_button(selection_):
             for typ in types:

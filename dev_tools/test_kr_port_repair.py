@@ -19,6 +19,8 @@ class PortRepairTest(unittest.TestCase):
         for index, (_, (x, y, right, bottom)) in enumerate(cases):
             template = images[index][y:bottom, x:right]
             self.assertGreater(template.std(), 20)
+            # Large white defeat lettering, not a mostly dark ship-result row.
+            self.assertGreater((template.min(axis=2) > 180).mean(), .20)
             self.assertGreater(cv2.matchTemplate(images[index], template, cv2.TM_CCOEFF_NORMED).max(), .99)
             self.assertLess(cv2.matchTemplate(images[1-index], template, cv2.TM_CCOEFF_NORMED).max(), .85)
 
