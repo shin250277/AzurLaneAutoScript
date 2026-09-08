@@ -15,9 +15,6 @@ OCR_NEW_YEAR_BATTLE_SCORE = Digit(NEW_YEAR_CHALLENGE_SCORE_HOLDER,
                                   letter=(231, 215, 82),
                                   threshold=128)
 
-KR_NEW_YEAR_CHALLENGE_ENTRANCE = Button(
-    area=(160, 350, 540, 550), color=(240, 240, 240),
-    button=(160, 350, 540, 550), name='KR_NEW_YEAR_CHALLENGE_ENTRANCE')
 KR_NEW_YEAR_CHALLENGE_START = Button(
     area=(285, 425, 500, 485), color=(220, 160, 135),
     button=(285, 425, 500, 485), name='KR_NEW_YEAR_CHALLENGE_START')
@@ -68,14 +65,8 @@ class NewYearChallenge(MinigameRun):
                 self.device.click(NEW_YEAR_CHALLENGE_ENTRANCE)
                 self.interval_reset(page_game_room.check_button, interval=3)
                 continue
-            # KR uses localized card artwork. At 25% scroll it is the left
-            # card in the middle row.
-            if self.config.SERVER == 'kr' and self.ui_page_appear(page_game_room, interval=3) \
-                    and MINIGAME_SCROLL.appear(main=self):
-                MINIGAME_SCROLL.set(main=self, position=0.25, distance_check=False)
-                self.device.click(KR_NEW_YEAR_CHALLENGE_ENTRANCE)
-                self.interval_reset(page_game_room.check_button, interval=3)
-                continue
+            # Match the card artwork before selecting it. A fixed KR row
+            # position selected the unrelated shooting game after list changes.
             # swipe down
             if self.ui_page_appear(page_game_room, interval=3) and MINIGAME_SCROLL.appear(main=self) \
                     and not MINIGAME_SCROLL.set(main=self, position=0.25, distance_check=False):

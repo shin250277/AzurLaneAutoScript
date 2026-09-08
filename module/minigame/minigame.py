@@ -1,4 +1,5 @@
 import module.config.server as server
+from module.base.button import Button
 from module.combat.assets import GET_ITEMS_1
 from module.logger import logger
 from module.minigame.assets import *
@@ -19,6 +20,11 @@ else:
                     letter=(211, 196, 95),
                     threshold=128)
 MINIGAME_SCROLL = Scroll(MINIGAME_SCROLL_AREA, color=(247, 247, 247), name='MINIGAME_SCROLL')
+KR_SHOOTING_GAME_CHECK = Button(
+    area=(109, 19, 270, 61), color=(210, 170, 85),
+    button=(27, 18, 68, 60),
+    file='./assets/kr/minigame/KR_SHOOTING_GAME_CHECK.png',
+    name='KR_SHOOTING_GAME_CHECK')
 
 class MinigameRun(UI):
 
@@ -109,6 +115,15 @@ class MinigameRun(UI):
 
 
 class Minigame(UI):
+
+    def ui_additional(self, get_ship=True):
+        # Recover from the shooting game wrongly selected by older KR builds.
+        # Its title is distinct; never use an unverified fixed-position back click.
+        if self.config.SERVER == 'kr' and self.appear(
+                KR_SHOOTING_GAME_CHECK, offset=(3, 3), interval=3):
+            self.device.click(KR_SHOOTING_GAME_CHECK)
+            return True
+        return super().ui_additional(get_ship=get_ship)
 
     def get_coin_amount(self, skip_first_screenshot=True):
         """
