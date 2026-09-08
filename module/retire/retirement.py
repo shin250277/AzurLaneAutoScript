@@ -32,6 +32,9 @@ KR_RETIRE_RARITY_WARNING = Button(
     name='KR_RETIRE_RARITY_WARNING')
 
 RETIRE_CONFIRM_SCROLL = Scroll(RETIRE_CONFIRM_SCROLL_AREA, color=(74, 77, 110), name='STRATEGIC_SEARCH_SCROLL')
+KR_RETIRE_UR_WARNING = Button(
+    area=(489, 402, 607, 425), color=(0, 0, 0), button=(489, 402, 607, 425),
+    file='./assets/kr/retire/KR_RETIRE_UR_WARNING.png', name='KR_RETIRE_UR_WARNING')
 RETIRE_CONFIRM_SCROLL.color_threshold = 240  # Background color is (66, 72, 77), so default (256-221)=35 is not enough to dintinguish.
 
 
@@ -129,6 +132,9 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
 
             # Click
             # Ship confirm, order by display hierarchy
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_RETIRE_UR_WARNING, offset=(20, 30), similarity=0.85):
+                raise RequestHumanTakeover('UR retirement confirmation blocked; review selected ships')
             if self._unable_to_enhance \
                     or self.config.OldRetire_SR \
                     or self.config.OldRetire_SSR \
