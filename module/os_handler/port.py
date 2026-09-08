@@ -117,6 +117,7 @@ class PortHandler(OSShop):
                       skip_first_screenshot=True)
 
         repaired = False
+        repair_requested = False
         for _ in self.loop():
             # End
             if self.info_bar_count():
@@ -127,7 +128,7 @@ class PortHandler(OSShop):
             if self.handle_popup_confirm('DOCK_REPAIR'):
                 repaired = True
                 continue
-            if self.config.SERVER == 'kr' and self.image_color_count(
+            if repair_requested and self.config.SERVER == 'kr' and self.image_color_count(
                     KR_PORT_DOCK_CONFIRM, color=KR_PORT_DOCK_CONFIRM.color,
                     threshold=20, count=5000) and self.get_interval_timer(
                         KR_PORT_DOCK_CONFIRM, interval=3, renew=True).reached():
@@ -139,6 +140,7 @@ class PortHandler(OSShop):
             # confirmation is translucent, so the button remains visible in
             # the background and would otherwise be clicked repeatedly.
             if self.appear_then_click(PORT_DOCK_CHECK, offset=(20, 20), interval=2):
+                repair_requested = True
                 continue
 
         self.ui_back(appear_button=PORT_DOCK_CHECK, check_button=PORT_CHECK, skip_first_screenshot=True)

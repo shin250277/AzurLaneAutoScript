@@ -27,6 +27,16 @@ from module.ui.page import (Page, page_academy, page_build, page_campaign, page_
                             page_shipyard, page_shop, page_sp, page_storage, page_supply_pack)
 from module.ui_white.assets import *
 
+KR_DEFEAT_RESULT = Button(
+    area=(230, 220, 551, 293), color=(180, 170, 173),
+    button=(1000, 632, 1050, 657),
+    file='./assets/kr/ui/DEFEAT_RESULT.png', name='KR_DEFEAT_RESULT')
+
+KR_DEFEAT_SUMMARY = Button(
+    area=(28, 58, 311, 119), color=(180, 170, 173),
+    button=(1140, 645, 1230, 680),
+    file='./assets/kr/ui/DEFEAT_SUMMARY.png', name='KR_DEFEAT_SUMMARY')
+
 KR_CAMPAIGN_MENU_CHECK = Button(
     area=(170, 582, 312, 644),
     color=(54, 56, 60),
@@ -849,6 +859,13 @@ class UI(InfoHandler):
         Args:
             get_ship:
         """
+        # A stopped KR run can resume on a defeat result instead of a map.
+        if server.server == 'kr':
+            if self.appear_then_click(KR_DEFEAT_RESULT, offset=(5, 5), interval=3):
+                return True
+            if self.appear_then_click(KR_DEFEAT_SUMMARY, offset=(5, 5), interval=3):
+                return True
+
         # Popups appear at page_os
         # Has a popup_confirm variant
         # so must take precedence
