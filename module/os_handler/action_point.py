@@ -5,6 +5,7 @@ from module.base.button import ButtonGrid
 from module.base.timer import Timer
 from module.base.utils import *
 from module.config.utils import get_server_next_update
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.ocr.ocr import Digit, DigitCounter
 from module.os_handler.assets import *
@@ -35,7 +36,11 @@ class ActionPointBuyCounter(DigitCounter):
         return result
 
 
-if server.server != 'jp':
+if server.server == 'kr':
+    # Korean wording places the complete green counter left of the JP region.
+    OCR_ACTION_POINT_BUY_REMAIN = ActionPointBuyCounter(
+        (862, 456, 899, 483), letter=(148, 247, 99), lang='cnocr', name='OCR_ACTION_POINT_BUY_REMAIN')
+elif server.server != 'jp':
     # Letters in ACTION_POINT_BUY_REMAIN are not the numeric fonts usually used in azur lane.
     OCR_ACTION_POINT_BUY_REMAIN = ActionPointBuyCounter(
         ACTION_POINT_BUY_REMAIN, letter=(148, 247, 99), lang='cnocr', name='OCR_ACTION_POINT_BUY_REMAIN')
@@ -272,12 +277,13 @@ class ActionPointHandler(UI, MapEventHandler):
             current, _, total = OCR_ACTION_POINT_BUY_REMAIN.ocr(self.device.image)
 
             # Possible result: 0/5, 05
-            if total == 0:
+            if total != 5 or not 0 <= current <= total:
                 continue
 
             break
         else:
             logger.warning('Get action points buy remain timeout')
+            raise RequestHumanTakeover('Cannot verify remaining action point purchases')
 
         return current
 

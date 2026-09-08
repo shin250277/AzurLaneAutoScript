@@ -16,7 +16,8 @@ from module.map.assets import (FLEET_PREPARATION, MAP_PREPARATION,
                                MAP_PREPARATION_CANCEL, WITHDRAW)
 from module.meowfficer.assets import MEOWFFICER_BUY, MEOWFFICER_TRAIN_START
 from module.ocr.ocr import Ocr
-from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
+from module.os_handler.assets import (ACTION_POINT_CANCEL, ACTION_POINT_USE, CURRENT_AP_CHECK,
+                                      AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
 from module.raid.assets import *
 from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_coalition,
@@ -807,6 +808,14 @@ class UI(InfoHandler):
         """
         Handle popups appear at page_os
         """
+        # Recover an interrupted KR AP purchase without confirming a purchase.
+        # Its close icon also matches the maintenance dialog close icon.
+        if (server.server == 'kr'
+                and self.match_template_color(CURRENT_AP_CHECK, offset=(40, 5), threshold=15)
+                and self.appear(ACTION_POINT_USE, offset=(20, 20))
+                and self.appear_then_click(ACTION_POINT_CANCEL, offset=(20, 20), interval=3)):
+            return True
+
         # Opsi reset
         # - Opsi has reset, handle_story_skip() clicks confirm
         # - RESET_TICKET_POPUP
