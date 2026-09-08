@@ -1,12 +1,22 @@
+import module.config.server as server
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import *
 from module.logger import logger
-from module.exception import RequestHumanTakeover
+from module.exception import GamePageUnknownError, RequestHumanTakeover
 from module.os.assets import *
 from module.os_handler.action_point import ActionPointHandler
 from module.os_handler.assets import AUTO_SEARCH_REWARD
 from module.os_handler.port import PORT_CHECK
 from module.ui.assets import BACK_ARROW
+
+if server.server == 'kr':
+    ZONE_SWITCH = Button(
+        area=(91, 336, 169, 355), color=(150, 150, 150), button=(91, 336, 169, 355),
+        file='./assets/kr/os/ZONE_STRONGHOLD.png', name='ZONE_SWITCH')
+    SELECT_DANGEROUS = Button(
+        area=(87, 315, 170, 337), color=(130, 130, 130), button=(87, 315, 170, 337),
+        file='./assets/kr/os/SELECT_DANGEROUS.png', name='SELECT_DANGEROUS')
 
 ZONE_TYPES = [ZONE_DANGEROUS, ZONE_SAFE, ZONE_OBSCURE, ZONE_ABYSSAL, ZONE_STRONGHOLD, ZONE_ARCHIVE]
 ZONE_SELECT = [SELECT_DANGEROUS, SELECT_SAFE, SELECT_OBSCURE, SELECT_ABYSSAL, SELECT_STRONGHOLD, SELECT_ARCHIVE]
@@ -173,6 +183,14 @@ class GlobeOperation(ActionPointHandler):
             in: is_zone_pinned
             out: is_in_zone_select
         """
+        if self.config.SERVER == 'kr':
+            for _ in self.loop(timeout=5):
+                if self.is_in_zone_select():
+                    return
+                if self.appear(ZONE_SWITCH, offset=(5, 5), interval=3):
+                    self.device.click(ZONE_SWITCH)
+            raise GamePageUnknownError('Cannot recognize KR zone selection menu')
+
         self.ui_click(ZONE_SWITCH, appear_button=self.is_zone_pinned, check_button=self.is_in_zone_select,
                       skip_first_screenshot=True)
 
