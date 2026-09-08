@@ -16,7 +16,21 @@ DOCK_SORTING = Switch('Dork_sorting')
 DOCK_SORTING.add_state('Ascending', check_button=SORT_ASC, click_button=SORTING_CLICK)
 DOCK_SORTING.add_state('Descending', check_button=SORT_DESC, click_button=SORTING_CLICK)
 
-DOCK_FAVOURITE = Switch('Favourite_filter')
+class DockFavouriteSwitch(Switch):
+    def get(self, main):
+        if main.config.SERVER != 'kr':
+            return super().get(main)
+        if not main.ui_page_appear(page_dock):
+            return 'unknown'
+        # KR's empty-list overlay darkens the inactive favourite label by
+        # about 12 RGB levels. Keep on/off colors distinct but allow that shift.
+        for data in self.state_list:
+            if main.appear(data['check_button'], offset=0, threshold=20):
+                return data['state']
+        return 'unknown'
+
+
+DOCK_FAVOURITE = DockFavouriteSwitch('Favourite_filter')
 DOCK_FAVOURITE.add_state('on', check_button=COMMON_SHIP_FILTER_ENABLE)
 DOCK_FAVOURITE.add_state('off', check_button=COMMON_SHIP_FILTER_DISABLE)
 
