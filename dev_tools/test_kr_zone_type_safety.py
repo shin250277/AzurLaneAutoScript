@@ -56,6 +56,21 @@ class ZoneTypeTest(unittest.TestCase):
             scope['zone_select_enter'](handler)
         handler.device.click.assert_not_called()
 
+    def test_visible_menu_is_not_selection_complete(self):
+        path = Path(__file__).resolve().parents[1] / 'module/os/globe_operation.py'
+        tree = ast.parse(path.read_text(encoding='utf-8'))
+        cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'GlobeOperation')
+        tree.body = [next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'zone_select_execute')]
+        scope = dict(logger=Mock())
+        exec(compile(tree, str(path), 'exec'), scope)
+        handler = SimpleNamespace(config=SimpleNamespace(SERVER='kr'), loop=lambda: range(3),
+                                  is_zone_pinned=lambda: True,
+                                  is_in_zone_select=Mock(side_effect=[True, False]),
+                                  appear_then_click=Mock(return_value=True),
+                                  _zone_select_offset=(20, 200), _zone_select_similarity=.75)
+        scope['zone_select_execute'](handler, 'normal')
+        handler.appear_then_click.assert_called_once()
+
 
 if __name__ == '__main__':
     unittest.main()

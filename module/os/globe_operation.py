@@ -206,7 +206,7 @@ class GlobeOperation(ActionPointHandler):
         logger.info(f'Zone select: {button}')
         for _ in self.loop():
             # End
-            if self.is_zone_pinned():
+            if self.is_zone_pinned() and (self.config.SERVER != 'kr' or not self.is_in_zone_select()):
                 break
             if self.appear_then_click(
                     button, offset=self._zone_select_offset, similarity=self._zone_select_similarity, interval=5):
