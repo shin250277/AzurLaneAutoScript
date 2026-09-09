@@ -24,8 +24,8 @@ class CommissionStartTest(unittest.TestCase):
                                   appear=Mock(return_value=True), device=Mock())
         self.assertTrue(scope['_commission_start_click'](handler, Mock()))
         handler.device.click.assert_called_once_with('start')
-        handler.device.screenshot.assert_called_once()
-        self.assertEqual(handler.info_bar_count.call_count, 2)
+        self.assertEqual(handler.info_bar_count.call_count, 1)
+        handler.device.sleep.assert_called_once_with(1)
         handler._kr_commission_start_confirmed.assert_called_once()
 
     def confirm(self, mode=True, items=()):
@@ -36,6 +36,7 @@ class CommissionStartTest(unittest.TestCase):
         scope = dict(logger=Mock(), copy=copy)
         exec(compile(tree, str(path), 'exec'), scope)
         ui = SimpleNamespace(handle_info_bar=Mock(), device=Mock(),
+                             handle_popup_cancel=Mock(return_value=False),
                              _commission_mode_reset=Mock(return_value=mode),
                              _commission_swipe_to_top=Mock(),
                              _commission_scan_list=Mock(return_value=items))
@@ -53,6 +54,13 @@ class CommissionStartTest(unittest.TestCase):
     def test_running_commission_confirms_departure(self):
         confirm, ui = self.confirm(items=[FakeCommission('running')])
         self.assertTrue(confirm(ui, FakeCommission('pending')))
+
+    def test_abandon_popup_is_cancelled_before_list_verification(self):
+        confirm, ui = self.confirm(items=[FakeCommission('running')])
+        ui.handle_popup_cancel.return_value = True
+        self.assertTrue(confirm(ui, FakeCommission('pending')))
+        ui.handle_popup_cancel.assert_called_once_with('COMMISSION_DEPARTURE_VERIFY')
+        self.assertEqual(ui.device.screenshot.call_count, 2)
 
 
 class FakeCommission:

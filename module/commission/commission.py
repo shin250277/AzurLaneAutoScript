@@ -369,11 +369,17 @@ class RewardCommission(UI, InfoHandler):
                 self.device.click(COMMISSION_START)
                 self.interval_reset(COMMISSION_ADVICE)
                 comm_timer.reset()
-                continue
+                # The same location becomes Abandon immediately after start.
+                # Do not click it again while waiting for a toast.
+                self.device.sleep(1)
+                return self._kr_commission_start_confirmed(comm, is_urgent=is_urgent)
             if self.match_template_color(COMMISSION_START, offset=(5, 20), interval=7):
                 self.device.click(COMMISSION_START)
                 self.interval_reset(COMMISSION_ADVICE)
                 comm_timer.reset()
+                if self.config.SERVER == 'kr':
+                    self.device.sleep(1)
+                    return self._kr_commission_start_confirmed(comm, is_urgent=is_urgent)
                 continue
             if self.handle_popup_confirm('COMMISSION_START'):
                 self.interval_reset(COMMISSION_ADVICE)
@@ -420,7 +426,13 @@ class RewardCommission(UI, InfoHandler):
         """A toast alone is not proof of departure; re-read the running list."""
         self.handle_info_bar()
         self.device.screenshot()
+        # A stale Start coordinate may have opened Abandon. Never confirm
+        # a modal in this verification path; cancel it and inspect the list.
+        if self.handle_popup_cancel('COMMISSION_DEPARTURE_VERIFY'):
+            self.device.sleep(0.5)
+            self.device.screenshot()
         if not self._commission_mode_reset():
+            self.device.image_save('./log/kr_commission_departure_unconfirmed.png')
             logger.warning('KR commission departure unconfirmed: list is obscured')
             return False
         self._commission_swipe_to_top()
