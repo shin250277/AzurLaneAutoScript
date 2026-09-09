@@ -164,14 +164,14 @@ class Daily(Combat):
     @property
     def supply_line_disruption_index(self):
         if self.emergency_module_development:
-            return 2
+            return 6
         else:
             return 2
 
     @property
     def empty_index(self):
         if self.emergency_module_development:
-            return 4
+            return 8  # All seven displayed tasks are present in this layout.
         else:
             return 4
 
