@@ -295,6 +295,12 @@ KR_LOCALIZED_PAGE_CHECKS = {
 }
 
 
+KR_AUTOMATION_NOTICE = Button(
+    area=(363, 224, 643, 248), color=(0, 0, 0),
+    button=(575, 505, 700, 545),
+    file='./assets/kr/combat/KR_AUTOMATION_NOTICE.png', name='KR_AUTOMATION_NOTICE')
+
+
 class UI(InfoHandler):
     ui_current: Page
 
@@ -852,6 +858,13 @@ class UI(InfoHandler):
 
         return False
 
+    def handle_kr_automation_notice(self):
+        # Match the specific informational sentence, not a generic blue confirm.
+        if self.config.SERVER == 'kr' and self.appear_then_click(
+                KR_AUTOMATION_NOTICE, offset=(5, 5), interval=2):
+            return True
+        return False
+
     def ui_additional(self, get_ship=True):
         """
         Handle all annoying popups during UI switching.
@@ -860,6 +873,8 @@ class UI(InfoHandler):
             get_ship:
         """
         # A stopped KR run can resume on a defeat result instead of a map.
+        if self.handle_kr_automation_notice():
+            return True
         if server.server == 'kr':
             if self.appear_then_click(KR_DEFEAT_RESULT, offset=(5, 5), interval=3):
                 return True

@@ -231,6 +231,8 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         self.wait_until_stable(COMBAT_OIL_LOADING)
 
     def handle_combat_automation_confirm(self):
+        if self.handle_kr_automation_notice():
+            return True
         if self.appear(AUTOMATION_CONFIRM_CHECK, threshold=30, interval=1):
             self.appear_then_click(AUTOMATION_CONFIRM, offset=(20, 20))
             return True
