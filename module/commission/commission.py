@@ -424,6 +424,9 @@ class RewardCommission(UI, InfoHandler):
 
     def _kr_commission_start_confirmed(self, comm, is_urgent=False):
         """A toast alone is not proof of departure; re-read the running list."""
+        # Preserve the response before dismissing any toast or popup.
+        self.device.screenshot()
+        self.device.image_save('./log/kr_commission_departure_before_handling.png')
         self.handle_info_bar()
         self.device.screenshot()
         # A stale Start coordinate may have opened Abandon. Never confirm
@@ -443,6 +446,8 @@ class RewardCommission(UI, InfoHandler):
         expected.convert_to_running()
         confirmed = any(item == expected for item in current)
         logger.attr('KR commission running confirmed', confirmed)
+        if not confirmed:
+            self.device.image_save('./log/kr_commission_departure_pending.png')
         return confirmed
 
     def _commission_find_and_start(self, comm, is_urgent=False):

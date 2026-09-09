@@ -50,6 +50,17 @@ class CommissionStartTest(unittest.TestCase):
     def test_pending_commission_is_not_success(self):
         confirm, ui = self.confirm(items=[FakeCommission('pending')])
         self.assertFalse(confirm(ui, FakeCommission('pending')))
+        ui.device.image_save.assert_any_call('./log/kr_commission_departure_pending.png')
+
+    def test_departure_frame_is_saved_before_popup_handling(self):
+        confirm, ui = self.confirm(items=[FakeCommission('running')])
+        events = []
+        ui.device.screenshot.side_effect = lambda: events.append('screenshot')
+        ui.device.image_save.side_effect = lambda path: events.append(path)
+        ui.handle_info_bar.side_effect = lambda: events.append('info_bar')
+        self.assertTrue(confirm(ui, FakeCommission('pending')))
+        self.assertEqual(events[:3], [
+            'screenshot', './log/kr_commission_departure_before_handling.png', 'info_bar'])
 
     def test_running_commission_confirms_departure(self):
         confirm, ui = self.confirm(items=[FakeCommission('running')])
@@ -60,7 +71,7 @@ class CommissionStartTest(unittest.TestCase):
         ui.handle_popup_cancel.return_value = True
         self.assertTrue(confirm(ui, FakeCommission('pending')))
         ui.handle_popup_cancel.assert_called_once_with('COMMISSION_DEPARTURE_VERIFY')
-        self.assertEqual(ui.device.screenshot.call_count, 2)
+        self.assertEqual(ui.device.screenshot.call_count, 3)
 
 
 class FakeCommission:
