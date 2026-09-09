@@ -1,4 +1,5 @@
 from scipy import signal
+import cv2
 
 from module.base.base import ModuleBase
 from module.base.button import Button
@@ -9,6 +10,18 @@ from module.handler.assets import *
 from module.logger import logger
 from module.os_handler.assets import CLICK_SAFE_AREA as OS_CLICK_SAFE_AREA
 from module.ui_white.assets import POPUP_CANCEL_WHITE, POPUP_CONFIRM_WHITE, POPUP_SINGLE_WHITE
+
+
+def kr_data_key_five_appear(image):
+    # Current KR archive dialogs render the key text at 110% of the old
+    # template. Include the quantity (5), not merely the currency name.
+    source = cv2.imread('./assets/kr/handler/USE_DATA_KEY.png')
+    if source is None:
+        return False
+    template = cv2.cvtColor(source, cv2.COLOR_BGR2RGB)[315:338, 604:734]
+    template = cv2.resize(template, None, fx=1.1, fy=1.1)
+    panel = image[295:355, 570:790]
+    return cv2.matchTemplate(panel, template, cv2.TM_CCOEFF_NORMED).max() > 0.85
 
 
 KR_GET_MISSION = Button(
@@ -237,6 +250,13 @@ class InfoHandler(ModuleBase):
         if not self.appear(POPUP_CONFIRM, offset=self._popup_offset) \
                 and not self.appear(POPUP_CANCEL, offset=self._popup_offset, interval=2):
             return False
+
+        if self.config.SERVER == 'kr' and kr_data_key_five_appear(self.device.image) \
+                and self.appear(POPUP_CONFIRM, offset=self._popup_offset):
+            logger.info('KR archive: confirm use of 5 data keys')
+            self.device.click(POPUP_CONFIRM)
+            self.config.USE_DATA_KEY = False
+            return True
 
         if self.appear(USE_DATA_KEY, offset=(20, 20)):
             # enable USE_DATA_KEY_NOTIFIED
