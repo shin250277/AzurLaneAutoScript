@@ -412,7 +412,26 @@ class RewardCommission(UI, InfoHandler):
                 self.device.sleep(0.3)
                 comm_timer.reset()
 
+        if self.config.SERVER == 'kr':
+            return self._kr_commission_start_confirmed(comm, is_urgent=is_urgent)
         return True
+
+    def _kr_commission_start_confirmed(self, comm, is_urgent=False):
+        """A toast alone is not proof of departure; re-read the running list."""
+        self.handle_info_bar()
+        self.device.screenshot()
+        if not self._commission_mode_reset():
+            logger.warning('KR commission departure unconfirmed: list is obscured')
+            return False
+        self._commission_swipe_to_top()
+        current = self._commission_scan_list()
+        if is_urgent:
+            current.call('convert_to_night')
+        expected = copy.deepcopy(comm)
+        expected.convert_to_running()
+        confirmed = any(item == expected for item in current)
+        logger.attr('KR commission running confirmed', confirmed)
+        return confirmed
 
     def _commission_find_and_start(self, comm, is_urgent=False):
         """
