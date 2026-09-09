@@ -19,6 +19,11 @@ from module.template.assets import TEMPLATE_COMBAT_LOADING
 from module.ui.assets import BACK_ARROW, EXERCISE_CHECK, MUNITIONS_CHECK
 
 
+KR_SHIP_CARD = Button(
+    area=(40, 360, 85, 410), color=(120, 124, 132),
+    button=(550, 500, 730, 660),
+    file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png', name='KR_SHIP_CARD')
+
 KR_QUIT = Button(
     area=(300, 500, 370, 525),
     color=(255, 104, 104),
@@ -544,6 +549,17 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
 
         return False
 
+    def handle_kr_ship_card(self, drop=None):
+        if self.config.SERVER != 'kr' or not self.appear(
+                KR_SHIP_CARD, offset=(3, 3), interval=1, similarity=0.85):
+            return False
+        if self.appear(NEW_SHIP):
+            self.config.GET_SHIP_TRIGGERED = True
+            if drop:
+                drop.handle_add(self)
+        self.device.click(KR_SHIP_CARD)
+        return True
+
     def handle_get_ship(self, drop=None):
         """
         Args:
@@ -552,6 +568,8 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         Returns:
             bool:
         """
+        if self.handle_kr_ship_card(drop=drop):
+            return True
         if self.appear_then_click(GET_SHIP, interval=1):
             if self.appear(NEW_SHIP):
                 logger.info('Get a new SHIP')
@@ -610,6 +628,10 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
             if self.handle_story_skip(drop=drop):
                 continue
             # Combat status
+            # KR can show a ship card after EXP; use the specific localized
+            # marker here without relaxing the legacy generic popup guard.
+            if self.handle_kr_ship_card(drop=drop):
+                continue
             if not exp_info and self.handle_get_ship(drop=drop):
                 continue
             if self.handle_get_items(drop=drop):
