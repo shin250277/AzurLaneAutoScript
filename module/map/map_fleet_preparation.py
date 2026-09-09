@@ -20,6 +20,18 @@ def _kr_hard_stats_unsatisfied(image):
     return np.count_nonzero((red > 150) & (red - green > 70) & (red - blue > 70)) > 50
 
 
+def _kr_hard_stats_visible(image):
+    """Require positive evidence of the KR restriction panel, not just no red.
+
+    This is not a hull/formation validator; the game's sortie validation still
+    applies to the preserved fleet.
+    """
+    panel = image[548:600, 120:950].astype(np.int16)
+    red, green, blue = panel[:, :, 0], panel[:, :, 1], panel[:, :, 2]
+    return np.count_nonzero((red > 150) & (green > 140)
+                            & (red - blue > 70) & (green - blue > 60)) > 50
+
+
 class FleetOperator:
     FLEET_BAR_SHAPE_Y = 33
     FLEET_BAR_MARGIN_Y = 9
@@ -331,29 +343,24 @@ class FleetPreparation(InfoHandler):
             return False
 
         # KR hard mode uses a redesigned fleet-constraint screen without the
-        # legacy dropdown selector. Its orange "recommend" buttons populate
-        # fleets for the displayed hull restrictions. Stat limits still need
-        # checking: recommendation can leave aviation below the minimum.
+        # legacy dropdown selector. Preserve the in-game fleet: pressing the
+        # orange recommendation button would overwrite manual adjustments.
         if self.config.SERVER == 'kr' and self.config.Campaign_Mode == 'hard' \
                 and self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET) \
                 and not self.appear(FLEET_1_CHOOSE, offset=FleetOperator.OFFSET):
-            logger.info('KR hard fleet selection: use recommended fleets')
-            if self.config.Fleet_Fleet1:
-                self.device.click(FLEET_1_CHOOSE)
-                self.device.sleep(1)
-            if self.config.Fleet_Fleet2:
-                self.device.click(FLEET_2_CHOOSE)
-                self.device.sleep(1)
-            # Preserve the actual recommended fleet and restrictions for
-            # diagnosis before the game dismisses a rejected preparation.
+            logger.info('KR hard fleet selection: preserve in-game fleets')
             self.device.screenshot()
             self.device.image_save('./log/kr_hard_fleet_preparation.png')
             if _kr_hard_stats_unsatisfied(self.device.image):
-                logger.critical('KR hard fleet stat restrictions are not satisfied after recommendation; '
+                logger.critical('KR hard fleet stat restrictions are not satisfied; '
                                 'check the red requirements in the fleet preparation screen')
                 raise HardNotSatisfied
+            if not _kr_hard_stats_visible(self.device.image):
+                logger.critical('KR hard fleet restriction panel is not recognized; '
+                                'check the fleet preparation screen manually')
+                raise HardNotSatisfied
             self.map_is_hard_mode = True
-            return True
+            return False
 
         if self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET):
             AUTO_SEARCH_SET_MOB.load_offset(FLEET_1_CLEAR)

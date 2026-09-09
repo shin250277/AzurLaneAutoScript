@@ -34,18 +34,21 @@ class HardFleetStatsTest(unittest.TestCase):
         self.image[553, 303:323] = (220, 60, 65)
         self.assertFalse(self.detect(self.image))
 
-    def preparation(self, red=False, fleet1=1, fleet2=2):
+    def preparation(self, red=False, fleet1=1, fleet2=2, visible=True):
         path = Path('module/map/map_fleet_preparation.py')
         tree = ast.parse(path.read_text(encoding='utf-8'))
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef)
                    and n.name == 'FleetPreparation')
-        tree.body = [next(n for n in cls.body if isinstance(n, ast.FunctionDef)
+        helpers = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
+        tree.body = helpers + [next(n for n in cls.body if isinstance(n, ast.FunctionDef)
                           and n.name == 'fleet_preparation')]
-        scope = dict(logger=Mock(), FleetOperator=SimpleNamespace(OFFSET=(20, 20)),
+        scope = dict(np=np, logger=Mock(), FleetOperator=SimpleNamespace(OFFSET=(20, 20)),
                      FLEET_1_CLEAR='clear1', FLEET_1_CHOOSE='choose1',
                      FLEET_2_CHOOSE='choose2', _kr_hard_stats_unsatisfied=self.detect,
                      HardNotSatisfied=ValueError)
         exec(compile(tree, str(path), 'exec'), scope)
+        if visible:
+            self.image[575:585, 130:230] = (220, 200, 65)
         if red:
             self.image[553:563, 303:330] = (220, 60, 65)
         ui = SimpleNamespace(
@@ -55,21 +58,27 @@ class HardFleetStatsTest(unittest.TestCase):
             appear=Mock(side_effect=[True, False]), device=Mock(image=self.image))
         return scope['fleet_preparation'], ui
 
-    def test_failed_recommendation_does_not_complete_preparation(self):
+    def test_failed_stats_preserve_fleet_and_stop(self):
         prepare, ui = self.preparation(red=True)
         with self.assertRaises(ValueError):
             prepare(ui)
         self.assertFalse(ui.map_is_hard_mode)
-        self.assertEqual([c[0][0] for c in ui.device.click.call_args_list],
-                         ['choose1', 'choose2'])
+        ui.device.click.assert_not_called()
         ui.device.screenshot.assert_called_once()
         ui.device.image_save.assert_called_once()
 
-    def test_allowed_preparation_only_recommends_enabled_fleet(self):
+    def test_visible_stats_preserve_manual_fleet(self):
         prepare, ui = self.preparation(fleet2=0)
-        self.assertTrue(prepare(ui))
+        self.assertFalse(prepare(ui))
         self.assertTrue(ui.map_is_hard_mode)
-        ui.device.click.assert_called_once_with('choose1')
+        ui.device.click.assert_not_called()
+
+    def test_unrecognized_panel_stops_without_recommending(self):
+        prepare, ui = self.preparation(visible=False)
+        with self.assertRaises(ValueError):
+            prepare(ui)
+        ui.device.click.assert_not_called()
+        self.assertFalse(ui.map_is_hard_mode)
 
     def test_already_checked_does_not_change_fleets(self):
         prepare, ui = self.preparation()
