@@ -228,7 +228,7 @@ class Daily(Combat):
                     continue
                 break
             if self.daily_current == self.supply_line_disruption_index:
-                logger.info('Submarine daily skip not unlocked, skip')
+                logger.info('Supply Line Disruption quick battle not unlocked, skip')
                 self.ui_click(click_button=BACK_ARROW, check_button=daily_enter_check, skip_first_screenshot=True)
                 break
             # Execute classic daily run
