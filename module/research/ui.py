@@ -19,6 +19,12 @@ KR_RESEARCH_GET_ITEMS = Button(
 
 class ResearchUI(UI):
     def is_in_research(self, interval=0):
+        if self.config.SERVER == 'kr':
+            # The localized title remains visible behind project details.
+            # Do not reopen a project or declare start success through them.
+            for button in (RESEARCH_START, RESEARCH_STOP, RESEARCH_UNAVAILABLE):
+                if self.appear(button, offset=(20, 20)):
+                    return False
         return self.ui_page_appear(page_research, offset=(20, 20), interval=interval)
 
     def is_in_queue(self, interval=0):
