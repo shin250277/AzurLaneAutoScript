@@ -537,6 +537,8 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
 
             if timeout.reached():
                 logger.warning('receive_6th_research wait timeout')
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_research_wait_timeout.png')
                 break
 
             status = self.get_research_status(self.device.image)

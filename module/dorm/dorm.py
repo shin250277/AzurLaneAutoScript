@@ -261,6 +261,8 @@ class RewardDorm(UI):
             # Timeout end
             if timeout.reached():
                 logger.warning('Dorm collect timeout, probably because Alas did not detect the info_bar')
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_dorm_collect_timeout.png')
                 break
 
     @cached_property
