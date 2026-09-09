@@ -13,6 +13,13 @@ from module.logger import logger
 from module.map.assets import *
 
 
+def _kr_hard_stats_unsatisfied(image):
+    """Red text in the redesigned KR stat panel means a failed restriction."""
+    panel = image[548:600, 120:950].astype(np.int16)
+    red, green, blue = panel[:, :, 0], panel[:, :, 1], panel[:, :, 2]
+    return np.count_nonzero((red > 150) & (red - green > 70) & (red - blue > 70)) > 50
+
+
 class FleetOperator:
     FLEET_BAR_SHAPE_Y = 33
     FLEET_BAR_MARGIN_Y = 9
@@ -325,7 +332,8 @@ class FleetPreparation(InfoHandler):
 
         # KR hard mode uses a redesigned fleet-constraint screen without the
         # legacy dropdown selector. Its orange "recommend" buttons populate
-        # fleets that satisfy the displayed stat and hull restrictions.
+        # fleets for the displayed hull restrictions. Stat limits still need
+        # checking: recommendation can leave aviation below the minimum.
         if self.config.SERVER == 'kr' and self.config.Campaign_Mode == 'hard' \
                 and self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET) \
                 and not self.appear(FLEET_1_CHOOSE, offset=FleetOperator.OFFSET):
@@ -336,6 +344,14 @@ class FleetPreparation(InfoHandler):
             if self.config.Fleet_Fleet2:
                 self.device.click(FLEET_2_CHOOSE)
                 self.device.sleep(1)
+            # Preserve the actual recommended fleet and restrictions for
+            # diagnosis before the game dismisses a rejected preparation.
+            self.device.screenshot()
+            self.device.image_save('./log/kr_hard_fleet_preparation.png')
+            if _kr_hard_stats_unsatisfied(self.device.image):
+                logger.critical('KR hard fleet stat restrictions are not satisfied after recommendation; '
+                                'check the red requirements in the fleet preparation screen')
+                raise HardNotSatisfied
             self.map_is_hard_mode = True
             return True
 
