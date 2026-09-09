@@ -72,8 +72,10 @@ class RewardCommission(UI, InfoHandler):
         for y in lines_detect(image):
             comm = Commission(image, y=y, config=self.config)
             logger.attr('Commission', comm)
-            repeat = len([c for c in commission if c == comm])
-            comm.repeat_count += repeat
+            # Equality includes repeat_count. Counting matches once assigns
+            # 1, 2, 2 to three identical cards and loses the third on merging.
+            while any(c == comm for c in commission):
+                comm.repeat_count += 1
             commission.append(comm)
 
         return SelectedGrids(commission)

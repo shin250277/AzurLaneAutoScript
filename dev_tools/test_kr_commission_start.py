@@ -8,6 +8,26 @@ from unittest.mock import Mock
 
 
 class CommissionStartTest(unittest.TestCase):
+    def test_three_identical_commissions_keep_distinct_occurrences(self):
+        path = Path('module/commission/commission.py')
+        tree = ast.parse(path.read_text(encoding='utf-8'))
+        tree.body = [next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
+                          and n.name == '_commission_detect')]
+
+        class Occurrence:
+            def __init__(self, image, y, config):
+                self.repeat_count = 1
+
+            def __eq__(self, other):
+                return self.repeat_count == other.repeat_count
+
+        scope = dict(logger=Mock(), lines_detect=lambda image: [200, 350, 500],
+                     Commission=Occurrence, SelectedGrids=list)
+        exec(compile(tree, str(path), 'exec'), scope)
+        result = scope['_commission_detect'](SimpleNamespace(config=Mock()), None)
+        self.assertEqual([c.repeat_count for c in result], [1, 2, 3])
+        self.assertNotEqual(result[1], result[2])
+
     def test_start_click_waits_for_confirmation(self):
         path = Path(__file__).resolve().parents[1] / 'module/commission/commission.py'
         tree = ast.parse(path.read_text(encoding='utf-8'))
