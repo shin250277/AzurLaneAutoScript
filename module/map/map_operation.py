@@ -9,6 +9,7 @@ from module.map.assets import *
 from module.map.map_fleet_preparation import FleetPreparation
 from module.retire.retirement import Retirement
 from module.ui.assets import BACK_ARROW, DAILY_CHECK
+from module.ui.page import page_event
 
 
 class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHandler):
@@ -99,6 +100,16 @@ class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHand
                 continue
 
         return count > 0
+
+    def _kr_refresh_stage_after_retirement(self, button, mode):
+        # KR can leave preparation entirely and return to the hard-event
+        # list. Re-read the same stage instead of reusing its normal icon.
+        if self.config.SERVER == 'kr' and self.ui_page_appear(page_event):
+            self.ensure_campaign_ui(name=button.name, mode=mode)
+            button = self.ENTRANCE
+            button.area = button.button
+            self.stage_entrance = button
+        return button
 
     def enter_map(self, button, mode='normal', skip_first_screenshot=True):
         """Enter a campaign.
@@ -193,6 +204,7 @@ class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHand
 
                 # Retire
                 if self.handle_retirement():
+                    button = self._kr_refresh_stage_after_retirement(button, mode)
                     continue
 
                 # Use Data Key
