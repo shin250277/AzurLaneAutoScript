@@ -42,6 +42,14 @@ class ResearchQueue(ResearchUI):
                     self.device.click(RESEARCH_QUEUE_ADD)
                     continue
                 else:
+                    if self.config.SERVER == 'kr':
+                        # Preserve paid-in resources while diagnosing a disabled
+                        # or misclassified queue button. Do not cancel/rebuy it.
+                        self.device.image_save('./log/kr_research_queue_unavailable.png')
+                        logger.warning('KR queue unavailable; preserve project and defer research')
+                        self.research_detail_quit()
+                        self.config.task_delay(minute=30)
+                        self.config.task_stop()
                     logger.info('Project requirements not satisfied, cancel it')
                     self.research_detail_cancel()
                     return False
@@ -69,7 +77,12 @@ class ResearchQueue(ResearchUI):
         # RESEARCH_QUEUE_ADD.button is the entire clickable area of button
         # Available: (90, 142, 203)
         # Unavailable: (153, 160, 170)
-        r, g, b = get_color(self.device.image, RESEARCH_QUEUE_ADD.button)
+        area = RESEARCH_QUEUE_ADD.button
+        if self.config.SERVER == 'kr':
+            # The KR click box extends beyond the blue button. Gold project
+            # backgrounds otherwise dilute its blue contrast below the cutoff.
+            area = (522, 559, 679, 604)
+        r, g, b = get_color(self.device.image, area)
         if b - min(r, g) > 60:
             return True
         else:

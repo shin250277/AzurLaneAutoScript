@@ -42,6 +42,10 @@ class ResearchUI(UI):
             in: is_in_research
             out: is_in_queue
         """
+        if (self.config.SERVER == 'kr' and not self.is_in_research()
+                and self.ui_page_appear(page_research, offset=(20, 20))):
+            # A restarted worker can inherit an open project detail overlay.
+            self.research_detail_quit()
         self.ui_click(RESEARCH_GOTO_QUEUE, check_button=self.is_in_queue, appear_button=self.is_in_research,
                       retry_wait=1, skip_first_screenshot=skip_first_screenshot)
 
