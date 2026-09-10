@@ -460,15 +460,21 @@ class RewardCommission(UI, InfoHandler):
             current.call('convert_to_night')
         expected = copy.deepcopy(comm)
         expected.convert_to_running()
-        if is_urgent and expected.genre == 'urgent_drill':
-            # KR fallback uses the red expiry label to identify urgent cards.
-            # Departure removes that label; normalize the expected metadata
-            # exactly as the running-card parser and urgent-list scan do.
-            expected.expire = timedelta(0)
-            expected.genre = 'major_comm' if expected.duration >= timedelta(hours=8) else 'extra_drill'
-            expected.category_str, expected.genre_str = expected.genre.split('_', 1)
-            expected.convert_to_night()
-        confirmed = any(item == expected for item in current)
+        normalize_urgent = is_urgent and expected.genre == 'urgent_drill'
+        confirmed = False
+        for item in current:
+            if normalize_urgent:
+                # Departure removes the red expiry label used by KR fallback.
+                # Use the observed countdown for classification, including an
+                # eight-hour commission that has just ticked below eight hours.
+                # Equality still checks running status, duration and occurrence.
+                expected.expire = timedelta(0)
+                expected.genre = 'major_comm' if item.duration >= timedelta(hours=8) else 'extra_drill'
+                expected.category_str, expected.genre_str = expected.genre.split('_', 1)
+                expected.convert_to_night()
+            if item == expected:
+                confirmed = True
+                break
         logger.attr('KR commission running confirmed', confirmed)
         if not confirmed:
             self.device.image_save('./log/kr_commission_departure_pending.png')

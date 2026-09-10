@@ -92,6 +92,13 @@ class CommissionStartTest(unittest.TestCase):
         running.duration = timedelta(minutes=70)
         running.status = 'pending'
         self.assertFalse(confirm(ui, pending, is_urgent=True))
+        # An eight-hour urgent commission crosses the fallback classification
+        # boundary as soon as its countdown begins.
+        pending.duration = timedelta(hours=8)
+        running.status = 'running'
+        running.duration = timedelta(hours=8, seconds=-3)
+        running.genre, running.category_str, running.genre_str = 'extra_drill', 'extra', 'drill'
+        self.assertTrue(confirm(ui, pending, is_urgent=True))
 
     def test_ten_oil_notice_can_confirm_but_still_requires_running(self):
         confirm, ui = self.confirm(items=[FakeCommission('pending')])
