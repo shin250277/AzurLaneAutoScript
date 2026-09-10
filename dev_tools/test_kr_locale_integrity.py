@@ -51,6 +51,15 @@ class KoreanLocaleIntegrityTest(unittest.TestCase):
                 self.assertEqual(sorted(re.findall(r'\{[^{}]+\}', source)),
                                  sorted(re.findall(r'\{[^{}]+\}', self.locales['ko-KR'][key])))
 
+    def test_officially_sourced_archive_titles(self):
+        expected = {
+            'war_archives_20190321_en': '작전문서: 홍염의 방문자',
+            'war_archives_20191031_en': '작전문서: 거울에 비친 이색',
+        }
+        for key, title in expected.items():
+            with self.subTest(key=key):
+                self.assertEqual(self.locales['ko-KR'][('Campaign', 'Event', key)], title)
+
 
 if __name__ == '__main__':
     unittest.main()
