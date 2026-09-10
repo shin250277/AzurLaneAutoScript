@@ -127,6 +127,29 @@ class CommissionStartTest(unittest.TestCase):
         running.status = 'pending'
         self.assertFalse(confirm(ui, pending, is_urgent=False))
 
+    def test_known_name_genre_survives_departure_without_fallback_reclassification(self):
+        from module.commission.project import Commission
+        from module.map.map_grids import SelectedGrids
+        for genre, urgent in (('urgent_drill', True), ('urgent_cube', True), ('extra_oil', False)):
+            with self.subTest(genre=genre):
+                pending = Commission.__new__(Commission)
+                pending.valid = True
+                pending.genre = pending.kr_name_genre = genre
+                pending.category_str, pending.genre_str = genre.split('_', 1)
+                pending.status = 'pending'
+                pending.duration = timedelta(hours=4)
+                pending.expire = timedelta(hours=1)
+                pending.repeat_count = 1
+                pending.suffix_image = None
+                running = copy.deepcopy(pending)
+                running.status = 'running'
+                running.duration -= timedelta(seconds=6)
+                running.expire = timedelta(0)
+                confirm, ui = self.confirm(items=SelectedGrids([running]))
+                self.assertTrue(confirm(ui, pending, is_urgent=urgent))
+                self.assertEqual(pending.genre, genre)
+                self.assertEqual(pending.expire, timedelta(hours=1))
+
     def test_unknown_popup_is_never_confirmed(self):
         confirm, ui = self.confirm(items=[FakeCommission('pending')])
         self.assertFalse(confirm(ui, FakeCommission('pending')))

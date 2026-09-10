@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from functools import lru_cache
 
 from module.base.decorator import Config
 from module.base.filter import Filter
@@ -65,6 +66,41 @@ def crop_kr_name_image(image, area):
         return None
     x, y, width, height = cv2.boundingRect(points)
     return letters[y:y + height, x:x + width].copy()
+
+
+def kr_name_images_match(first, second, similarity=0.90):
+    if first is None or second is None:
+        return False
+    # Do not match a short title/numeral as a substring of a longer one.
+    if any(abs(a - b) > 2 for a, b in zip(first.shape, second.shape)):
+        return False
+    scores = []
+    for image, template in ((first, second), (second, first)):
+        padded = cv2.copyMakeBorder(image, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=255)
+        result = cv2.matchTemplate(padded, template, cv2.TM_CCOEFF_NORMED)
+        scores.append(cv2.minMaxLoc(result)[1])
+    return min(scores) >= similarity
+
+
+@lru_cache(maxsize=1)
+def _kr_name_templates():
+    templates = []
+    for name, genre in dictionary_kr_visual.items():
+        path = './assets/kr/commission/names/{}.png'.format(name)
+        image = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            raise FileNotFoundError(path)
+        templates.append((genre, image))
+    return templates
+
+
+def classify_kr_name(image):
+    if image is None:
+        return ''
+    matches = {genre for genre, template in _kr_name_templates()
+               if kr_name_images_match(image, template)}
+    # Ambiguous matches must not silently select the first reward genre.
+    return next(iter(matches)) if len(matches) == 1 else ''
 
 
 def image_hash(image):
@@ -220,6 +256,7 @@ class Commission:
         if self.config.SERVER == 'kr':
             self.name = f'KR_COMMISSION_{self.suffix_hash[:8]}'
             self.kr_name_image = crop_kr_name_image(self.image, self.button.area)
+            self.kr_name_genre = classify_kr_name(self.kr_name_image)
 
         # Duration time
         area = area_offset((290, 68, 390, 95), self.area[0:2])
@@ -255,14 +292,17 @@ class Commission:
         # usable with stable timing metadata and never infer reward type from
         # the JP model's mojibake output.
         if self.config.SERVER == 'kr':
-            if self.expire:
+            if self.kr_name_genre:
+                self.genre = self.kr_name_genre
+            elif self.expire:
                 self.genre = 'urgent_drill'
             elif self.duration >= timedelta(hours=8):
                 self.genre = 'major_comm'
             else:
                 self.genre = 'extra_drill'
             self.valid = self.kr_name_image is not None
-            logger.info(f'Korean commission fallback: {self.genre}, duration={self.duration}')
+            source = 'name template' if self.kr_name_genre else 'fallback'
+            logger.info(f'Korean commission {source}: {self.genre}, duration={self.duration}')
 
     @Config.when(SERVER='tw')
     def commission_parse(self):
@@ -415,19 +455,8 @@ class Commission:
         return hash(f'{self.genre}_{self.name}')
 
     def kr_name_match(self, other, similarity=0.90):
-        first = getattr(self, 'kr_name_image', None)
-        second = getattr(other, 'kr_name_image', None)
-        if first is None or second is None:
-            return False
-        # Do not match a short title/numeral as a substring of a longer one.
-        if any(abs(a - b) > 2 for a, b in zip(first.shape, second.shape)):
-            return False
-        scores = []
-        for image, template in ((first, second), (second, first)):
-            padded = cv2.copyMakeBorder(image, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=255)
-            result = cv2.matchTemplate(padded, template, cv2.TM_CCOEFF_NORMED)
-            scores.append(cv2.minMaxLoc(result)[1])
-        return min(scores) >= similarity
+        return kr_name_images_match(getattr(self, 'kr_name_image', None),
+                                    getattr(other, 'kr_name_image', None), similarity)
 
     def suffix_match(self, other, similarity=0.75):
         """
