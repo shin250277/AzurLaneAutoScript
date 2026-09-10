@@ -69,6 +69,51 @@ class PurchaseSelectionTest(unittest.TestCase):
         self.handler.action_point_use.assert_not_called()
 
 
+class BoxSelectionTest(unittest.TestCase):
+    def setUp(self):
+        path = Path(__file__).resolve().parents[1] / 'module/os_handler/action_point.py'
+        tree = ast.parse(path.read_text(encoding='utf-8'))
+        cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'ActionPointHandler')
+        tree.body = [n for n in cls.body if isinstance(n, ast.FunctionDef)
+                     and n.name in ('handle_action_point', 'action_point_get_active_button')]
+        self.color = Mock(return_value=(100, 100, 100))
+        grid = SimpleNamespace(buttons=[SimpleNamespace(area=(0, 0, 10, 10)) for _ in range(4)])
+        scope = dict(ACTION_POINT_BOX={1: 20, 2: 50, 3: 100}, ACTION_POINT_GRID=grid,
+                     get_color=self.color, logger=Mock(), RequestHumanTakeover=RuntimeError,
+                     ActionPointLimit=RuntimeError)
+        exec(compile(tree, str(path), 'exec'), scope)
+        self.handle, self.active = scope['handle_action_point'], scope['action_point_get_active_button']
+        self.ui = Mock()
+        self.ui.config = SimpleNamespace(SERVER='kr', OpsiGeneral_BuyActionPointLimit=0,
+                                         OS_ACTION_POINT_PRESERVE=0)
+        self.ui._action_point_current, self.ui._action_point_total = 0, 20
+        self.ui._action_point_box = {1: 1, 2: 0, 3: 0}
+        self.ui.action_point_set_button.return_value = True
+        self.ui.action_point_use.side_effect = lambda: setattr(self.ui, '_action_point_current', 20)
+
+    def test_failed_box_selection_never_consumes_item(self):
+        self.ui.action_point_set_button.return_value = False
+        with self.assertRaises(RuntimeError):
+            self.handle(self.ui, None, None, cost=20)
+        self.ui.action_point_use.assert_not_called()
+
+    def test_confirmed_box_selection_and_updated_ap_succeed(self):
+        self.assertTrue(self.handle(self.ui, None, None, cost=20))
+        self.ui.action_point_set_button.assert_called_once_with(1)
+        self.ui.action_point_use.assert_called_once_with()
+
+    def test_unknown_active_button_is_not_assumed_to_be_box_one(self):
+        self.assertEqual(self.active(self.ui), -1)
+
+    def test_other_server_keeps_existing_unknown_button_fallback(self):
+        self.ui.config.SERVER = 'jp'
+        self.assertEqual(self.active(self.ui), 1)
+
+    def test_visible_active_button_is_still_detected(self):
+        self.color.side_effect = [(100, 100, 100), (100, 100, 200)]
+        self.assertEqual(self.active(self.ui), 1)
+
+
 class PopupRecoveryTest(unittest.TestCase):
     def test_cancel_only_after_ap_checks(self):
         path = Path(__file__).resolve().parents[1] / 'module/ui/ui.py'

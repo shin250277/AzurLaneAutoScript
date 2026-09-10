@@ -233,6 +233,7 @@ class ActionPointHandler(UI, MapEventHandler):
         """
         Returns:
             int: 0 to 3. 0 for oil, 1 for 20 ap box, 2 for 50 ap box, 3 for 100 ap box.
+                KR returns -1 when no active selection can be verified.
         """
         for index, item in enumerate(ACTION_POINT_GRID.buttons):
             area = item.area
@@ -243,6 +244,8 @@ class ActionPointHandler(UI, MapEventHandler):
                 return index
 
         logger.warning('Unable to find an active action point box button')
+        if self.config.SERVER == 'kr':
+            return -1
         return 1
 
     def action_point_set_button(self, index):
@@ -421,7 +424,10 @@ class ActionPointHandler(UI, MapEventHandler):
             # Use action point boxes
             if len(box):
                 if self._action_point_total > self.config.OS_ACTION_POINT_PRESERVE:
-                    self.action_point_set_button(box[0])
+                    selected = self.action_point_set_button(box[0])
+                    if self.config.SERVER == 'kr' and not selected:
+                        self.device.image_save('./log/kr_action_point_selection_unconfirmed.png')
+                        raise RequestHumanTakeover('KR AP box selection was not confirmed; refusing item use')
                     self.action_point_use()
                     continue
                 else:
