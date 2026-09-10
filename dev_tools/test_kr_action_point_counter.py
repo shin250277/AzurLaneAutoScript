@@ -36,6 +36,39 @@ class CounterTest(unittest.TestCase):
         self.assertEqual(self.read(self.handler), 5)
 
 
+class PurchaseSelectionTest(unittest.TestCase):
+    def setUp(self):
+        path = Path(__file__).resolve().parents[1] / 'module/os_handler/action_point.py'
+        tree = ast.parse(path.read_text(encoding='utf-8'))
+        cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'ActionPointHandler')
+        tree.body = [n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'action_point_buy']
+        scope = dict(ACTION_POINTS_BUY={5: 1000}, logger=Mock(), RequestHumanTakeover=RuntimeError)
+        exec(compile(tree, str(path), 'exec'), scope)
+        self.buy = scope['action_point_buy']
+        self.handler = Mock()
+        self.handler.config = SimpleNamespace(SERVER='kr', OpsiGeneral_BuyActionPointLimit=1)
+        self.handler._action_point_box = {0: 10000}
+        self.handler.action_point_get_buy_remain.return_value = 5
+        self.handler.action_point_set_button.return_value = True
+
+    def test_failed_oil_selection_never_uses_current_item(self):
+        self.handler.action_point_set_button.return_value = False
+        with self.assertRaises(RuntimeError):
+            self.buy(self.handler)
+        self.handler.action_point_use.assert_not_called()
+        self.handler.action_point_get_buy_remain.assert_not_called()
+
+    def test_verified_oil_selection_keeps_authorized_purchase_path(self):
+        self.assertTrue(self.buy(self.handler))
+        self.handler.action_point_set_button.assert_called_once_with(0)
+        self.handler.action_point_use.assert_called_once_with()
+
+    def test_purchase_cap_still_blocks_use(self):
+        self.handler.action_point_get_buy_remain.return_value = 4
+        self.assertFalse(self.buy(self.handler))
+        self.handler.action_point_use.assert_not_called()
+
+
 class PopupRecoveryTest(unittest.TestCase):
     def test_cancel_only_after_ap_checks(self):
         path = Path(__file__).resolve().parents[1] / 'module/ui/ui.py'

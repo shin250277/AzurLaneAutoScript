@@ -300,7 +300,10 @@ class ActionPointHandler(UI, MapEventHandler):
         Pages:
             in: ACTION_POINT_USE
         """
-        self.action_point_set_button(0)
+        selected = self.action_point_set_button(0)
+        if self.config.SERVER == 'kr' and not selected:
+            self.device.image_save('./log/kr_action_point_selection_unconfirmed.png')
+            raise RequestHumanTakeover('KR oil purchase selection was not confirmed; refusing item use')
         current = self.action_point_get_buy_remain()
         buy_max = 5  # In current version of AL, players can buy 5 times of AP in a week.
         buy_count = buy_max - current
