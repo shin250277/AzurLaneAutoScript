@@ -193,6 +193,8 @@ class GuildOperations(GuildBase):
                 self.device.screenshot()
             if (self.appear(GUILD_OPERATIONS_INACTIVE_CHECK)
                     and self._guild_operations_active_appear()):
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_guild_operations_inactive.png')
                 logger.info(
                     'Mode: Operations Inactive, please contact your Elite/Officer/Leader seniors to select '
                     'an operation difficulty')
@@ -207,6 +209,8 @@ class GuildOperations(GuildBase):
                 logger.info('Mode: Guild Raid Boss (GUILD_OPERATIONS_NEW)')
                 return 2
 
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_guild_operations_unknown.png')
         logger.warning('Operations interface is unrecognized')
         return None
 

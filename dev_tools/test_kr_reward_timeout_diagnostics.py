@@ -17,6 +17,29 @@ def load_method(path, name, **scope):
 
 
 class TimeoutDiagnosticsTest(unittest.TestCase):
+    def test_guild_mode_retains_inactive_or_unknown_kr_frame_only(self):
+        method = load_method(
+            'module/guild/operations.py', '_guild_operations_get_mode',
+            GUILD_OPERATIONS_INACTIVE_CHECK='inactive',
+            GUILD_BOSS_ENTER='boss', GUILD_OPERATIONS_NEW='new')
+        for server in ('kr', 'jp'):
+            for mode in ('inactive', 'active', 'boss', 'new', 'unknown'):
+                with self.subTest(server=server, mode=mode):
+                    ui = SimpleNamespace(
+                        config=SimpleNamespace(SERVER=server), device=Mock(),
+                        appear=Mock(side_effect=lambda button, **kw: button == mode),
+                        _guild_operations_active_appear=Mock(
+                            return_value=mode in ('inactive', 'active')))
+                    expected = {'inactive': 0, 'active': 1, 'boss': 2, 'new': 2}.get(mode)
+                    self.assertEqual(method(ui), expected)
+                    if server == 'kr' and mode in ('inactive', 'unknown'):
+                        ui.device.image_save.assert_called_once_with(
+                            './log/kr_guild_operations_{}.png'.format(mode))
+                    else:
+                        ui.device.image_save.assert_not_called()
+                    self.assertEqual(ui.device.screenshot.call_count, 2 if mode == 'unknown' else 0)
+                    ui.device.click.assert_not_called()
+
     def test_research_center_unknown_retains_current_kr_frame_once(self):
         statuses = [Mock() for _ in range(5)]
         detail = Mock()
