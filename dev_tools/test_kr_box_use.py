@@ -2,10 +2,14 @@
 import unittest
 import numpy as np
 from module.base.button import Button
-from module.storage.assets import BOX_USE, BOX_AMOUNT_CONFIRM
+from module.storage.assets import BOX_USE, BOX_AMOUNT_CONFIRM, EQUIPMENT_FULL
 
 
 class KrBoxUseTest(unittest.TestCase):
+    def test_full_storage_button_opens_organize_not_expansion(self):
+        self.assertIn('kr', EQUIPMENT_FULL.raw_file)
+        self.assertEqual(EQUIPMENT_FULL.raw_button['kr'], (413, 487, 569, 538))
+
     def test_amount_confirmation_has_korean_template(self):
         self.assertIn('kr', BOX_AMOUNT_CONFIRM.raw_file)
         from PIL import Image

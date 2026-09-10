@@ -10,10 +10,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('screenshot')
     parser.add_argument('--amount-confirm', action='store_true')
+    parser.add_argument('--storage-full', action='store_true')
     args = parser.parse_args()
     name = 'BOX_AMOUNT_CONFIRM' if args.amount_confirm else 'BOX_USE'
     area = (809, 613, 868, 645) if args.amount_confirm else (750, 494, 823, 528)
     click_area = (752, 600, 927, 660) if args.amount_confirm else (710, 484, 867, 536)
+    if args.storage_full:
+        name = 'EQUIPMENT_FULL'
+        area = (368, 312, 626, 341)
+        click_area = (413, 487, 569, 538)
     with Image.open(args.screenshot) as source:
         if source.size != (1280, 720):
             raise ValueError('Expected 1280x720 game screenshot')

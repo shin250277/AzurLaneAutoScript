@@ -190,6 +190,13 @@ class StorageHandler(StorageUI):
             # Storage full
             if self.appear(EQUIPMENT_FULL, offset=(20, 20)):
                 logger.info('Storage full')
+                if self.config.SERVER == 'kr':
+                    # The localized message confirms this is the full-storage
+                    # modal. Its LEFT button opens existing equipment; never
+                    # use the right-hand expansion button.
+                    self.ui_click(EQUIPMENT_FULL, check_button=DISASSEMBLE_CANCEL,
+                                  skip_first_screenshot=True, retry_wait=3)
+                    raise StorageFull
                 # Close popup
                 self.ui_click(MATERIAL_ENTER, check_button=self._storage_in_material, appear_button=EQUIPMENT_FULL,
                               retry_wait=3, skip_first_screenshot=True)
