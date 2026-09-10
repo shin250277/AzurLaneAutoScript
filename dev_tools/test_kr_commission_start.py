@@ -53,14 +53,37 @@ class CommissionStartTest(unittest.TestCase):
         tree = ast.parse(path.read_text(encoding='utf-8'))
         tree.body = [next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
                           and n.name == '_kr_commission_start_confirmed')]
-        scope = dict(logger=Mock(), copy=copy)
+        scope = dict(logger=Mock(), copy=copy, KR_COMMISSION_OIL_CONFIRM='oil_notice',
+                     OCR_KR_COMMISSION_OIL=Mock(ocr=Mock(return_value=10)))
         exec(compile(tree, str(path), 'exec'), scope)
         ui = SimpleNamespace(handle_info_bar=Mock(), device=Mock(),
+                             appear=Mock(return_value=False),
+                             handle_popup_confirm=Mock(return_value=True),
+                             oil_ocr=scope['OCR_KR_COMMISSION_OIL'],
                              handle_popup_cancel=Mock(return_value=False),
                              _commission_mode_reset=Mock(return_value=mode),
                              _commission_swipe_to_top=Mock(),
                              _commission_scan_list=Mock(return_value=items))
         return scope['_kr_commission_start_confirmed'], ui
+
+    def test_ten_oil_notice_can_confirm_but_still_requires_running(self):
+        confirm, ui = self.confirm(items=[FakeCommission('pending')])
+        ui.appear.return_value = True
+        self.assertFalse(confirm(ui, FakeCommission('pending')))
+        ui.handle_popup_confirm.assert_called_once_with('COMMISSION_OIL_10')
+
+    def test_unknown_popup_is_never_confirmed(self):
+        confirm, ui = self.confirm(items=[FakeCommission('pending')])
+        self.assertFalse(confirm(ui, FakeCommission('pending')))
+        ui.handle_popup_confirm.assert_not_called()
+
+    def test_unverified_oil_amount_is_not_confirmed(self):
+        for amount in (0, 100, 1000):
+            confirm, ui = self.confirm(items=[FakeCommission('pending')])
+            ui.appear.return_value = True
+            ui.oil_ocr.ocr.return_value = amount
+            self.assertFalse(confirm(ui, FakeCommission('pending')))
+            ui.handle_popup_confirm.assert_not_called()
 
     def test_obscuring_popup_is_not_success(self):
         confirm, ui = self.confirm(mode=False)

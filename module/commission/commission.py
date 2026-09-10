@@ -15,6 +15,7 @@ from module.dorm.dorm import RewardDorm
 from module.exception import GameStuckError, OilMaxed, RequestHumanTakeover
 from module.handler.info_handler import InfoHandler
 from module.logger import logger
+from module.ocr.ocr import Digit
 from module.map.map_grids import SelectedGrids
 from module.retire.assets import DOCK_CHECK
 from module.ui.assets import BACK_ARROW, REWARD_GOTO_COMMISSION
@@ -28,6 +29,12 @@ COMMISSION_SWITCH = Switch('Commission_switch', is_selector=True)
 COMMISSION_SWITCH.add_state('daily', COMMISSION_DAILY)
 COMMISSION_SWITCH.add_state('urgent', COMMISSION_URGENT)
 COMMISSION_SCROLL = Scroll(COMMISSION_SCROLL_AREA, color=(247, 211, 66), name='COMMISSION_SCROLL')
+KR_COMMISSION_OIL_CONFIRM = Button(
+    area=(422, 329, 856, 360), color=(), button=(422, 329, 856, 360),
+    file='./assets/kr/commission/KR_OIL_NOTICE.png', name='KR_COMMISSION_OIL_CONFIRM')
+OCR_KR_COMMISSION_OIL = Digit(
+    Button(area=(585, 331, 660, 359), color=(), button=(585, 331, 660, 359),
+           name='KR_COMMISSION_OIL_COST'), letter=(132, 211, 74), threshold=128)
 
 
 def lines_detect(image):
@@ -431,6 +438,13 @@ class RewardCommission(UI, InfoHandler):
         self.device.image_save('./log/kr_commission_departure_before_handling.png')
         self.handle_info_bar()
         self.device.screenshot()
+        # Only the observed, non-premium 10-oil departure notice is allowed.
+        # An unrelated modal (especially Abandon) must still be cancelled.
+        if (self.appear(KR_COMMISSION_OIL_CONFIRM, offset=(5, 5), similarity=0.95)
+                and OCR_KR_COMMISSION_OIL.ocr(self.device.image) == 10):
+            if self.handle_popup_confirm('COMMISSION_OIL_10'):
+                self.device.sleep(1)
+                self.device.screenshot()
         # A stale Start coordinate may have opened Abandon. Never confirm
         # a modal in this verification path; cancel it and inspect the list.
         if self.handle_popup_cancel('COMMISSION_DEPARTURE_VERIFY'):
