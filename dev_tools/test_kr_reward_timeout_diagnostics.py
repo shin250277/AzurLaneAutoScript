@@ -17,6 +17,22 @@ def load_method(path, name, **scope):
 
 
 class TimeoutDiagnosticsTest(unittest.TestCase):
+    def test_commission_scan_frames_are_kr_only_and_bounded(self):
+        method = load_method('module/commission/commission.py', '_save_kr_commission_scan_frame')
+        for server in ('kr', 'jp'):
+            ui = SimpleNamespace(config=SimpleNamespace(SERVER=server), device=Mock())
+            for _ in range(12):
+                method(ui)
+            if server == 'kr':
+                self.assertEqual(ui.device.image_save.call_count, 8)
+                self.assertEqual(
+                    [call[0][0] for call in ui.device.image_save.call_args_list],
+                    ['./log/kr_commission_scan_{}.png'.format(i) for i in range(8)])
+            else:
+                ui.device.image_save.assert_not_called()
+            ui.device.click.assert_not_called()
+            ui.device.screenshot.assert_not_called()
+
     def test_guild_mode_retains_inactive_or_unknown_kr_frame_only(self):
         method = load_method(
             'module/guild/operations.py', '_guild_operations_get_mode',

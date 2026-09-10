@@ -263,6 +263,16 @@ class RewardCommission(UI, InfoHandler):
         COMMISSION_SCROLL.set_top(main=self, skip_first_screenshot=True)
         return True
 
+    def _save_kr_commission_scan_frame(self):
+        """Bounded local evidence for KR names/rewards; no extra game input."""
+        if self.config.SERVER != 'kr':
+            return
+        index = getattr(self, '_kr_scan_frame_count', 0)
+        if index >= 8:
+            return
+        self.device.image_save(f'./log/kr_commission_scan_{index}.png')
+        self._kr_scan_frame_count = index + 1
+
     def _commission_scan_list(self):
         """
         Returns:
@@ -272,6 +282,7 @@ class RewardCommission(UI, InfoHandler):
         commission = SelectedGrids([])
         for _ in range(15):
             new = self.commission_detect(trial=2)
+            self._save_kr_commission_scan_frame()
             commission = commission.add_by_eq(new)
 
             # End
