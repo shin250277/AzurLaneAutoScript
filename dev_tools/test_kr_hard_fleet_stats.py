@@ -42,8 +42,15 @@ class HardFleetStatsTest(unittest.TestCase):
         helpers = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
         tree.body = helpers + [next(n for n in cls.body if isinstance(n, ast.FunctionDef)
                           and n.name == 'fleet_preparation')]
-        scope = dict(np=np, logger=Mock(), FleetOperator=SimpleNamespace(OFFSET=(20, 20)),
+        scope = dict(np=np, logger=Mock(),
+                     FleetOperator=Mock(OFFSET=(20, 20),
+                                        side_effect=AssertionError('Legacy fleet mutation path reached')),
+                     AUTO_SEARCH_SET_MOB=Mock(), AUTO_SEARCH_SET_BOSS=Mock(),
+                     AUTO_SEARCH_SET_ALL=Mock(), AUTO_SEARCH_SET_STANDBY=Mock(),
+                     SUBMARINE_CLEAR='subclear',
                      FLEET_1_CLEAR='clear1', FLEET_1_CHOOSE='choose1',
+                     FLEET_1_ADVICE='advice1', FLEET_1_BAR='bar1',
+                     FLEET_1_IN_USE='in_use1', FLEET_1_HARD_SATIESFIED='satisfied1',
                      FLEET_2_CHOOSE='choose2', _kr_hard_stats_unsatisfied=self.detect,
                      HardNotSatisfied=ValueError)
         exec(compile(tree, str(path), 'exec'), scope)
@@ -72,6 +79,28 @@ class HardFleetStatsTest(unittest.TestCase):
         self.assertFalse(prepare(ui))
         self.assertTrue(ui.map_is_hard_mode)
         ui.device.click.assert_not_called()
+
+    def test_sp_normal_mode_constraint_screen_preserves_manual_fleet(self):
+        prepare, ui = self.preparation()
+        ui.config.Campaign_Mode = 'normal'
+        self.assertFalse(prepare(ui))
+        self.assertTrue(ui.map_is_hard_mode)
+        ui.device.click.assert_not_called()
+
+    def test_sp_normal_mode_unrecognized_constraints_stop_without_clearing(self):
+        prepare, ui = self.preparation(visible=False)
+        ui.config.Campaign_Mode = 'normal'
+        with self.assertRaises(ValueError):
+            prepare(ui)
+        ui.device.click.assert_not_called()
+
+    def test_real_dropdown_layout_keeps_legacy_selection_path(self):
+        prepare, ui = self.preparation()
+        ui.config.Campaign_Mode = 'normal'
+        ui.appear.side_effect = lambda button, **kwargs: button in ('clear1', 'choose1')
+        with self.assertRaisesRegex(AssertionError, 'Legacy fleet mutation path reached'):
+            prepare(ui)
+        ui.device.image_save.assert_not_called()
 
     def test_unrecognized_panel_stops_without_recommending(self):
         prepare, ui = self.preparation(visible=False)

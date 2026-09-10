@@ -342,10 +342,10 @@ class FleetPreparation(InfoHandler):
         if self.map_fleet_checked:
             return False
 
-        # KR hard mode uses a redesigned fleet-constraint screen without the
-        # legacy dropdown selector. Preserve the in-game fleet: pressing the
-        # orange recommendation button would overwrite manual adjustments.
-        if self.config.SERVER == 'kr' and self.config.Campaign_Mode == 'hard' \
+        # KR hard maps and normal-mode SP maps share this constraint screen
+        # without a legacy dropdown. Detect the layout, not Campaign_Mode:
+        # the legacy clear/recommend path would overwrite manual fleets.
+        if self.config.SERVER == 'kr' \
                 and self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET) \
                 and not self.appear(FLEET_1_CHOOSE, offset=FleetOperator.OFFSET):
             logger.info('KR hard fleet selection: preserve in-game fleets')
