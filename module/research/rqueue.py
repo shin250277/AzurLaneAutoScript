@@ -43,6 +43,8 @@ class ResearchQueue(ResearchUI):
                     continue
                 else:
                     if self.config.SERVER == 'kr':
+                        if self.research_resume_interrupted_requirement():
+                            return False
                         # Preserve paid-in resources while diagnosing a disabled
                         # or misclassified queue button. Do not cancel/rebuy it.
                         self.device.image_save('./log/kr_research_queue_unavailable.png')
@@ -66,6 +68,10 @@ class ResearchQueue(ResearchUI):
 
         self.ensure_research_center_stable()
         return True
+
+    def research_resume_interrupted_requirement(self):
+        """Optional recovery implemented by the equipment-capable handler."""
+        return False
 
     def _research_queue_add_available(self):
         """

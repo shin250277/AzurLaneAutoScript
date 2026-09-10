@@ -26,6 +26,32 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
     enforce = False
     end_time = None
 
+    def research_resume_interrupted_requirement(self):
+        """Resume only the exact, twice-confirmed zero-progress E-315-MI card."""
+        from module.base.utils import load_image
+        from module.research.kr_resume import can_resume_zero_requirement
+        from module.research.project import OCR_RESEARCH_DETAIL_KR
+
+        if self.config.SERVER != 'kr' or getattr(self, '_kr_requirement_resume_attempted', False):
+            return False
+        reference = load_image('./assets/kr/research/REQUIREMENT_ZERO_15.png')
+        for _ in range(2):
+            self.device.screenshot()
+            if not self.appear(RESEARCH_STOP, offset=(20, 20)):
+                return False
+            code = OCR_RESEARCH_DETAIL_KR.ocr(self.device.image)
+            if not can_resume_zero_requirement(code, self.device.image, reference):
+                return False
+        self._kr_requirement_resume_attempted = True
+        logger.info('KR resume confirmed E-315-MI requirement: 0/15; preserve existing project')
+        self.research_detail_quit()
+        self.storage_disassemble_equipment(rarity=1, amount=15)
+        self.ui_ensure(page_research)
+        # Reload the live research state rather than trusting cached indexes.
+        self.config.task_delay(minute=0)
+        self.config.task_stop()
+        return True
+
     def research_has_finished(self):
         """
         Finished research should be auto-focused to the center, but sometimes didn't, due to an unknown game bug.

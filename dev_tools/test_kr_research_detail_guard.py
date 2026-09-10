@@ -60,6 +60,7 @@ class ResearchDetailGuardTest(unittest.TestCase):
                              is_research_stabled=Mock(return_value=False),
                              appear=Mock(return_value=True),
                              _research_queue_add_available=Mock(return_value=False),
+                             research_resume_interrupted_requirement=Mock(return_value=False),
                              research_detail_cancel=Mock(), research_detail_quit=Mock())
         ui.config.task_stop.side_effect = RuntimeError('task stopped')
         with self.assertRaisesRegex(RuntimeError, 'task stopped'):
