@@ -83,6 +83,18 @@ class ResearchSelector(ResearchUI):
             project = detector(self.device.image)
             if project.duration == '0':
                 logger.warning(f'Invalid research duration: {project}')
+                if self.config.SERVER == 'kr' and timeout.reached():
+                    # An expired E project can still wait for equipment
+                    # disassembly. Its displayed zero is not a transient OCR
+                    # failure; attempt the guarded recovery before yielding.
+                    recover = getattr(self, 'research_resume_interrupted_requirement', None)
+                    if recover is not None and recover():
+                        return project
+                    self.device.image_save('./log/kr_research_zero_duration.png')
+                    logger.warning('KR zero-duration research unresolved; preserve and defer')
+                    self.research_detail_quit()
+                    self.config.task_delay(minute=30)
+                    self.config.task_stop()
                 continue
             else:
                 return project
