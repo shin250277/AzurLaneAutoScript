@@ -31,6 +31,39 @@ class ZoneTypeTest(unittest.TestCase):
         self.handler.config.SERVER = 'jp'
         self.assertTrue(self.select(self.handler))
 
+    def switched_menu(self, available, pinned='SAFE'):
+        return SimpleNamespace(
+            config=SimpleNamespace(SERVER='kr'), device=Mock(), zone_has_switch=lambda: True,
+            get_zone_pinned_name=Mock(return_value=pinned), zone_select_enter=Mock(),
+            ensure_zone_select_expanded=lambda: [SimpleNamespace(name='SELECT_' + name)
+                                                 for name in available],
+            zone_select_execute=Mock(), pinned_to_name=lambda button: button.name[7:])
+
+    def test_missing_requested_special_type_does_not_fallback_to_normal(self):
+        handler = self.switched_menu(['SAFE', 'DANGEROUS'])
+        with self.assertRaises(RuntimeError):
+            self.select(handler, types=('OBSCURE',))
+        handler.zone_select_execute.assert_not_called()
+        handler.device.image_save.assert_called_once_with('./log/kr_zone_type_unconfirmed.png')
+
+    def test_unconfirmed_selection_stops_instead_of_returning_ignored_false(self):
+        handler = self.switched_menu(['ABYSSAL'])
+        with self.assertRaises(RuntimeError):
+            self.select(handler, types=('ABYSSAL',))
+        self.assertEqual(handler.zone_select_execute.call_count, 3)
+
+    def test_verified_special_selection_is_allowed(self):
+        handler = self.switched_menu(['ABYSSAL'])
+        handler.get_zone_pinned_name.side_effect = ['SAFE', 'ABYSSAL']
+        self.assertTrue(self.select(handler, types=('ABYSSAL',)))
+        handler.zone_select_execute.assert_called_once()
+
+    def test_japanese_missing_special_type_keeps_existing_fallback(self):
+        handler = self.switched_menu(['SAFE'])
+        handler.config.SERVER = 'jp'
+        self.assertTrue(self.select(handler, types=('OBSCURE',)))
+        handler.zone_select_execute.assert_called_once()
+
     def test_normal_menu_template_does_not_match_fortress_card(self):
         import cv2
         import numpy as np

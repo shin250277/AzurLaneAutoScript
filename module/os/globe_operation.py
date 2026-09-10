@@ -259,6 +259,9 @@ class GlobeOperation(ActionPointHandler):
 
             button = get_button(selection)
             if button is None:
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_zone_type_unconfirmed.png')
+                    raise RequestHumanTakeover(f'Requested KR zone types are unavailable: {types}')
                 logger.warning('No such zone type to select, fallback to default')
                 types = ('SAFE', 'DANGEROUS')
                 button = get_button(selection)
@@ -268,6 +271,10 @@ class GlobeOperation(ActionPointHandler):
                 return True
 
         logger.warning('Failed to select zone type after 3 trial')
+        if self.config.SERVER == 'kr':
+            # Callers proceed to globe_enter without checking a False result.
+            self.device.image_save('./log/kr_zone_type_unconfirmed.png')
+            raise RequestHumanTakeover(f'KR zone type selection was not confirmed: {types}')
         return False
 
     def zone_has_safe(self):
