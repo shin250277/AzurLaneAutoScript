@@ -3,7 +3,7 @@ import module.config.server as server
 from module.base.button import Button
 from module.base.decorator import run_once
 from module.base.timer import Timer
-from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2, GET_SHIP
+from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2, GET_SHIP, NEW_SHIP
 from module.exception import (GameNotRunningError, GamePageUnknownError,
                               RequestHumanTakeover)
 from module.exercise.assets import EXERCISE_PREPARATION
@@ -299,6 +299,12 @@ KR_AUTOMATION_NOTICE = Button(
     area=(363, 224, 643, 248), color=(0, 0, 0),
     button=(575, 505, 700, 545),
     file='./assets/kr/combat/KR_AUTOMATION_NOTICE.png', name='KR_AUTOMATION_NOTICE')
+
+
+KR_UI_SHIP_CARD = Button(
+    area=(40, 360, 85, 410), color=(120, 124, 132),
+    button=(550, 500, 730, 660),
+    file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png', name='KR_UI_SHIP_CARD')
 
 
 class UI(InfoHandler):
@@ -865,6 +871,17 @@ class UI(InfoHandler):
             return True
         return False
 
+    def ui_handle_kr_ship_card(self):
+        # Reuse the contextual card detector already used in combat/gacha,
+        # not GET_SHIP's tiny white patch that also matches the main chat UI.
+        if self.config.SERVER != 'kr' or not self.appear(
+                KR_UI_SHIP_CARD, offset=(3, 3), interval=1, similarity=0.85):
+            return False
+        if self.appear(NEW_SHIP):
+            self.config.GET_SHIP_TRIGGERED = True
+        self.device.click(KR_UI_SHIP_CARD)
+        return True
+
     def ui_additional(self, get_ship=True):
         """
         Handle all annoying popups during UI switching.
@@ -872,6 +889,8 @@ class UI(InfoHandler):
         Args:
             get_ship:
         """
+        if get_ship and self.ui_handle_kr_ship_card():
+            return True
         # A stopped KR run can resume on a defeat result instead of a map.
         if self.handle_kr_automation_notice():
             return True
