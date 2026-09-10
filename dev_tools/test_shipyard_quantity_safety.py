@@ -36,6 +36,10 @@ class ShipyardQuantityTest(unittest.TestCase):
         self.assertIsNone(self.ensure(self.ui, 2))
         self.ui.device.multi_click.assert_not_called()
 
+    def test_zero_selected_quantity_does_not_allow_confirmation(self):
+        self.readings([0, 0, 0, 0])
+        self.assertIsNone(self.ensure(self.ui, 2))
+
     def test_buy_and_use_do_not_confirm_unresolved_excess(self):
         for name, argument in (('_shipyard_buy', 2), ('_shipyard_use', 1)):
             with self.subTest(operation=name):
@@ -45,6 +49,21 @@ class ShipyardQuantityTest(unittest.TestCase):
                 ui._shipyard_buy_enter.return_value = True
                 ui._shipyard_cannot_strengthen.return_value = False
                 ui._shipyard_get_total.return_value = ('plus', 'minus', 5)
+                ui._shipyard_ensure_index.side_effect = lambda count: self.ensure(ui, count)
+                run = method('module/shipyard/shipyard_reward.py', 'RewardShipyard', name)
+                run(ui, argument)
+                ui._shipyard_buy_confirm.assert_not_called()
+                ui._shipyard_pay_calc.assert_not_called()
+
+    def test_buy_and_use_do_not_confirm_empty_selection(self):
+        for name, argument in (('_shipyard_buy', 2), ('_shipyard_use', 1)):
+            with self.subTest(operation=name):
+                ui = Mock()
+                ui._shipyard_buy_calc.return_value = (3, 2)
+                ui._shipyard_get_bp_count.return_value = 2
+                ui._shipyard_buy_enter.return_value = True
+                ui._shipyard_cannot_strengthen.return_value = False
+                ui._shipyard_get_total.return_value = ('plus', 'minus', 0)
                 ui._shipyard_ensure_index.side_effect = lambda count: self.ensure(ui, count)
                 run = method('module/shipyard/shipyard_reward.py', 'RewardShipyard', name)
                 run(ui, argument)

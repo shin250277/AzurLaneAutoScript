@@ -123,6 +123,9 @@ class ShipyardUI(UI):
         if current > count:
             logger.warning('Shipyard quantity exceeds requested amount, refusing confirmation')
             return None
+        if current == 0:
+            logger.warning('No blueprints selected after adjustment, refusing confirmation')
+            return None
 
         logger.info(f'Current interface does not allow consumption of {count} BPs\n')
         logger.info(f'Capable of consuming at most {current} of the {count} BPs')
