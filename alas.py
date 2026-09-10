@@ -540,8 +540,10 @@ class AzurLaneAutoScript:
             # Init device and change server
             _ = self.device
             self.device.config = self.config
-            # Skip first restart
-            if self.is_first_task and task == 'Restart':
+            # Skip a routine first restart, but honor the UI's explicit
+            # immediate-run sentinel (clearing the next-run input).
+            if (self.is_first_task and task == 'Restart'
+                    and self.config.Scheduler_NextRun != datetime(2020, 1, 1)):
                 logger.info('Skip task `Restart` at scheduler start')
                 self.config.task_delay(server_update=True)
                 del_cached_property(self, 'config')
