@@ -18,6 +18,13 @@ dictionary_kr_visual = {
     'URGENT_PART_LOGISTICS': 'urgent_part',
 }
 
+# Only visually verified render variants share a canonical name. Never group
+# different Roman numerals merely because their reward genre is the same.
+dictionary_kr_visual_aliases = {
+    'DAILY_CHIP_II_SCROLL': 'DAILY_CHIP_II',
+    'EXTRA_CUBE_LIVE_FIRE_SCROLL': 'EXTRA_CUBE_LIVE_FIRE',
+}
+
 dictionary_cn = {
     'major_comm': ['自主训练', '对抗演习', '科研任务', '工具整备', '战术课程', '货物运输'],
     'daily_resource': ['日常资源开发'],

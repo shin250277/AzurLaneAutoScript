@@ -52,6 +52,42 @@ class KoreanCommissionIdentityTest(unittest.TestCase):
         self.assertIsNone(project.crop_kr_name_image(
             np.full((40, 260, 3), 75, dtype=np.uint8), (0, 0, 260, 40)))
 
+    def observed(self, title):
+        comm = self.commission('placeholder')
+        comm.kr_name_image = cv2.imread('assets/kr/commission/names/' + title + '.png', 0)
+        comm.kr_name_key = project.classify_kr_name_key(comm.kr_name_image)
+        comm.name = title
+        comm.genre = project.classify_kr_name(comm.kr_name_image)
+        comm.category_str = comm.genre.split('_', 1)[0]
+        comm.suffix_image = None
+        return comm
+
+    def test_observed_scroll_variants_share_name_identity(self):
+        for title in ('DAILY_CHIP_II', 'EXTRA_CUBE_LIVE_FIRE'):
+            with self.subTest(title=title):
+                self.assertEqual(self.observed(title), self.observed(title + '_SCROLL'))
+
+    def test_full_korean_title_is_not_vetoed_by_legacy_suffix_crop(self):
+        first = self.observed('DAILY_RESOURCE_IV')
+        second = copy.deepcopy(first)
+        second.suffix_image = np.zeros((20, 20), dtype=np.uint8)
+        self.assertEqual(first, second)
+
+    def test_known_genre_does_not_merge_distinct_roman_names(self):
+        self.assertNotEqual(self.observed('DAILY_RESOURCE_IV'), self.observed('DAILY_RESOURCE_VI'))
+
+    def test_cached_name_key_cannot_replace_missing_image(self):
+        first = self.observed('DAILY_RESOURCE_IV')
+        second = copy.deepcopy(first)
+        second.kr_name_image = None
+        self.assertNotEqual(first, second)
+
+    def test_equal_render_variants_have_equal_hashes(self):
+        first = self.observed('DAILY_CHIP_II')
+        second = self.observed('DAILY_CHIP_II_SCROLL')
+        self.assertEqual(first, second)
+        self.assertEqual(hash(first), hash(second))
+
 
 if __name__ == '__main__':
     unittest.main()

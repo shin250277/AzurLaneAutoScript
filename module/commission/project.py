@@ -90,17 +90,21 @@ def _kr_name_templates():
         image = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
         if image is None:
             raise FileNotFoundError(path)
-        templates.append((genre, image))
+        templates.append((name, image))
     return templates
 
 
-def classify_kr_name(image):
+def classify_kr_name_key(image):
     if image is None:
         return ''
-    matches = {genre for genre, template in _kr_name_templates()
+    matches = {dictionary_kr_visual_aliases.get(name, name) for name, template in _kr_name_templates()
                if kr_name_images_match(image, template)}
-    # Ambiguous matches must not silently select the first reward genre.
+    # Ambiguous names must not be merged even when they have the same genre.
     return next(iter(matches)) if len(matches) == 1 else ''
+
+
+def classify_kr_name(image):
+    return dictionary_kr_visual.get(classify_kr_name_key(image), '')
 
 
 def image_hash(image):
@@ -256,7 +260,8 @@ class Commission:
         if self.config.SERVER == 'kr':
             self.name = f'KR_COMMISSION_{self.suffix_hash[:8]}'
             self.kr_name_image = crop_kr_name_image(self.image, self.button.area)
-            self.kr_name_genre = classify_kr_name(self.kr_name_image)
+            self.kr_name_key = classify_kr_name_key(self.kr_name_image)
+            self.kr_name_genre = dictionary_kr_visual.get(self.kr_name_key, '')
 
         # Duration time
         area = area_offset((290, 68, 390, 95), self.area[0:2])
@@ -425,10 +430,11 @@ class Commission:
             return False
         if self.genre != other.genre or self.status != other.status:
             return False
-        if hasattr(self, 'kr_name_image') or hasattr(other, 'kr_name_image'):
+        korean_name = hasattr(self, 'kr_name_image') or hasattr(other, 'kr_name_image')
+        if korean_name:
             if not self.kr_name_match(other):
                 return False
-        if self.category_str == 'daily':
+        if self.category_str == 'daily' and not korean_name:
             if not self.suffix_match(other):
                 return False
         if self.genre == 'urgent_box':
@@ -446,15 +452,25 @@ class Commission:
                 return False
         if self.repeat_count != other.repeat_count:
             return False
-        if self.genre in ['extra_oil', 'night_oil'] and not self.suffix_match(other):
+        if not korean_name and self.genre in ['extra_oil', 'night_oil'] and not self.suffix_match(other):
             return False
 
         return True
 
     def __hash__(self):
+        if hasattr(self, 'kr_name_image'):
+            # Visually equal names may have different pixel hashes or only one
+            # recognized template key. Genre is checked by every equality path.
+            return hash(self.genre)
         return hash(f'{self.genre}_{self.name}')
 
     def kr_name_match(self, other, similarity=0.90):
+        if getattr(self, 'kr_name_image', None) is None or getattr(other, 'kr_name_image', None) is None:
+            return False
+        first_key = getattr(self, 'kr_name_key', '')
+        second_key = getattr(other, 'kr_name_key', '')
+        if first_key and second_key:
+            return first_key == second_key
         return kr_name_images_match(getattr(self, 'kr_name_image', None),
                                     getattr(other, 'kr_name_image', None), similarity)
 

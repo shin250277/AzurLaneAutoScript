@@ -51,8 +51,14 @@ class KoreanCommissionNamesTest(unittest.TestCase):
     def test_conflicting_genres_are_not_guessed(self):
         title = self.title('DAILY_CHIP_II')
         with patch.object(project, '_kr_name_templates', return_value=[
-                ('daily_chip', title), ('extra_cube', title)]):
+                ('DAILY_CHIP_II', title), ('EXTRA_CUBE_LIVE_FIRE', title)]):
             self.assertEqual(project.classify_kr_name(title), '')
+
+    def test_conflicting_names_of_same_genre_are_not_merged(self):
+        title = self.title('DAILY_RESOURCE_IV')
+        with patch.object(project, '_kr_name_templates', return_value=[
+                ('DAILY_RESOURCE_IV', title), ('DAILY_RESOURCE_VI', title)]):
+            self.assertEqual(project.classify_kr_name_key(title), '')
 
     def test_real_roman_order_and_medium_large_names_remain_distinct(self):
         for first, second in (
