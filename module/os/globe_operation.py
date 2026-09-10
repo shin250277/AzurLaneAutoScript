@@ -43,6 +43,11 @@ class GlobeOperation(ActionPointHandler):
             Button:
         """
         for zone in ZONE_TYPES:
+            # KR keeps the English DANGEROUS subtitle even on an obscure
+            # zone. Prefer the specific Korean heading over that subtitle.
+            if (zone is ZONE_DANGEROUS and self.config.SERVER == 'kr'
+                    and self.appear(ZONE_OBSCURE, offset=(20, 20))):
+                zone = ZONE_OBSCURE
             if self.appear(zone, offset=(20, 20)):
                 for button in ASSETS_PINNED_ZONE:
                     button.load_offset(zone)
