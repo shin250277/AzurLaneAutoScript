@@ -79,6 +79,27 @@ class OsTaskStopBoundariesTest(unittest.TestCase):
         run(self.ui)
         self.ui.clear_obscure.assert_called_once_with()
 
+    def test_failed_stronghold_stops_before_repair_and_retry(self):
+        self.ui.run_stronghold.return_value = False
+        clear = method('module/os/tasks/stronghold.py', 'OpsiStronghold', 'clear_stronghold')
+        self.ui.clear_stronghold.side_effect = lambda: clear(self.ui)
+        # Bound the old outer loop so the regression cannot hang.
+        self.ui.config.check_task_switch.side_effect = AssertionError('Failed battle returned to retry loop')
+        run = method('module/os/tasks/stronghold.py', 'OpsiStronghold', 'os_stronghold')
+        with self.assertRaises(TaskStopped):
+            run(self.ui)
+        self.ui.run_stronghold.assert_called_once_with()
+        self.ui.fleet_repair.assert_not_called()
+        self.ui.handle_fleet_resolve.assert_not_called()
+        self.ui.config.check_task_switch.assert_not_called()
+
+    def test_successful_stronghold_keeps_repair_path(self):
+        self.ui.run_stronghold.return_value = True
+        clear = method('module/os/tasks/stronghold.py', 'OpsiStronghold', 'clear_stronghold')
+        clear(self.ui)
+        self.ui.fleet_repair.assert_called_once_with(revert=False)
+        self.ui.handle_fleet_resolve.assert_called_once_with(revert=False)
+
     def test_repeating_tasks_honor_scheduler_stop_between_zones(self):
         for name, cls in (('abyssal', 'OpsiAbyssal'), ('stronghold', 'OpsiStronghold')):
             with self.subTest(task=name):
