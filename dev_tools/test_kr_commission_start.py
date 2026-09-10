@@ -1,6 +1,7 @@
 """A KR start click is not evidence that a commission started."""
 import ast
 import copy
+from datetime import timedelta
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -53,7 +54,7 @@ class CommissionStartTest(unittest.TestCase):
         tree = ast.parse(path.read_text(encoding='utf-8'))
         tree.body = [next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
                           and n.name == '_kr_commission_start_confirmed')]
-        scope = dict(logger=Mock(), copy=copy, KR_COMMISSION_OIL_CONFIRM='oil_notice',
+        scope = dict(logger=Mock(), copy=copy, timedelta=timedelta, KR_COMMISSION_OIL_CONFIRM='oil_notice',
                      OCR_KR_COMMISSION_OIL=Mock(ocr=Mock(return_value=10)))
         exec(compile(tree, str(path), 'exec'), scope)
         ui = SimpleNamespace(handle_info_bar=Mock(), device=Mock(),
@@ -65,6 +66,32 @@ class CommissionStartTest(unittest.TestCase):
                              _commission_swipe_to_top=Mock(),
                              _commission_scan_list=Mock(return_value=items))
         return scope['_kr_commission_start_confirmed'], ui
+
+    def test_urgent_departure_loses_expiry_and_changes_fallback_category(self):
+        from module.commission.project import Commission
+        from module.map.map_grids import SelectedGrids
+        pending = Commission.__new__(Commission)
+        pending.valid = True
+        pending.genre = 'urgent_drill'
+        pending.category_str, pending.genre_str = 'urgent', 'drill'
+        pending.status = 'pending'
+        pending.duration = timedelta(minutes=70)
+        pending.expire = timedelta(hours=1, minutes=46)
+        pending.repeat_count = 1
+        running = copy.deepcopy(pending)
+        running.genre, running.category_str = 'extra_drill', 'extra'
+        running.status = 'running'
+        running.duration -= timedelta(seconds=3)
+        running.expire = timedelta(0)
+        confirm, ui = self.confirm(items=SelectedGrids([running]))
+        self.assertTrue(confirm(ui, pending, is_urgent=True))
+        self.assertEqual(pending.genre, 'urgent_drill')
+        self.assertEqual(pending.expire, timedelta(hours=1, minutes=46))
+        running.duration = timedelta(minutes=65)
+        self.assertFalse(confirm(ui, pending, is_urgent=True))
+        running.duration = timedelta(minutes=70)
+        running.status = 'pending'
+        self.assertFalse(confirm(ui, pending, is_urgent=True))
 
     def test_ten_oil_notice_can_confirm_but_still_requires_running(self):
         confirm, ui = self.confirm(items=[FakeCommission('pending')])

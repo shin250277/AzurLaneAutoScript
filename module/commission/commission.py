@@ -445,8 +445,8 @@ class RewardCommission(UI, InfoHandler):
             if self.handle_popup_confirm('COMMISSION_OIL_10'):
                 self.device.sleep(1)
                 self.device.screenshot()
-        # A stale Start coordinate may have opened Abandon. Never confirm
-        # a modal in this verification path; cancel it and inspect the list.
+        # A stale Start coordinate may have opened Abandon. Any modal other
+        # than the verified oil notice above must be cancelled.
         if self.handle_popup_cancel('COMMISSION_DEPARTURE_VERIFY'):
             self.device.sleep(0.5)
             self.device.screenshot()
@@ -460,6 +460,14 @@ class RewardCommission(UI, InfoHandler):
             current.call('convert_to_night')
         expected = copy.deepcopy(comm)
         expected.convert_to_running()
+        if is_urgent and expected.genre == 'urgent_drill':
+            # KR fallback uses the red expiry label to identify urgent cards.
+            # Departure removes that label; normalize the expected metadata
+            # exactly as the running-card parser and urgent-list scan do.
+            expected.expire = timedelta(0)
+            expected.genre = 'major_comm' if expected.duration >= timedelta(hours=8) else 'extra_drill'
+            expected.category_str, expected.genre_str = expected.genre.split('_', 1)
+            expected.convert_to_night()
         confirmed = any(item == expected for item in current)
         logger.attr('KR commission running confirmed', confirmed)
         if not confirmed:
