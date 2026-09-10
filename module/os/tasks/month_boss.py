@@ -48,7 +48,9 @@ class OpsiMonthBoss(OSMap):
 
         if not is_normal and self.config.OpsiMonthBoss_Mode == "normal":
             logger.info("Attack normal boss only but having hard boss, skip")
-            self.month_boss_delay(is_normal=False, result=True)
+            # Keep the same next-month schedule without recording an unplayed
+            # hard battle as a successful clear.
+            self.config.task_delay(target=get_os_next_reset())
             self.config.task_stop()
             return True
 
