@@ -2,10 +2,21 @@
 import unittest
 import numpy as np
 from module.base.button import Button
-from module.storage.assets import BOX_USE
+from module.storage.assets import BOX_USE, BOX_AMOUNT_CONFIRM
 
 
 class KrBoxUseTest(unittest.TestCase):
+    def test_amount_confirmation_has_korean_template(self):
+        self.assertIn('kr', BOX_AMOUNT_CONFIRM.raw_file)
+        from PIL import Image
+        button = Button(area=BOX_AMOUNT_CONFIRM.raw_area['kr'],
+                        color=BOX_AMOUNT_CONFIRM.raw_color['kr'],
+                        button=BOX_AMOUNT_CONFIRM.raw_button['kr'],
+                        file=BOX_AMOUNT_CONFIRM.raw_file['kr'])
+        frame = np.asarray(Image.open(button.file).convert('RGB'))
+        self.assertTrue(button.match(frame, offset=(20, 20)))
+        self.assertFalse(button.match(np.zeros_like(frame), offset=(20, 20)))
+
     def test_kr_has_explicit_template(self):
         self.assertIn('kr', BOX_USE.raw_file)
         self.assertIn('kr', BOX_USE.raw_area)

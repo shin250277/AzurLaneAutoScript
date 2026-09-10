@@ -9,13 +9,16 @@ import numpy as np
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('screenshot')
+    parser.add_argument('--amount-confirm', action='store_true')
     args = parser.parse_args()
-    area = (750, 494, 823, 528)
+    name = 'BOX_AMOUNT_CONFIRM' if args.amount_confirm else 'BOX_USE'
+    area = (809, 613, 868, 645) if args.amount_confirm else (750, 494, 823, 528)
+    click_area = (752, 600, 927, 660) if args.amount_confirm else (710, 484, 867, 536)
     with Image.open(args.screenshot) as source:
         if source.size != (1280, 720):
             raise ValueError('Expected 1280x720 game screenshot')
         label = source.convert('RGB').crop(area)
-    target = Path('assets/kr/storage/BOX_USE.png')
+    target = Path('assets/kr/storage') / (name + '.png')
     target.parent.mkdir(parents=True, exist_ok=True)
     canvas = Image.new('RGB', (1280, 720))
     canvas.paste(label, area)
@@ -24,18 +27,18 @@ def main():
     path = Path('module/storage/assets.py')
     lines = path.read_text(encoding='utf-8').splitlines()
     for i, line in enumerate(lines):
-        if line.startswith('BOX_USE = Button('):
+        if line.startswith(name + ' = Button('):
             call = ast.parse(line).body[0].value
             fields = {k.arg: ast.literal_eval(k.value) for k in call.keywords}
             for field, value in [('area', area), ('color', color),
-                                 ('button', (710, 484, 867, 536)),
-                                 ('file', './assets/kr/storage/BOX_USE.png')]:
+                                 ('button', click_area),
+                                 ('file', './' + target.as_posix())]:
                 fields[field]['kr'] = value
-            lines[i] = 'BOX_USE = Button(' + ', '.join(
+            lines[i] = name + ' = Button(' + ', '.join(
                 '{}={!r}'.format(k, v) for k, v in fields.items()) + ')'
             break
     else:
-        raise ValueError('BOX_USE definition missing')
+        raise ValueError(name + ' definition missing')
     path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
