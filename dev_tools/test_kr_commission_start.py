@@ -106,6 +106,27 @@ class CommissionStartTest(unittest.TestCase):
         self.assertFalse(confirm(ui, FakeCommission('pending')))
         ui.handle_popup_confirm.assert_called_once_with('COMMISSION_OIL_10')
 
+    def test_limited_daily_departure_also_loses_expiry(self):
+        from module.commission.project import Commission
+        pending = Commission.__new__(Commission)
+        pending.valid = True
+        pending.genre = 'urgent_drill'
+        pending.category_str, pending.genre_str = 'urgent', 'drill'
+        pending.status = 'pending'
+        pending.duration = timedelta(hours=4)
+        pending.expire = timedelta(hours=1, minutes=53)
+        pending.repeat_count = 1
+        running = copy.deepcopy(pending)
+        running.genre, running.category_str, running.genre_str = 'extra_drill', 'extra', 'drill'
+        running.status = 'running'
+        running.duration -= timedelta(seconds=6)
+        running.expire = timedelta(0)
+        confirm, ui = self.confirm(items=[running])
+        self.assertTrue(confirm(ui, pending, is_urgent=False))
+        self.assertEqual(pending.expire, timedelta(hours=1, minutes=53))
+        running.status = 'pending'
+        self.assertFalse(confirm(ui, pending, is_urgent=False))
+
     def test_unknown_popup_is_never_confirmed(self):
         confirm, ui = self.confirm(items=[FakeCommission('pending')])
         self.assertFalse(confirm(ui, FakeCommission('pending')))
@@ -152,6 +173,7 @@ class CommissionStartTest(unittest.TestCase):
 
 
 class FakeCommission:
+    genre = 'extra_drill'
     def __init__(self, status):
         self.status = status
 

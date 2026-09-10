@@ -57,6 +57,16 @@ def crop_suffix_image(image, area):
     return image
 
 
+def crop_kr_name_image(image, area):
+    """Keep the complete KR title, including its Roman numeral, without OCR."""
+    letters = extract_letters(crop(image, area), letter=(255, 255, 255), threshold=128).astype(np.uint8)
+    points = cv2.findNonZero((letters < 128).astype(np.uint8))
+    if points is None:
+        return None
+    x, y, width, height = cv2.boundingRect(points)
+    return letters[y:y + height, x:x + width].copy()
+
+
 def image_hash(image):
     """
     Args:
@@ -209,6 +219,7 @@ class Commission:
         self.suffix_hash = image_hash(self.suffix_image)
         if self.config.SERVER == 'kr':
             self.name = f'KR_COMMISSION_{self.suffix_hash[:8]}'
+            self.kr_name_image = crop_kr_name_image(self.image, self.button.area)
 
         # Duration time
         area = area_offset((290, 68, 390, 95), self.area[0:2])
@@ -250,7 +261,7 @@ class Commission:
                 self.genre = 'major_comm'
             else:
                 self.genre = 'extra_drill'
-            self.valid = True
+            self.valid = self.kr_name_image is not None
             logger.info(f'Korean commission fallback: {self.genre}, duration={self.duration}')
 
     @Config.when(SERVER='tw')
@@ -374,6 +385,9 @@ class Commission:
             return False
         if self.genre != other.genre or self.status != other.status:
             return False
+        if hasattr(self, 'kr_name_image') or hasattr(other, 'kr_name_image'):
+            if not self.kr_name_match(other):
+                return False
         if self.category_str == 'daily':
             if not self.suffix_match(other):
                 return False
@@ -399,6 +413,21 @@ class Commission:
 
     def __hash__(self):
         return hash(f'{self.genre}_{self.name}')
+
+    def kr_name_match(self, other, similarity=0.90):
+        first = getattr(self, 'kr_name_image', None)
+        second = getattr(other, 'kr_name_image', None)
+        if first is None or second is None:
+            return False
+        # Do not match a short title/numeral as a substring of a longer one.
+        if any(abs(a - b) > 2 for a, b in zip(first.shape, second.shape)):
+            return False
+        scores = []
+        for image, template in ((first, second), (second, first)):
+            padded = cv2.copyMakeBorder(image, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=255)
+            result = cv2.matchTemplate(padded, template, cv2.TM_CCOEFF_NORMED)
+            scores.append(cv2.minMaxLoc(result)[1])
+        return min(scores) >= similarity
 
     def suffix_match(self, other, similarity=0.75):
         """

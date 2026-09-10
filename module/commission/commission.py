@@ -460,7 +460,7 @@ class RewardCommission(UI, InfoHandler):
             current.call('convert_to_night')
         expected = copy.deepcopy(comm)
         expected.convert_to_running()
-        normalize_urgent = is_urgent and expected.genre == 'urgent_drill'
+        normalize_urgent = expected.genre == 'urgent_drill'
         confirmed = False
         for item in current:
             if normalize_urgent:
@@ -471,7 +471,8 @@ class RewardCommission(UI, InfoHandler):
                 expected.expire = timedelta(0)
                 expected.genre = 'major_comm' if item.duration >= timedelta(hours=8) else 'extra_drill'
                 expected.category_str, expected.genre_str = expected.genre.split('_', 1)
-                expected.convert_to_night()
+                if is_urgent:
+                    expected.convert_to_night()
             if item == expected:
                 confirmed = True
                 break
