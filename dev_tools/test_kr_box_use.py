@@ -2,10 +2,22 @@
 import unittest
 import numpy as np
 from module.base.button import Button
-from module.storage.assets import BOX_USE, BOX_AMOUNT_CONFIRM, EQUIPMENT_FULL, DISASSEMBLE_CANCEL, DISASSEMBLE_CONFIRM
+from module.storage.assets import BOX_USE, BOX_AMOUNT_CONFIRM, EQUIPMENT_FULL, DISASSEMBLE_CANCEL, DISASSEMBLE_CONFIRM, DISASSEMBLE_POPUP_CONFIRM
 
 
 class KrBoxUseTest(unittest.TestCase):
+    def test_disassemble_popup_uses_materials_header(self):
+        self.assertIn('kr', DISASSEMBLE_POPUP_CONFIRM.raw_file)
+        self.assertEqual(DISASSEMBLE_POPUP_CONFIRM.raw_area['kr'], (584, 173, 693, 195))
+        from PIL import Image
+        button = Button(area=DISASSEMBLE_POPUP_CONFIRM.raw_area['kr'],
+                        color=DISASSEMBLE_POPUP_CONFIRM.raw_color['kr'],
+                        button=DISASSEMBLE_POPUP_CONFIRM.raw_button['kr'],
+                        file=DISASSEMBLE_POPUP_CONFIRM.raw_file['kr'])
+        frame = np.asarray(Image.open(button.file).convert('RGB'))
+        self.assertTrue(button.match(frame, offset=(-15, -5, 5, 70)))
+        self.assertFalse(button.match(np.zeros_like(frame), offset=(-15, -5, 5, 70)))
+
     def test_disassemble_confirmation_has_korean_label(self):
         self.assertIn('kr', DISASSEMBLE_CONFIRM.raw_file)
         from PIL import Image

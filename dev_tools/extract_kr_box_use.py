@@ -13,6 +13,7 @@ def main():
     parser.add_argument('--storage-full', action='store_true')
     parser.add_argument('--disassemble-cancel', action='store_true')
     parser.add_argument('--disassemble-confirm', action='store_true')
+    parser.add_argument('--disassemble-popup', action='store_true')
     args = parser.parse_args()
     name = 'BOX_AMOUNT_CONFIRM' if args.amount_confirm else 'BOX_USE'
     area = (809, 613, 868, 645) if args.amount_confirm else (750, 494, 823, 528)
@@ -29,6 +30,11 @@ def main():
         name = 'DISASSEMBLE_CONFIRM'
         area = (1112, 656, 1179, 692)
         click_area = (1071, 650, 1221, 700)
+    if args.disassemble_popup:
+        name = 'DISASSEMBLE_POPUP_CONFIRM'
+        # Identify the materials-received dialog, not a generic blue confirm.
+        area = (584, 173, 693, 195)
+        click_area = (708, 557, 851, 603)
     with Image.open(args.screenshot) as source:
         if source.size != (1280, 720):
             raise ValueError('Expected 1280x720 game screenshot')
