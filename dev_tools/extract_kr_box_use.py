@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--amount-confirm', action='store_true')
     parser.add_argument('--storage-full', action='store_true')
     parser.add_argument('--disassemble-cancel', action='store_true')
+    parser.add_argument('--disassemble-confirm', action='store_true')
     args = parser.parse_args()
     name = 'BOX_AMOUNT_CONFIRM' if args.amount_confirm else 'BOX_USE'
     area = (809, 613, 868, 645) if args.amount_confirm else (750, 494, 823, 528)
@@ -24,6 +25,10 @@ def main():
         name = 'DISASSEMBLE_CANCEL'
         area = (908, 656, 968, 692)
         click_area = (865, 650, 1011, 700)
+    if args.disassemble_confirm:
+        name = 'DISASSEMBLE_CONFIRM'
+        area = (1112, 656, 1179, 692)
+        click_area = (1071, 650, 1221, 700)
     with Image.open(args.screenshot) as source:
         if source.size != (1280, 720):
             raise ValueError('Expected 1280x720 game screenshot')

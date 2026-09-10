@@ -2,10 +2,21 @@
 import unittest
 import numpy as np
 from module.base.button import Button
-from module.storage.assets import BOX_USE, BOX_AMOUNT_CONFIRM, EQUIPMENT_FULL, DISASSEMBLE_CANCEL
+from module.storage.assets import BOX_USE, BOX_AMOUNT_CONFIRM, EQUIPMENT_FULL, DISASSEMBLE_CANCEL, DISASSEMBLE_CONFIRM
 
 
 class KrBoxUseTest(unittest.TestCase):
+    def test_disassemble_confirmation_has_korean_label(self):
+        self.assertIn('kr', DISASSEMBLE_CONFIRM.raw_file)
+        from PIL import Image
+        button = Button(area=DISASSEMBLE_CONFIRM.raw_area['kr'],
+                        color=DISASSEMBLE_CONFIRM.raw_color['kr'],
+                        button=DISASSEMBLE_CONFIRM.raw_button['kr'],
+                        file=DISASSEMBLE_CONFIRM.raw_file['kr'])
+        frame = np.asarray(Image.open(button.file).convert('RGB'))
+        self.assertTrue(button.match(frame, offset=(20, 20)))
+        self.assertFalse(button.match(np.zeros_like(frame), offset=(20, 20)))
+
     def test_disassemble_screen_has_korean_cancel_marker(self):
         self.assertIn('kr', DISASSEMBLE_CANCEL.raw_file)
         from PIL import Image
