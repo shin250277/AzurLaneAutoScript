@@ -1,7 +1,7 @@
 from module.base.timer import Timer
 from module.base.utils import rgb2gray
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2
-from module.exception import ScriptError
+from module.exception import RequestHumanTakeover, ScriptError
 from module.handler.assets import GET_MISSION
 from module.logger import logger
 from module.os.globe_operation import GlobeOperation
@@ -77,6 +77,11 @@ class StorageHandler(GlobeOperation, ZoneManager):
                 self.interval_reset(STORAGE_CHECK)
                 get_mission_counter += 1
                 if get_mission_counter >= 3:
+                    if self.config.SERVER == 'kr':
+                        # Returning normally makes the outer logger/sample loop
+                        # select the same misidentified item again indefinitely.
+                        self.device.image_save('./log/kr_storage_item_unconfirmed.png')
+                        raise RequestHumanTakeover('KR storage item use is unconfirmed after repeated info screens')
                     logger.warning('Possibly stuck on energy storage device, redetecting logger items.')
                     break
                 continue
