@@ -136,6 +136,13 @@ class ResearchUI(UI):
                 out.append('unknown')
 
         logger.info(f'Research status: {out}')
+        if (self.config.SERVER == 'kr' and out == ['detail', 'detail', 'unknown', 'detail', 'detail']
+                and image is self.device.image
+                and not getattr(self, '_kr_center_unknown_saved', False)):
+            # Keep one real center-card failure per worker for offline diagnosis.
+            # Do not save unrelated supplied images or change navigation decisions.
+            self.device.image_save('./log/kr_research_center_unknown.png')
+            self._kr_center_unknown_saved = True
         return out
 
     def is_research_stabled(self):
