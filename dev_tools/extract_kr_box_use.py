@@ -15,6 +15,7 @@ def main():
     parser.add_argument('--disassemble-confirm', action='store_true')
     parser.add_argument('--disassemble-popup', action='store_true')
     parser.add_argument('--mission-finish', action='store_true')
+    parser.add_argument('--meta-reward-enter', action='store_true')
     args = parser.parse_args()
     name = 'BOX_AMOUNT_CONFIRM' if args.amount_confirm else 'BOX_USE'
     area = (809, 613, 868, 645) if args.amount_confirm else (750, 494, 823, 528)
@@ -42,6 +43,11 @@ def main():
         name = 'MISSION_FINISH'
         area = (1048, 207, 1086, 231)
         click_area = (1030, 207, 1109, 231)
+    if args.meta_reward_enter:
+        folder = 'meta_reward'
+        name = 'REWARD_ENTER'
+        area = (1098, 537, 1200, 560)
+        click_area = (1098, 526, 1247, 561)
     with Image.open(args.screenshot) as source:
         if source.size != (1280, 720):
             raise ValueError('Expected 1280x720 game screenshot')
