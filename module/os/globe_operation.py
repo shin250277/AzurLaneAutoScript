@@ -146,7 +146,10 @@ class GlobeOperation(ActionPointHandler):
         return self.appear(ZONE_SWITCH, offset=(5, 5))
 
     _zone_select_offset = (20, 200)
-    _zone_select_similarity = 0.75
+    @property
+    def _zone_select_similarity(self):
+        # Korean abyssal/obscure labels share a suffix; 0.75 confused them.
+        return 0.85 if self.config.SERVER == 'kr' else 0.75
 
     def get_zone_select(self):
         """

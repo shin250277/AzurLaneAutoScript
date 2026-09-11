@@ -18,6 +18,7 @@ def main():
     parser.add_argument('--meta-reward-enter', action='store_true')
     parser.add_argument('--meta-reward-check', action='store_true')
     parser.add_argument('--meta-reward-receive', action='store_true')
+    parser.add_argument('--select-abyssal', action='store_true')
     args = parser.parse_args()
     name = 'BOX_AMOUNT_CONFIRM' if args.amount_confirm else 'BOX_USE'
     area = (809, 613, 868, 645) if args.amount_confirm else (750, 494, 823, 528)
@@ -60,6 +61,11 @@ def main():
         name = 'REWARD_RECEIVE'
         area = (1090, 610, 1165, 630)
         click_area = (1032, 602, 1214, 637)
+    if args.select_abyssal:
+        folder = 'os'
+        name = 'SELECT_ABYSSAL'
+        area = (87, 249, 169, 272)
+        click_area = (70, 236, 188, 285)
     with Image.open(args.screenshot) as source:
         if source.size != (1280, 720):
             raise ValueError('Expected 1280x720 game screenshot')
