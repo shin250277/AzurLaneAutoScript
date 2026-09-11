@@ -263,6 +263,13 @@ class RewardCommission(UI, InfoHandler):
         COMMISSION_SCROLL.set_top(main=self, skip_first_screenshot=True)
         return True
 
+    def _save_kr_commission_selection_mismatch(self):
+        """Retain the selected-card evidence before the mismatch is dismissed."""
+        if self.config.SERVER != 'kr' or getattr(self, '_kr_selection_mismatch_saved', False):
+            return
+        self.device.image_save('./log/kr_commission_selection_mismatch.png')
+        self._kr_selection_mismatch_saved = True
+
     def _save_kr_commission_scan_frame(self):
         """Bounded local evidence for KR names/rewards; no extra game input."""
         if self.config.SERVER != 'kr':
@@ -423,6 +430,7 @@ class RewardCommission(UI, InfoHandler):
                         logger.info('Selected to the correct commission')
                     else:
                         logger.warning('Selected to the wrong commission')
+                        self._save_kr_commission_selection_mismatch()
                         return False
                 else:
                     logger.warning('No selected commission detected, assuming correct')

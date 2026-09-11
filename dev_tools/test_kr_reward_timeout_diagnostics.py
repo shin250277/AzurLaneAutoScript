@@ -17,6 +17,19 @@ def load_method(path, name, **scope):
 
 
 class TimeoutDiagnosticsTest(unittest.TestCase):
+    def test_commission_selection_mismatch_saves_kr_once_without_input(self):
+        method = load_method('module/commission/commission.py', '_save_kr_commission_selection_mismatch')
+        for server in ('kr', 'jp'):
+            ui = SimpleNamespace(config=SimpleNamespace(SERVER=server), device=Mock())
+            method(ui)
+            method(ui)
+            if server == 'kr':
+                ui.device.image_save.assert_called_once_with('./log/kr_commission_selection_mismatch.png')
+            else:
+                ui.device.image_save.assert_not_called()
+            ui.device.click.assert_not_called()
+            ui.device.screenshot.assert_not_called()
+
     def test_commission_scan_frames_are_kr_only_and_bounded(self):
         method = load_method('module/commission/commission.py', '_save_kr_commission_scan_frame')
         for server in ('kr', 'jp'):
