@@ -249,6 +249,14 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
             return False
 
         self.hp_get()
+        if (self.config.SERVER == 'kr' and any(self.hp_has_ship)
+                and all(hp == 0 for hp in self.hp) and not any(self.need_repair)
+                and not getattr(self, '_kr_zero_hp_saved', False)):
+            # Preserve the frame before port navigation; zero HP without wrench
+            # icons can be a transition-frame reading, not six defeated ships.
+            self.device.image_save('./log/kr_os_zero_hp.png')
+            self._kr_zero_hp_saved = True
+            logger.warning('KR all-zero HP without repair icons; diagnostic saved')
         check = [round(data, 2) <= self.config.OpsiGeneral_RepairThreshold if use else False
                  for data, use in zip(self.hp, self.hp_has_ship)]
         if any(check):
