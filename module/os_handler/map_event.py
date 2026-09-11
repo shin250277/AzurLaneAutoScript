@@ -6,6 +6,7 @@ from module.logger import logger
 from module.os.assets import GLOBE_GOTO_MAP
 from module.os_handler.assets import *
 from module.os_handler.enemy_searching import EnemySearchingHandler
+from module.os_shop.assets import PORT_SUPPLY_CHECK
 from module.statistics.azurstats import DropImage
 from module.ui.assets import BACK_ARROW
 from module.ui.switch import Switch
@@ -155,6 +156,15 @@ class MapEventHandler(EnemySearchingHandler):
             if self.handle_os_in_map():
                 break
 
+    def handle_kr_auto_search_shop_exit(self):
+        # A reward dismissal can leave the Akashi supply screen open. This
+        # loop is exiting auto-search, not shopping: never confirm a purchase.
+        if self.config.SERVER == 'kr' and self.appear(PORT_SUPPLY_CHECK, offset=(20, 20), interval=3):
+            logger.info('KR auto-search exit: leave supply without purchasing')
+            self.device.click(BACK_ARROW)
+            return True
+        return False
+
     def os_auto_search_quit(self, drop=None):
         """
         Args:
@@ -166,6 +176,9 @@ class MapEventHandler(EnemySearchingHandler):
         confirm_timer = Timer(1.2, count=3).start()
         cleared = False
         for _ in self.loop():
+            if self.handle_kr_auto_search_shop_exit():
+                confirm_timer.reset()
+                continue
             if self.appear(AUTO_SEARCH_REWARD, offset=(50, 50), interval=2):
                 if self.ensure_no_info_bar():
                     cleared = True
