@@ -33,12 +33,11 @@ KR_ADD_NEW_STUDENT = [
         area=(630, 365, 680, 410), color=(63, 70, 90),
         button=(620, 350, 820, 430), name='KR_ADD_NEW_STUDENT_2'),
 ]
-KR_REWARD_GOTO_TACTICAL = Button(
-    area=(402, 299, 528, 339), color=(50, 184, 235),
-    button=(402, 299, 528, 339), name='KR_REWARD_GOTO_TACTICAL')
-KR_REWARD_GOTO_TACTICAL_COMPLETE = Button(
-    area=(402, 413, 529, 454), color=(254, 176, 54),
-    button=(402, 413, 529, 454), name='KR_REWARD_GOTO_TACTICAL_COMPLETE')
+KR_TACTICAL_REWARD_CARD = Button(
+    area=(76, 360, 186, 413), color=(0, 0, 0),
+    button=(402, 395, 528, 435),
+    file='./assets/kr/tactical/KR_TACTICAL_REWARD_CARD.png',
+    name='KR_TACTICAL_REWARD_CARD')
 KR_SHIP_CONFIRM = Button(
     area=(935, 610, 1110, 700), color=(64, 123, 194),
     button=(935, 610, 1110, 700), name='KR_SHIP_CONFIRM')
@@ -226,6 +225,19 @@ class Book:
 
 
 class RewardTacticalClass(Dock):
+    def _handle_kr_tactical_reward_entry(self):
+        """Anchor the action to the tactical title, including its vertical shift."""
+        if self.config.SERVER != 'kr':
+            return False
+        if not self.appear(KR_TACTICAL_REWARD_CARD, offset=(20, 150), interval=3):
+            return False
+        area = KR_TACTICAL_REWARD_CARD.button
+        if not any(self.image_color_count(area, color=color, threshold=230, count=1000)
+                   for color in [(254, 176, 54), (50, 184, 235)]):
+            return False
+        self.device.click(KR_TACTICAL_REWARD_CARD)
+        return True
+
     books: SelectedGrids
     tactical_finish = []
     dock_select_index = 0
@@ -493,7 +505,6 @@ class RewardTacticalClass(Dock):
         received = False
         study_finished = not self.config.AddNewStudent_Enable
         book_empty = False
-        kr_reward_entry_pending = False
         # tactical cards can't be loaded that fast, confirm if it's empty.
         empty_confirm = Timer(0.6, count=2).start()
         while 1:
@@ -563,37 +574,19 @@ class RewardTacticalClass(Dock):
                 empty_confirm.reset()
 
             # Popups
-            if self.appear_then_click(REWARD_2, offset=(20, 20), interval=3):
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_2, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_2_WHITE)
                 continue
-            if self.appear_then_click(REWARD_2_WHITE, offset=(20, 20), interval=3):
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_2_WHITE, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_2)
                 continue
-            if self.appear_then_click(REWARD_GOTO_TACTICAL, offset=(20, 20), interval=3):
+            if self._handle_kr_tactical_reward_entry():
+                continue
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_GOTO_TACTICAL, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_GOTO_TACTICAL_WHITE)
-                kr_reward_entry_pending = self.config.SERVER == 'kr'
                 continue
-            if self.appear_then_click(REWARD_GOTO_TACTICAL_WHITE, offset=(20, 20), interval=3):
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_GOTO_TACTICAL_WHITE, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_GOTO_TACTICAL)
-                kr_reward_entry_pending = self.config.SERVER == 'kr'
-                continue
-            if self.config.SERVER == 'kr' and self.image_color_count(
-                    KR_REWARD_GOTO_TACTICAL_COMPLETE,
-                    color=KR_REWARD_GOTO_TACTICAL_COMPLETE.color,
-                    threshold=230, count=2000):
-                if not getattr(self, '_kr_tactical_complete_saved', False):
-                    # Keep the first candidate, not a later misdirected screen.
-                    self.device.image_save('./log/kr_tactical_complete_candidate.png')
-                    self._kr_tactical_complete_saved = True
-                self.device.click(KR_REWARD_GOTO_TACTICAL_COMPLETE)
-                kr_reward_entry_pending = False
-                continue
-            if kr_reward_entry_pending and self.image_color_count(
-                    KR_REWARD_GOTO_TACTICAL,
-                    color=KR_REWARD_GOTO_TACTICAL.color,
-                    threshold=220, count=1000):
-                self.device.click(KR_REWARD_GOTO_TACTICAL)
-                kr_reward_entry_pending = False
                 continue
             if self.ui_main_appear_then_click(page_reward, interval=3):
                 continue

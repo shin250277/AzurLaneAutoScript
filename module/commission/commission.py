@@ -557,6 +557,27 @@ class RewardCommission(UI, InfoHandler):
         self.device.click_record_clear()
         return False
 
+    def _commission_start_kr(self):
+        """Refresh selection after departure: scrolling can split one title into aliases."""
+        for _ in range(4):
+            self._commission_scan_all()
+            choices = [(comm, False) for comm in self.daily_choose]
+            choices += [(comm, True) for comm in self.urgent_choose]
+            started = False
+            for comm, urgent in choices:
+                self._commission_ensure_mode('urgent' if urgent else 'daily')
+                self._commission_swipe_to_top()
+                self.handle_info_bar()
+                started = self._commission_find_and_start(comm, is_urgent=urgent)
+                if started:
+                    comm.convert_to_running()
+                self._commission_mode_reset()
+                if started:
+                    # Never use the remaining pre-departure queue after list reordering.
+                    break
+            if not started:
+                break
+
     def commission_start(self):
         """
         Scan and Start all chosen commissions.
@@ -565,6 +586,9 @@ class RewardCommission(UI, InfoHandler):
             in: page_commission
             out: page_commission
         """
+        if self.config.SERVER == 'kr':
+            self._commission_start_kr()
+            return
         self._commission_scan_all()
 
         logger.hr('Commission run', level=1)
