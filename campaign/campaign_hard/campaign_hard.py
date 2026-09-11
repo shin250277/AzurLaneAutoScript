@@ -38,6 +38,13 @@ class Campaign(CampaignBase):
     def _expected_end(self, expected):
         return 'in_stage'
 
+    def battle_default(self):
+        # KR cleared hard stages can start with only the boss present.
+        # The generic default searches ordinary enemies and then withdraws.
+        if self.config.SERVER == 'kr' and self.map.select(is_boss=True):
+            return self.clear_boss()
+        return super().battle_default()
+
     def clear_boss(self):
         grids = self.map.select(is_boss=True)
         grids = grids.add(self.map.select(may_boss=True, is_enemy=True))
