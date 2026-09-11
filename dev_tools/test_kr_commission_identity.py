@@ -71,6 +71,35 @@ class KoreanCommissionIdentityTest(unittest.TestCase):
         self.assertNotEqual(self.observed('EXTRA_CUBE_FLEET_ESCORT'),
                             self.observed('EXTRA_CUBE_LIVE_FIRE'))
 
+    def test_training_selection_variants_preserve_full_equality_and_hash(self):
+        for level, hours in (('MEDIUM', 5), ('ADVANCED', 8)):
+            with self.subTest(level=level):
+                title = 'EXTRA_CUBE_FLEET_TRAINING_' + level
+                first, second = self.observed(title), self.observed(title + '_SELECTED')
+                first.duration = second.duration = timedelta(hours=hours)
+                first.expire = second.expire = timedelta(0)
+                self.assertEqual(first, second)
+                self.assertEqual(second, first)
+                self.assertEqual(hash(first), hash(second))
+
+    def test_training_alias_does_not_bypass_other_commission_guards(self):
+        first = self.observed('EXTRA_CUBE_FLEET_TRAINING_MEDIUM')
+        for attribute, value in (
+                ('duration', timedelta(hours=8)), ('status', 'running'),
+                ('genre', 'major_comm'), ('repeat_count', 2),
+                ('expire', timedelta(0)), ('valid', False)):
+            with self.subTest(attribute=attribute):
+                second = self.observed('EXTRA_CUBE_FLEET_TRAINING_MEDIUM_SELECTED')
+                setattr(second, attribute, value)
+                self.assertNotEqual(first, second)
+                self.assertNotEqual(second, first)
+
+    def test_training_levels_remain_distinct_even_with_equal_timing(self):
+        for suffix in ('', '_SELECTED'):
+            with self.subTest(suffix=suffix):
+                self.assertNotEqual(self.observed('EXTRA_CUBE_FLEET_TRAINING_MEDIUM' + suffix),
+                                    self.observed('EXTRA_CUBE_FLEET_TRAINING_ADVANCED' + suffix))
+
     def test_full_korean_title_is_not_vetoed_by_legacy_suffix_crop(self):
         first = self.observed('DAILY_RESOURCE_IV')
         second = copy.deepcopy(first)

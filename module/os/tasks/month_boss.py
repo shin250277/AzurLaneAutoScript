@@ -40,6 +40,10 @@ class OpsiMonthBoss(OSMap):
             logger.attr('Month boss difficulty', 'hard')
             is_normal = False
         else:
+            if self.config.SERVER == 'kr':
+                # Unknown KR text is not proof that no boss is available.
+                # Retain the existing frame before leaving for diagnosis.
+                self.device.image_save('./log/kr_month_boss_unknown.png')
             logger.info("No Normal/Hard boss found, stop")
             self.os_mission_quit()
             self.month_boss_delay(is_normal=False, result=False)

@@ -17,6 +17,28 @@ def load_method(path, name, **scope):
 
 
 class TimeoutDiagnosticsTest(unittest.TestCase):
+    def test_unknown_month_boss_retains_kr_frame_without_combat(self):
+        method = load_method('module/os/tasks/month_boss.py', 'clear_month_boss',
+                             OS_MONTHBOSS_NORMAL='normal', OS_MONTHBOSS_HARD='hard')
+        for server in ('kr', 'jp'):
+            with self.subTest(server=server):
+                ui = SimpleNamespace(
+                    config=SimpleNamespace(SERVER=server, OpsiMonthBoss_Mode='normal'),
+                    device=Mock(), is_in_opsi_explore=Mock(return_value=False),
+                    os_mission_enter=Mock(), os_mission_quit=Mock(),
+                    appear=Mock(return_value=False), month_boss_delay=Mock(),
+                    boss_clear=Mock())
+                self.assertTrue(method(ui))
+                if server == 'kr':
+                    ui.device.image_save.assert_called_once_with('./log/kr_month_boss_unknown.png')
+                else:
+                    ui.device.image_save.assert_not_called()
+                ui.device.click.assert_not_called()
+                ui.device.screenshot.assert_not_called()
+                ui.boss_clear.assert_not_called()
+                ui.os_mission_quit.assert_called_once_with()
+                ui.month_boss_delay.assert_called_once_with(is_normal=False, result=False)
+
     def test_commission_selection_mismatch_saves_kr_once_without_input(self):
         method = load_method('module/commission/commission.py', '_save_kr_commission_selection_mismatch')
         for server in ('kr', 'jp'):
