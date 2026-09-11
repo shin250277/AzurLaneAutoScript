@@ -60,6 +60,10 @@ class MissionHandler(GlobeOperation, ZoneManager):
                 # No mission found, wait to confirm. Missions might not be loaded so fast.
                 if confirm_timer.reached():
                     logger.info('No OS mission found.')
+                    if self.config.SERVER == 'kr':
+                        # Retain the actual list for diagnosing a false empty
+                        # result after the mission-acceptance limit is reached.
+                        self.device.image_save('./log/kr_os_mission_empty.png')
                     break
             elif self.is_in_os_mission() \
                     and self.match_template_color(MISSION_CHECKOUT, offset=(20, 20)):
