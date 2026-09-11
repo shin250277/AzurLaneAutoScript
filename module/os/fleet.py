@@ -207,9 +207,9 @@ class OSFleet(OSCamera, Combat, Fleet, OSAsh):
             # common layout because its status row includes an extra icon.
             return self.image_color_count(
                 (344, 76, 389, 121), color=FLEET_LOW_RESOLVE.color,
-                threshold=221, count=250)
+                threshold=34, count=250)
         return self.image_color_count(
-            FLEET_LOW_RESOLVE, color=FLEET_LOW_RESOLVE.color, threshold=221, count=250)
+            FLEET_LOW_RESOLVE, color=FLEET_LOW_RESOLVE.color, threshold=30, count=250)
 
     def get_sea_grids(self):
         """

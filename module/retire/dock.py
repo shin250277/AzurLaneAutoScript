@@ -71,9 +71,9 @@ class Dock(Equipment):
         if self.config.SERVER == 'kr':
             return self.image_color_count(
                 KR_DOCK_EMPTY_TEXT, color=KR_DOCK_EMPTY_TEXT.color,
-                threshold=220, count=700) and self.image_color_count(
+                threshold=35, count=700) and self.image_color_count(
                 KR_DOCK_EMPTY_ICON, color=KR_DOCK_EMPTY_ICON.color,
-                threshold=200, count=900)
+                threshold=55, count=900)
         return False
 
     def _dock_filter_confirm_appear(self, interval=0):
@@ -82,7 +82,7 @@ class Dock(Equipment):
         if self.config.SERVER == 'kr' and self.image_color_count(
                 KR_DOCK_FILTER_CONFIRM,
                 color=KR_DOCK_FILTER_CONFIRM.color,
-                threshold=210, count=1200):
+                threshold=45, count=1200):
             return True
         return False
 

@@ -38,7 +38,7 @@ class MeowfficerCollect(MeowfficerBase):
         if self.config.SERVER == 'kr' and self.image_color_count(
                 KR_MEOWFFICER_TRAIN_EVALUATE,
                 color=KR_MEOWFFICER_TRAIN_EVALUATE.color,
-                threshold=210, count=2500):
+                threshold=45, count=2500):
             self.device.click(KR_MEOWFFICER_TRAIN_EVALUATE)
             return True
         return False
@@ -65,7 +65,7 @@ class MeowfficerCollect(MeowfficerBase):
 
             # End - Random left shift
             if self.image_color_count(MEOWFFICER_SHIFT_DETECT,
-                                      color=MEOWFFICER_SHIFT_DETECT.color, threshold=221, count=650):
+                                      color=MEOWFFICER_SHIFT_DETECT.color, threshold=30, count=650):
                 if not flag:
                     confirm_timer.reset()
                     flag = True
@@ -137,12 +137,12 @@ class MeowfficerCollect(MeowfficerBase):
 
         for btn in grid.buttons:
             # Empty slot; check for many white pixels
-            if self.image_color_count(btn, color=(255, 255, 247), threshold=221, count=200):
+            if self.image_color_count(btn, color=(255, 255, 247), threshold=30, count=200):
                 continue
 
             # Non-empty slot; check for few white pixels
             # i.e. roman numerals
-            if self.image_color_count(btn, color=(255, 255, 255), threshold=221, count=25):
+            if self.image_color_count(btn, color=(255, 255, 255), threshold=30, count=25):
                 if handle_drop:
                     self._meow_talent_cap_handle(btn, drop)
                 continue

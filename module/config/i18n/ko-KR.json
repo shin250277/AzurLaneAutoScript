@@ -28,6 +28,10 @@
       "name": "대형 작전",
       "help": ""
     },
+    "Island": {
+      "name": "Menu.Island.name",
+      "help": "Menu.Island.help"
+    },
     "Tool": {
       "name": "도구",
       "help": ""
@@ -66,10 +70,6 @@
       "name": "이벤트 공통 설정",
       "help": ""
     },
-    "Coalition": {
-      "name": "연합 작전 이벤트",
-      "help": ""
-    },
     "Event": {
       "name": "이벤트 파밍",
       "help": ""
@@ -86,13 +86,17 @@
       "name": "병원 이벤트",
       "help": ""
     },
+    "Coalition": {
+      "name": "연합 작전 이벤트",
+      "help": ""
+    },
+    "EventShop": {
+      "name": "Task.EventShop.name",
+      "help": "Task.EventShop.help"
+    },
     "WarArchives": {
       "name": "작전문서",
       "help": "작전문서 기능은 유지보수가 부족해 연속 공략이 정상 작동하지 않을 수 있습니다. ALAS가 비정상적으로 동작하면 수동으로 공략을 완료한 뒤 자동 공략을 사용하세요."
-    },
-    "CoalitionSp": {
-      "name": "연합 작전 이벤트 SP",
-      "help": ""
     },
     "EventA": {
       "name": "이벤트 일일 A",
@@ -116,6 +120,10 @@
     },
     "RaidDaily": {
       "name": "레이드 일일",
+      "help": ""
+    },
+    "CoalitionSp": {
+      "name": "연합 작전 이벤트 SP",
       "help": ""
     },
     "Commission": {
@@ -250,6 +258,30 @@
       "name": "월간 초기화 일일 작업",
       "help": "ALAS가 대형 작전 초기화 10분 전에 진입해 화면을 나가지 않고 초기화를 기다립니다. 이후 일일 임무, 비밀 해역, 심연 해역, 지휘냥 파밍을 실행해 추가 강화 부품을 획득합니다. 일일 임무에는 '대형 작전 일일 임무' 작업 설정을 사용하며 나머지 기능은 동일합니다.\n중요: ALAS가 대형 작전 초기화를 기다리는 동안 게임을 조작하지 마세요."
     },
+    "IslandProduction": {
+      "name": "Task.IslandProduction.name",
+      "help": "Task.IslandProduction.help"
+    },
+    "IslandOrder": {
+      "name": "Task.IslandOrder.name",
+      "help": "Task.IslandOrder.help"
+    },
+    "IslandFreebie": {
+      "name": "Task.IslandFreebie.name",
+      "help": "Task.IslandFreebie.help"
+    },
+    "IslandCollect": {
+      "name": "Task.IslandCollect.name",
+      "help": "Task.IslandCollect.help"
+    },
+    "IslandSeasonTask": {
+      "name": "Task.IslandSeasonTask.name",
+      "help": "Task.IslandSeasonTask.help"
+    },
+    "IslandBusiness": {
+      "name": "Task.IslandBusiness.name",
+      "help": "Task.IslandBusiness.help"
+    },
     "Daemon": {
       "name": "일반 반자동",
       "help": ""
@@ -261,6 +293,10 @@
     "EventStory": {
       "name": "이벤트 스토리",
       "help": ""
+    },
+    "IslandProductionPlanner": {
+      "name": "Task.IslandProductionPlanner.name",
+      "help": "Task.IslandProductionPlanner.help"
     },
     "Benchmark": {
       "name": "성능 테스트",
@@ -777,6 +813,7 @@
       "event_20260520_cn": "Alliance Before the Hagiobull",
       "event_20260625_cn": "Miracle by Midnight",
       "event_20260813_cn": "몽광의 아스트라리움",
+      "event_20260908_cn": "Tales of the Paranormal",
       "raid_20200624": "Air Raid Drills with Essex Rerun",
       "raid_20210708": "Cross Wave rerun",
       "raid_20220127": "Mystery Investigation",
@@ -788,6 +825,7 @@
       "raid_20240328": "From Zero to Hero Rerun",
       "raid_20250116": "Spring Fashion Festa",
       "raid_20260212": "Spring Auction Adventure",
+      "raid_20260827": "The Big Shots Proclamation",
       "war_archives_20180607_cn": "archives Ink Stained Steel Sakura",
       "war_archives_20180726_cn": "archives Iris of Light and Dark",
       "war_archives_20181020_en": "archives Strive Wish and Strategize",
@@ -1360,6 +1398,33 @@
       "multi": "연합 작전"
     }
   },
+  "EventShop": {
+    "_info": {
+      "name": "EventShop._info.name",
+      "help": "EventShop._info.help"
+    },
+    "UnlockSSRShip": {
+      "name": "EventShop.UnlockSSRShip.name",
+      "help": "EventShop.UnlockSSRShip.help"
+    },
+    "BuyURShip": {
+      "name": "EventShop.BuyURShip.name",
+      "help": "EventShop.BuyURShip.help",
+      "0": "0",
+      "1": "1",
+      "2": "2"
+    },
+    "PresetFilter": {
+      "name": "EventShop.PresetFilter.name",
+      "help": "EventShop.PresetFilter.help",
+      "all": "all",
+      "custom": "custom"
+    },
+    "CustomFilter": {
+      "name": "EventShop.CustomFilter.name",
+      "help": "EventShop.CustomFilter.help"
+    }
+  },
   "Commission": {
     "_info": {
       "name": "의뢰 설정",
@@ -1901,6 +1966,10 @@
     "Refresh": {
       "name": "상점 새로고침 허용",
       "help": "새로고침 시 다이아 50개를 소비합니다."
+    },
+    "BuyUnobtainedShip": {
+      "name": "MeritShop.BuyUnobtainedShip.name",
+      "help": "MeritShop.BuyUnobtainedShip.help"
     },
     "Filter": {
       "name": "상품 필터",
@@ -2581,6 +2650,210 @@
       "22": "22 | NA 해역 남서부 구역 B"
     }
   },
+  "IslandProduction": {
+    "_info": {
+      "name": "IslandProduction._info.name",
+      "help": "IslandProduction._info.help"
+    },
+    "HardFloorItems": {
+      "name": "IslandProduction.HardFloorItems.name",
+      "help": "IslandProduction.HardFloorItems.help"
+    },
+    "DailyBufferItems": {
+      "name": "IslandProduction.DailyBufferItems.name",
+      "help": "IslandProduction.DailyBufferItems.help"
+    },
+    "ManualBufferItems": {
+      "name": "IslandProduction.ManualBufferItems.name",
+      "help": "IslandProduction.ManualBufferItems.help"
+    },
+    "IdleAccumulatingItems": {
+      "name": "IslandProduction.IdleAccumulatingItems.name",
+      "help": "IslandProduction.IdleAccumulatingItems.help"
+    }
+  },
+  "IslandOrder": {
+    "_info": {
+      "name": "IslandOrder._info.name",
+      "help": "IslandOrder._info.help"
+    },
+    "StuckSeasonOrderId": {
+      "name": "IslandOrder.StuckSeasonOrderId.name",
+      "help": "IslandOrder.StuckSeasonOrderId.help"
+    }
+  },
+  "IslandFreebie": {
+    "_info": {
+      "name": "IslandFreebie._info.name",
+      "help": "IslandFreebie._info.help"
+    },
+    "Share": {
+      "name": "IslandFreebie.Share.name",
+      "help": "IslandFreebie.Share.help"
+    }
+  },
+  "IslandRestaurant": {
+    "_info": {
+      "name": "IslandRestaurant._info.name",
+      "help": "IslandRestaurant._info.help"
+    },
+    "KoiGrade": {
+      "name": "IslandRestaurant.KoiGrade.name",
+      "help": "IslandRestaurant.KoiGrade.help",
+      "bronze": "bronze",
+      "silver": "silver",
+      "gold": "gold",
+      "diamond": "diamond"
+    },
+    "KoiWaitress1": {
+      "name": "IslandRestaurant.KoiWaitress1.name",
+      "help": "IslandRestaurant.KoiWaitress1.help",
+      "none": "none",
+      "any": "any",
+      "Chao_Ho": "Chao_Ho",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "KoiWaitress2": {
+      "name": "IslandRestaurant.KoiWaitress2.name",
+      "help": "IslandRestaurant.KoiWaitress2.help",
+      "none": "none",
+      "any": "any",
+      "Chao_Ho": "Chao_Ho",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "KoiMenu": {
+      "name": "IslandRestaurant.KoiMenu.name",
+      "help": "IslandRestaurant.KoiMenu.help"
+    },
+    "BearGrade": {
+      "name": "IslandRestaurant.BearGrade.name",
+      "help": "IslandRestaurant.BearGrade.help",
+      "bronze": "bronze",
+      "silver": "silver",
+      "gold": "gold",
+      "diamond": "diamond"
+    },
+    "BearWaitress1": {
+      "name": "IslandRestaurant.BearWaitress1.name",
+      "help": "IslandRestaurant.BearWaitress1.help",
+      "none": "none",
+      "any": "any",
+      "Cheshire": "Cheshire",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "BearWaitress2": {
+      "name": "IslandRestaurant.BearWaitress2.name",
+      "help": "IslandRestaurant.BearWaitress2.help",
+      "none": "none",
+      "any": "any",
+      "Cheshire": "Cheshire",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "BearMenu": {
+      "name": "IslandRestaurant.BearMenu.name",
+      "help": "IslandRestaurant.BearMenu.help"
+    },
+    "EateryGrade": {
+      "name": "IslandRestaurant.EateryGrade.name",
+      "help": "IslandRestaurant.EateryGrade.help",
+      "bronze": "bronze",
+      "silver": "silver",
+      "gold": "gold",
+      "diamond": "diamond"
+    },
+    "EateryWaitress1": {
+      "name": "IslandRestaurant.EateryWaitress1.name",
+      "help": "IslandRestaurant.EateryWaitress1.help",
+      "none": "none",
+      "any": "any",
+      "Helena": "Helena",
+      "Prinz_Eugen": "Prinz_Eugen",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "EateryWaitress2": {
+      "name": "IslandRestaurant.EateryWaitress2.name",
+      "help": "IslandRestaurant.EateryWaitress2.help",
+      "none": "none",
+      "any": "any",
+      "Helena": "Helena",
+      "Prinz_Eugen": "Prinz_Eugen",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "EateryMenu": {
+      "name": "IslandRestaurant.EateryMenu.name",
+      "help": "IslandRestaurant.EateryMenu.help"
+    },
+    "GrillGrade": {
+      "name": "IslandRestaurant.GrillGrade.name",
+      "help": "IslandRestaurant.GrillGrade.help",
+      "bronze": "bronze",
+      "silver": "silver",
+      "gold": "gold",
+      "diamond": "diamond"
+    },
+    "GrillWaitress1": {
+      "name": "IslandRestaurant.GrillWaitress1.name",
+      "help": "IslandRestaurant.GrillWaitress1.help",
+      "none": "none",
+      "any": "any",
+      "August_von_Parseval": "August_von_Parseval",
+      "Prinz_Eugen": "Prinz_Eugen",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "GrillWaitress2": {
+      "name": "IslandRestaurant.GrillWaitress2.name",
+      "help": "IslandRestaurant.GrillWaitress2.help",
+      "none": "none",
+      "any": "any",
+      "August_von_Parseval": "August_von_Parseval",
+      "Prinz_Eugen": "Prinz_Eugen",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "GrillMenu": {
+      "name": "IslandRestaurant.GrillMenu.name",
+      "help": "IslandRestaurant.GrillMenu.help"
+    },
+    "CafeGrade": {
+      "name": "IslandRestaurant.CafeGrade.name",
+      "help": "IslandRestaurant.CafeGrade.help",
+      "bronze": "bronze",
+      "silver": "silver",
+      "gold": "gold",
+      "diamond": "diamond"
+    },
+    "CafeWaitress1": {
+      "name": "IslandRestaurant.CafeWaitress1.name",
+      "help": "IslandRestaurant.CafeWaitress1.help",
+      "none": "none",
+      "any": "any",
+      "Cheshire": "Cheshire",
+      "Belfast": "Belfast",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "CafeWaitress2": {
+      "name": "IslandRestaurant.CafeWaitress2.name",
+      "help": "IslandRestaurant.CafeWaitress2.help",
+      "none": "none",
+      "any": "any",
+      "Cheshire": "Cheshire",
+      "Belfast": "Belfast",
+      "Chang_Feng": "Chang_Feng"
+    },
+    "CafeMenu": {
+      "name": "IslandRestaurant.CafeMenu.name",
+      "help": "IslandRestaurant.CafeMenu.help"
+    }
+  },
+  "IslandSeasonTask": {
+    "_info": {
+      "name": "IslandSeasonTask._info.name",
+      "help": "IslandSeasonTask._info.help"
+    },
+    "TaskTarget": {
+      "name": "IslandSeasonTask.TaskTarget.name",
+      "help": "IslandSeasonTask.TaskTarget.help"
+    }
+  },
   "Daemon": {
     "_info": {
       "name": "반자동 클릭",
@@ -2615,6 +2888,45 @@
       "help": "",
       "True": "활성화",
       "False": "비활성화"
+    }
+  },
+  "IslandProductionPlanner": {
+    "_info": {
+      "name": "IslandProductionPlanner._info.name",
+      "help": "IslandProductionPlanner._info.help"
+    },
+    "RescanIslandTechnology": {
+      "name": "IslandProductionPlanner.RescanIslandTechnology.name",
+      "help": "IslandProductionPlanner.RescanIslandTechnology.help"
+    },
+    "DailyProfitLowerLimit": {
+      "name": "IslandProductionPlanner.DailyProfitLowerLimit.name",
+      "help": "IslandProductionPlanner.DailyProfitLowerLimit.help"
+    },
+    "DailyBufferSafetyMargin": {
+      "name": "IslandProductionPlanner.DailyBufferSafetyMargin.name",
+      "help": "IslandProductionPlanner.DailyBufferSafetyMargin.help"
+    },
+    "FieldsEfficiency": {
+      "name": "IslandProductionPlanner.FieldsEfficiency.name",
+      "help": "IslandProductionPlanner.FieldsEfficiency.help",
+      "0": "0",
+      "0.04": "0.04",
+      "0.12": "0.12"
+    },
+    "OrchardEfficiency": {
+      "name": "IslandProductionPlanner.OrchardEfficiency.name",
+      "help": "IslandProductionPlanner.OrchardEfficiency.help",
+      "0": "0",
+      "0.04": "0.04",
+      "0.12": "0.12"
+    },
+    "NurseryEfficiency": {
+      "name": "IslandProductionPlanner.NurseryEfficiency.name",
+      "help": "IslandProductionPlanner.NurseryEfficiency.help",
+      "0": "0",
+      "0.04": "0.04",
+      "0.12": "0.12"
     }
   },
   "Benchmark": {

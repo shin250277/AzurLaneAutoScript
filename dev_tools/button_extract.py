@@ -1,4 +1,6 @@
 import os
+import json
+from pathlib import Path
 
 import imageio
 import numpy as np
@@ -11,6 +13,7 @@ from module.logger import logger
 
 MODULE_FOLDER = './module'
 BUTTON_FILE = 'assets.py'
+KR_OVERRIDES = json.loads((Path(__file__).with_name('kr_asset_overrides.json')).read_text(encoding='utf-8'))
 IMPORT_EXP = """
 from module.base.button import Button
 from module.base.template import Template
@@ -101,6 +104,10 @@ class ImageExtractor:
             self.color[server] = self.color[fallback]
             self.button[server] = self.button[fallback]
             self.file[server] = self.file[fallback]
+        if server == 'kr':
+            override = KR_OVERRIDES.get(self.module, {}).get(self.name, {}).get('kr', {})
+            for field, value in override.items():
+                getattr(self, field)[server] = tuple(value) if isinstance(value, list) else value
 
     @property
     def expression(self):
@@ -175,6 +182,14 @@ class ModuleExtractor:
                 exp.append(ImageExtractor(module=self.name, file=file).expression)
                 continue
 
+        for name, override in KR_OVERRIDES.get(self.name, {}).items():
+            if 'definition' in override:
+                values = {}
+                for field, value in override['definition'].items():
+                    values[field] = {server: tuple(v) if isinstance(v, list) else v
+                                     for server, v in value.items()} if isinstance(value, dict) else value
+                exp.append('{} = {}({})'.format(name, override['kind'],
+                    ', '.join('{}={!r}'.format(k, v) for k, v in values.items())))
         exp.sort()
 
         logger.info('Module: %s(%s)' % (self.name, len(exp)))

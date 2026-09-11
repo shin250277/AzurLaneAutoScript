@@ -356,7 +356,7 @@ class RewardGacha(GachaUI, Retirement):
             if not submitted and self.config.SERVER == 'kr' and self.image_color_count(
                     KR_GACHA_SUBMIT_CONFIRM,
                     color=KR_GACHA_SUBMIT_CONFIRM.color,
-                    threshold=210, count=1200):
+                    threshold=45, count=1200):
                 self.device.click(KR_GACHA_SUBMIT_CONFIRM)
                 submitted = True
                 continue

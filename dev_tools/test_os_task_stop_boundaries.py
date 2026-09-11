@@ -117,6 +117,7 @@ class OsTaskStopBoundariesTest(unittest.TestCase):
                 with self.subTest(task=name, stage=stage):
                     ui = Mock()
                     ui.config.SERVER = 'kr'
+                    ui.config.is_task_enabled.return_value = False
                     if stage == 'initialization':
                         ui.load_campaign.side_effect = ActionPointLimit
                     else:

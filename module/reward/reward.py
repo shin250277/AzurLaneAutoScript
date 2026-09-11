@@ -76,11 +76,11 @@ class Reward(UI):
         if self.config.SERVER == 'kr':
             if self.image_color_count(
                     KR_MISSION_SINGLE, color=KR_MISSION_SINGLE.color,
-                    threshold=220, count=1000):
+                    threshold=35, count=1000):
                 return KR_MISSION_SINGLE
             if self.image_color_count(
                     KR_MISSION_UNFINISH, color=KR_MISSION_UNFINISH.color,
-                    threshold=220, count=150):
+                    threshold=35, count=150):
                 return KR_MISSION_UNFINISH
         if self.match_template_color(MISSION_SINGLE, offset=(50, 200)):
             return MISSION_SINGLE
@@ -116,7 +116,7 @@ class Reward(UI):
                     continue
                 if self.config.SERVER == 'kr' and self.image_color_count(
                         KR_MISSION_SINGLE, color=KR_MISSION_SINGLE.color,
-                        threshold=220, count=1000):
+                        threshold=35, count=1000):
                     self.device.click(KR_MISSION_SINGLE)
                     click_interval.reset()
                     clicked = True
@@ -125,7 +125,7 @@ class Reward(UI):
                     return clicked
                 if self.config.SERVER == 'kr' and self.image_color_count(
                         KR_MISSION_UNFINISH, color=KR_MISSION_UNFINISH.color,
-                        threshold=220, count=150):
+                        threshold=35, count=150):
                     return clicked
 
     def _reward_mission_claim_receive(self):
@@ -229,7 +229,7 @@ class Reward(UI):
         Returns:
             bool, if handled
         """
-        if not self.image_color_count(MISSION_WEEKLY_RED_DOT, color=(206, 81, 66), threshold=221, count=20):
+        if not self.image_color_count(MISSION_WEEKLY_RED_DOT, color=(206, 81, 66), threshold=30, count=20):
             logger.info('No MISSION_WEEKLY_RED_DOT')
             return False
 
@@ -247,7 +247,7 @@ class Reward(UI):
         if self.appear(MISSION_NOTICE):
             logger.info('Found mission notice MISSION_NOTICE')
             return True
-        if self.image_color_count(MISSION_NOTICE_WHITE, color=(214, 117, 99), threshold=221, count=20):
+        if self.image_color_count(MISSION_NOTICE_WHITE, color=(214, 117, 99), threshold=30, count=20):
             logger.info('Found mission notice MISSION_NOTICE_WHITE')
             return True
 

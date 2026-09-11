@@ -90,7 +90,7 @@ class ResearchUI(UI):
                 KR_RESEARCH_GET_ITEMS, offset=(3, 3), similarity=0.75):
             return KR_RESEARCH_GET_ITEMS
         if self.appear(GET_ITEMS_3, offset=(5, 5)):
-            if self.image_color_count(GET_ITEMS_3_CHECK, color=(255, 255, 255), threshold=221, count=100):
+            if self.image_color_count(GET_ITEMS_3_CHECK, color=(255, 255, 255), threshold=30, count=100):
                 return GET_ITEMS_3
             else:
                 return GET_ITEMS_2

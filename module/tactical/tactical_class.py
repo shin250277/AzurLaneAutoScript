@@ -232,7 +232,7 @@ class RewardTacticalClass(Dock):
         if not self.appear(KR_TACTICAL_REWARD_CARD, offset=(20, 150), interval=3):
             return False
         area = KR_TACTICAL_REWARD_CARD.button
-        if not any(self.image_color_count(area, color=color, threshold=230, count=1000)
+        if not any(self.image_color_count(area, color=color, threshold=25, count=1000)
                    for color in [(254, 176, 54), (50, 184, 235)]):
             return False
         self.device.click(KR_TACTICAL_REWARD_CARD)
@@ -250,11 +250,11 @@ class RewardTacticalClass(Dock):
             return False
         if not self.image_color_count(
                 KR_TACTICAL_FINISH_HEADER, color=KR_TACTICAL_FINISH_HEADER.color,
-                threshold=220, count=3000):
+                threshold=35, count=3000):
             return False
         if not self.image_color_count(
                 KR_TACTICAL_FINISH_CONFIRM, color=KR_TACTICAL_FINISH_CONFIRM.color,
-                threshold=220, count=1500):
+                threshold=35, count=1500):
             return False
         self.device.click(KR_TACTICAL_FINISH_CONFIRM)
         return True
@@ -270,7 +270,7 @@ class RewardTacticalClass(Dock):
             return True
         if self.config.SERVER == 'kr' and self.image_color_count(
                 KR_SKILL_CONFIRM, color=KR_SKILL_CONFIRM.color,
-                threshold=220, count=1000):
+                threshold=35, count=1000):
             return True
         return False
 
@@ -280,7 +280,7 @@ class RewardTacticalClass(Dock):
         if self.config.SERVER == 'kr' and self.image_color_count(
                 KR_TACTICAL_CLASS_START,
                 color=KR_TACTICAL_CLASS_START.color,
-                threshold=220, count=1000):
+                threshold=35, count=1000):
             return True
         return False
 
@@ -527,7 +527,7 @@ class RewardTacticalClass(Dock):
                     kr_student_clicked = False
                     for button in KR_ADD_NEW_STUDENT:
                         if self.image_color_count(
-                                button, color=button.color, threshold=235, count=50):
+                                button, color=button.color, threshold=20, count=50):
                             self.device.click(button)
                             kr_student_clicked = True
                             self.device.sleep(1)

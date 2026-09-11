@@ -13,7 +13,7 @@ from module.handler.assets import (AUTO_SEARCH_MENU_EXIT, BATTLE_PASS_NEW_SEASON
 from module.handler.info_handler import InfoHandler
 from module.logger import logger
 from module.map.assets import (FLEET_PREPARATION, MAP_PREPARATION,
-                               MAP_PREPARATION_CANCEL, WITHDRAW)
+                               MAP_PREPARATION_HARD, MAP_PREPARATION_CANCEL, WITHDRAW)
 from module.meowfficer.assets import MEOWFFICER_BUY, MEOWFFICER_TRAIN_START
 from module.ocr.ocr import Ocr
 from module.os_handler.assets import (ACTION_POINT_CANCEL, ACTION_POINT_USE, CURRENT_AP_CHECK,
@@ -594,6 +594,7 @@ class UI(InfoHandler):
 
         logger.hr(f"UI goto {destination}")
         suppress_kr_campaign_popups = False
+        island_page_detected = False
         while 1:
             GOTO_MAIN.clear_offset()
             if skip_first_screenshot:
@@ -604,6 +605,7 @@ class UI(InfoHandler):
             # Destination page
             if self.ui_page_appear(page=destination, offset=offset):
                 logger.info(f'Page arrive: {destination}')
+                self.ui_current = destination
                 break
 
             # Other pages
@@ -624,6 +626,8 @@ class UI(InfoHandler):
                     continue
                 appeared = self.ui_page_appear(page, offset=offset, interval=5)
                 if appeared:
+                    self.ui_current = page
+                    island_page_detected = page.is_island() or page.parent.is_island()
                     logger.info(f'Page switch: {page} -> {page.parent}')
                     button = page.links[page.parent]
                     self.device.click(button)
@@ -642,7 +646,7 @@ class UI(InfoHandler):
                 # reward popups. There are no legitimate main-page popups in
                 # this short route, so wait only for the localized destination.
                 continue
-            if self.ui_additional(get_ship=get_ship):
+            if self.ui_additional(get_ship=get_ship and not island_page_detected):
                 continue
 
         # Reset connection
@@ -961,6 +965,7 @@ class UI(InfoHandler):
 
         # Campaign preparation
         if self.appear(MAP_PREPARATION, offset=(30, 30), interval=3) \
+                or self.appear(MAP_PREPARATION_HARD, offset=(30, 30), interval=3) \
                 or self.appear(FLEET_PREPARATION, offset=(20, 50), interval=3) \
                 or self.appear(RAID_FLEET_PREPARATION, offset=(30, 30), interval=3):
             self.device.click(MAP_PREPARATION_CANCEL)

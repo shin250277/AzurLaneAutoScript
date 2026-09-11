@@ -34,7 +34,7 @@ class BuyFurniture(UI):
             return True
         if self.config.SERVER == 'kr' and self.image_color_count(
                 kr_button, color=kr_button.color,
-                threshold=210, count=1200):
+                threshold=45, count=1200):
             return True
         return False
 

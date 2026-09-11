@@ -46,6 +46,8 @@ HOSPITAL = ['Hospital']
 # campaign/Readme.md has no KR column. Keep verified Korean live-event names
 # here and fall back to JP/EN for entries that have not been localized yet.
 KR_EVENT_NAMES = {
+    'war_archives_20190321_en': '작전문서: 홍염의 방문자',
+    'war_archives_20191031_en': '작전문서: 거울에 비친 이색',
     'event_20260813_cn': '몽광의 아스트라리움',
     'coalition_20260723': '\uad34\ub2f4\uc2e4\ub85d',
 }

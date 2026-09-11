@@ -277,7 +277,7 @@ class Daily(Combat):
             # selector. Handle it before looking for the dimmed selector below.
             if self.config.SERVER == 'kr' and self.image_color_count(
                     KR_DAILY_INFO_CONFIRM, color=KR_DAILY_INFO_CONFIRM.color,
-                    threshold=235, count=700):
+                    threshold=20, count=700):
                 self.device.click(KR_DAILY_INFO_CONFIRM)
                 continue
             if self.config.Daily_UseDailySkip:

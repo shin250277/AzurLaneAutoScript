@@ -30,7 +30,11 @@ class AstrariumMapsTest(unittest.TestCase):
 
     def test_korean_event_option(self):
         args = json.loads((ROOT / 'module/config/argument/args.json').read_text(encoding='utf-8'))
-        self.assertIn(EVENT, args['Event']['Campaign']['Event']['option_kr'])
+        # The latest event changes; historical maps remain available without
+        # forcing an expired event back into the current scheduler options.
+        from module.config.config_updater import ConfigGenerator
+        self.assertIn(EVENT, [event.directory for event in ConfigGenerator().event])
+        self.assertTrue(args['Event']['Campaign']['Event']['option_kr'])
         words = json.loads((ROOT / 'module/config/i18n/ko-KR.json').read_text(encoding='utf-8'))
         self.assertEqual(words['Campaign']['Event'][EVENT], '몽광의 아스트라리움')
 
