@@ -570,6 +570,10 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         """
         if self.handle_kr_ship_card(drop=drop):
             return True
+        if self.config.SERVER == 'kr':
+            # The legacy KR GET_SHIP sample is a tiny white patch which also
+            # matches META artwork. Only the contextual card may click on KR.
+            return False
         if self.appear_then_click(GET_SHIP, interval=1):
             if self.appear(NEW_SHIP):
                 logger.info('Get a new SHIP')
