@@ -581,6 +581,10 @@ class RewardTacticalClass(Dock):
                     KR_REWARD_GOTO_TACTICAL_COMPLETE,
                     color=KR_REWARD_GOTO_TACTICAL_COMPLETE.color,
                     threshold=230, count=2000):
+                if not getattr(self, '_kr_tactical_complete_saved', False):
+                    # Keep the first candidate, not a later misdirected screen.
+                    self.device.image_save('./log/kr_tactical_complete_candidate.png')
+                    self._kr_tactical_complete_saved = True
                 self.device.click(KR_REWARD_GOTO_TACTICAL_COMPLETE)
                 kr_reward_entry_pending = False
                 continue
