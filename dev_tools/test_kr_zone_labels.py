@@ -16,12 +16,14 @@ class KrZoneLabelsTest(unittest.TestCase):
         tree = ast.parse(path.read_text(encoding='utf-8'))
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'GlobeOperation')
         tree.body = [next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'get_zone_pinned')]
-        dangerous, obscure = Mock(), Mock()
+        dangerous, obscure, abyssal = Mock(), Mock(), Mock()
         scope = dict(ZONE_TYPES=[dangerous, obscure], ZONE_DANGEROUS=dangerous,
-                     ZONE_OBSCURE=obscure, ASSETS_PINNED_ZONE=[])
+                     ZONE_OBSCURE=obscure, ZONE_ABYSSAL=abyssal, ASSETS_PINNED_ZONE=[])
         exec(compile(tree, str(path), 'exec'), scope)
-        handler = SimpleNamespace(config=SimpleNamespace(SERVER='kr'), appear=lambda *a, **k: True)
+        handler = SimpleNamespace(config=SimpleNamespace(SERVER='kr'), appear=lambda a, **k: a is not abyssal)
         self.assertIs(scope['get_zone_pinned'](handler), obscure)
+        handler.appear = lambda a, **k: a is not obscure
+        self.assertIs(scope['get_zone_pinned'](handler), abyssal)
         handler.config.SERVER = 'jp'
         self.assertIs(scope['get_zone_pinned'](handler), dangerous)
 
