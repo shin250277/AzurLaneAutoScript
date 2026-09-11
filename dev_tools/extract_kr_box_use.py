@@ -14,6 +14,7 @@ def main():
     parser.add_argument('--disassemble-cancel', action='store_true')
     parser.add_argument('--disassemble-confirm', action='store_true')
     parser.add_argument('--disassemble-popup', action='store_true')
+    parser.add_argument('--mission-finish', action='store_true')
     args = parser.parse_args()
     name = 'BOX_AMOUNT_CONFIRM' if args.amount_confirm else 'BOX_USE'
     area = (809, 613, 868, 645) if args.amount_confirm else (750, 494, 823, 528)
@@ -35,17 +36,23 @@ def main():
         # Identify the materials-received dialog, not a generic blue confirm.
         area = (584, 173, 693, 195)
         click_area = (708, 557, 851, 603)
+    folder = 'storage'
+    if args.mission_finish:
+        folder = 'os_handler'
+        name = 'MISSION_FINISH'
+        area = (1048, 207, 1086, 231)
+        click_area = (1030, 207, 1109, 231)
     with Image.open(args.screenshot) as source:
         if source.size != (1280, 720):
             raise ValueError('Expected 1280x720 game screenshot')
         label = source.convert('RGB').crop(area)
-    target = Path('assets/kr/storage') / (name + '.png')
+    target = Path('assets/kr') / folder / (name + '.png')
     target.parent.mkdir(parents=True, exist_ok=True)
     canvas = Image.new('RGB', (1280, 720))
     canvas.paste(label, area)
     canvas.save(str(target))
     color = tuple(int(v) for v in np.asarray(label).mean(axis=(0, 1)))
-    path = Path('module/storage/assets.py')
+    path = Path('module') / folder / 'assets.py'
     lines = path.read_text(encoding='utf-8').splitlines()
     for i, line in enumerate(lines):
         if line.startswith(name + ' = Button('):
