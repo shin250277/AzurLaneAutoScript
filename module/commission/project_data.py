@@ -8,6 +8,8 @@ dictionary_kr_visual = {
     'DAILY_CHIP_II_SCROLL': 'daily_chip',
     'EXTRA_CUBE_LIVE_FIRE': 'extra_cube',
     'EXTRA_CUBE_LIVE_FIRE_SCROLL': 'extra_cube',
+    'EXTRA_CUBE_FLEET_ESCORT': 'extra_cube',
+    'EXTRA_CUBE_FLEET_ESCORT_SCROLL': 'extra_cube',
     'EXTRA_OIL_MEDIUM_III': 'extra_oil',
     'EXTRA_OIL_LARGE_III': 'extra_oil',
     'URGENT_DRILL_RECON': 'urgent_drill',
@@ -23,6 +25,7 @@ dictionary_kr_visual = {
 dictionary_kr_visual_aliases = {
     'DAILY_CHIP_II_SCROLL': 'DAILY_CHIP_II',
     'EXTRA_CUBE_LIVE_FIRE_SCROLL': 'EXTRA_CUBE_LIVE_FIRE',
+    'EXTRA_CUBE_FLEET_ESCORT_SCROLL': 'EXTRA_CUBE_FLEET_ESCORT',
 }
 
 dictionary_cn = {

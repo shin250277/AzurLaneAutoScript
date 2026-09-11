@@ -19,6 +19,8 @@ CASES = {
     'DAILY_CHIP_II_SCROLL': 'daily_chip',
     'EXTRA_CUBE_LIVE_FIRE': 'extra_cube',
     'EXTRA_CUBE_LIVE_FIRE_SCROLL': 'extra_cube',
+    'EXTRA_CUBE_FLEET_ESCORT': 'extra_cube',
+    'EXTRA_CUBE_FLEET_ESCORT_SCROLL': 'extra_cube',
     'EXTRA_OIL_MEDIUM_III': 'extra_oil',
     'EXTRA_OIL_LARGE_III': 'extra_oil',
     'URGENT_DRILL_RECON': 'urgent_drill',

@@ -63,9 +63,13 @@ class KoreanCommissionIdentityTest(unittest.TestCase):
         return comm
 
     def test_observed_scroll_variants_share_name_identity(self):
-        for title in ('DAILY_CHIP_II', 'EXTRA_CUBE_LIVE_FIRE'):
+        for title in ('DAILY_CHIP_II', 'EXTRA_CUBE_LIVE_FIRE', 'EXTRA_CUBE_FLEET_ESCORT'):
             with self.subTest(title=title):
                 self.assertEqual(self.observed(title), self.observed(title + '_SCROLL'))
+
+    def test_fleet_escort_is_not_live_fire_despite_same_cube_reward(self):
+        self.assertNotEqual(self.observed('EXTRA_CUBE_FLEET_ESCORT'),
+                            self.observed('EXTRA_CUBE_LIVE_FIRE'))
 
     def test_full_korean_title_is_not_vetoed_by_legacy_suffix_crop(self):
         first = self.observed('DAILY_RESOURCE_IV')
