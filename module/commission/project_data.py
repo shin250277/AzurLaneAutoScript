@@ -1,5 +1,9 @@
 # Exact observed KR title glyph templates; unknown titles still use fallback.
 dictionary_kr_visual = {
+    'EXTRA_CUBE_FLEET_TRAINING_MEDIUM': 'extra_cube',
+    'EXTRA_CUBE_FLEET_TRAINING_MEDIUM_SELECTED': 'extra_cube',
+    'EXTRA_CUBE_FLEET_TRAINING_ADVANCED': 'extra_cube',
+    'EXTRA_CUBE_FLEET_TRAINING_ADVANCED_SELECTED': 'extra_cube',
     'DAILY_RESOURCE_IV': 'daily_resource',
     'DAILY_RESOURCE_VI': 'daily_resource',
     'EXTRA_OIL_MEDIUM_I': 'extra_oil',
@@ -23,6 +27,8 @@ dictionary_kr_visual = {
 # Only visually verified render variants share a canonical name. Never group
 # different Roman numerals merely because their reward genre is the same.
 dictionary_kr_visual_aliases = {
+    'EXTRA_CUBE_FLEET_TRAINING_ADVANCED_SELECTED': 'EXTRA_CUBE_FLEET_TRAINING_ADVANCED',
+    'EXTRA_CUBE_FLEET_TRAINING_MEDIUM_SELECTED': 'EXTRA_CUBE_FLEET_TRAINING_MEDIUM',
     'DAILY_CHIP_II_SCROLL': 'DAILY_CHIP_II',
     'EXTRA_CUBE_LIVE_FIRE_SCROLL': 'EXTRA_CUBE_LIVE_FIRE',
     'EXTRA_CUBE_FLEET_ESCORT_SCROLL': 'EXTRA_CUBE_FLEET_ESCORT',

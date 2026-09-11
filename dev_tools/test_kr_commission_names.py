@@ -11,6 +11,10 @@ from module.commission import project
 
 
 CASES = {
+    'EXTRA_CUBE_FLEET_TRAINING_MEDIUM': 'extra_cube',
+    'EXTRA_CUBE_FLEET_TRAINING_MEDIUM_SELECTED': 'extra_cube',
+    'EXTRA_CUBE_FLEET_TRAINING_ADVANCED': 'extra_cube',
+    'EXTRA_CUBE_FLEET_TRAINING_ADVANCED_SELECTED': 'extra_cube',
     'DAILY_RESOURCE_IV': 'daily_resource',
     'DAILY_RESOURCE_VI': 'daily_resource',
     'EXTRA_OIL_MEDIUM_I': 'extra_oil',
@@ -33,6 +37,21 @@ CASES = {
 
 
 class KoreanCommissionNamesTest(unittest.TestCase):
+    def test_training_selected_variant_keeps_identity_not_advanced(self):
+        names = ['EXTRA_CUBE_FLEET_TRAINING_MEDIUM',
+                 'EXTRA_CUBE_FLEET_TRAINING_MEDIUM_SELECTED',
+                 'EXTRA_CUBE_FLEET_TRAINING_ADVANCED',
+                 'EXTRA_CUBE_FLEET_TRAINING_ADVANCED_SELECTED']
+        cards = [SimpleNamespace(kr_name_image=self.title(name),
+                                 kr_name_key=project.classify_kr_name_key(self.title(name)))
+                 for name in names]
+        self.assertTrue(project.Commission.kr_name_match(cards[0], cards[1]))
+        self.assertFalse(project.Commission.kr_name_match(cards[0], cards[2]))
+        self.assertFalse(project.Commission.kr_name_match(cards[1], cards[2]))
+        self.assertTrue(project.Commission.kr_name_match(cards[2], cards[3]))
+        self.assertFalse(project.Commission.kr_name_match(cards[0], cards[3]))
+        self.assertFalse(project.Commission.kr_name_match(cards[1], cards[3]))
+
     def title(self, name):
         path = Path('assets/kr/commission/names') / (name + '.png')
         image = cv2.imread(str(path), cv2.IMREAD_GRAYSCALE)
