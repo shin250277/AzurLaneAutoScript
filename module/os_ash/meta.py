@@ -520,8 +520,12 @@ class AshBeaconAssist(Meta):
             else:
                 self.device.screenshot()
 
-            if not appeared and timeout.reached():
+            if (not appeared or self.config.SERVER == 'kr') and timeout.reached():
                 logger.info('No meta beacon found, delay task OpsiAshAssist')
+                if self.config.SERVER == 'kr':
+                    # Empty after combat is not proof that all daily assists
+                    # were used. Retry later instead of claiming completion.
+                    return False
                 break
 
             if self.handle_map_event():
@@ -532,6 +536,8 @@ class AshBeaconAssist(Meta):
                 if remain_times:
                     self._ensure_meta_level()
                     self._make_an_attack()
+                    if self.config.SERVER == 'kr':
+                        timeout.reset()
                 else:
                     logger.info('No enough assist times, complete')
                     break
