@@ -568,6 +568,14 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                 break
 
             status = self.get_research_status(self.device.image)
+            # KR completed text is not a waiting/running/detail template.
+            # Only skip the animation wait when the completed card is centered
+            # and all four surrounding cards have loaded.
+            if (self.config.SERVER == 'kr'
+                    and status == ['detail', 'detail', 'unknown', 'detail', 'detail']
+                    and self.research_has_finished() and self._research_finished_index == 2):
+                logger.info('KR completed 6th research already centered')
+                break
             # Project cards haven't fully loaded
             if 'unknown' in status:
                 continue
