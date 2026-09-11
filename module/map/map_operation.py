@@ -351,7 +351,10 @@ class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHand
         Returns:
             bool: If MAP_PREPARATION and tha animation of map information finished
         """
-        if not self.appear(MAP_PREPARATION, offset=(20, 20)):
+        # KR expands this dialog for stages with more reward icons, moving
+        # the same shortcut button 56 pixels to the right (observed on 11-4).
+        offset = (80, 20) if self.config.SERVER == 'kr' else (20, 20)
+        if not self.appear(MAP_PREPARATION, offset=offset):
             self.map_clear_percentage_prev = -1
             self.map_clear_percentage_timer.reset()
             return False
