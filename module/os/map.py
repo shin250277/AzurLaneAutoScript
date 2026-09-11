@@ -249,14 +249,24 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
             return False
 
         self.hp_get()
-        if (self.config.SERVER == 'kr' and any(self.hp_has_ship)
-                and all(hp == 0 for hp in self.hp) and not any(self.need_repair)
-                and not getattr(self, '_kr_zero_hp_saved', False)):
-            # Preserve the frame before port navigation; zero HP without wrench
-            # icons can be a transition-frame reading, not six defeated ships.
-            self.device.image_save('./log/kr_os_zero_hp.png')
-            self._kr_zero_hp_saved = True
-            logger.warning('KR all-zero HP without repair icons; diagnostic saved')
+        if self.config.SERVER == 'kr':
+            # Globe-to-map transitions can hide every HP bar while the cached
+            # fleet still contains ships. Do not treat that frame as damage.
+            for attempt in range(4):
+                if not (any(self.hp_has_ship) and all(hp == 0 for hp in self.hp)
+                        and not any(self.need_repair)):
+                    break
+                if not getattr(self, '_kr_zero_hp_saved', False):
+                    self.device.image_save('./log/kr_os_zero_hp.png')
+                    self._kr_zero_hp_saved = True
+                    logger.warning('KR all-zero HP without repair icons; diagnostic saved')
+                if attempt == 3:
+                    logger.warning('KR HP remains unreadable; stop before port repair')
+                    raise RequestHumanTakeover
+                logger.info('KR ambiguous zero HP, wait for fleet bars and recheck')
+                self.device.sleep(0.5)
+                self.device.screenshot()
+                self.hp_get()
         check = [round(data, 2) <= self.config.OpsiGeneral_RepairThreshold if use else False
                  for data, use in zip(self.hp, self.hp_has_ship)]
         if any(check):
