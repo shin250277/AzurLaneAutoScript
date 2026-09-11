@@ -261,9 +261,12 @@ class OpsiAshBeacon(Meta):
         """
         # Page beacon or dossier
         if self.appear(BEACON_LIST, offset=(20, 20)):
-            if self.config.OpsiAshBeacon_OneHitMode or self.config.OpsiAshBeacon_RequestAssist:
+            # One-hit mode limits attacks; it must not override assist opt-out.
+            if self.config.OpsiAshBeacon_RequestAssist:
                 if not self._ask_for_help():
                     return False
+            else:
+                logger.info('META assist requests disabled')
             return True
         if self.appear(DOSSIER_LIST, offset=(20, 20)):
             # can auto attack but not auto attacking

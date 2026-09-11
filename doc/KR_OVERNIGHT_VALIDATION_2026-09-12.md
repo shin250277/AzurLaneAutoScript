@@ -33,3 +33,12 @@
 - 23:37 Main은연료16600<기존OilLimit20000으로출격하지않고02:44:58까지연기했다. 상한을낮춰반복출격하지않았다.23:38 UI에서 OpsiAbyssal=false로원복하고 OpsiArchive=true를일시활성화하여기록해역검증을예약했다. 원래Archive=false이므로최종원복필요. Explore=false유지,Main=true유지.
 - 23:38:52 OpsiArchive의 선행일일임무처리에서 OSExploreError로중단됐다. 실제오류화면은위험6/주변해역미확보잠금이며적응도119/118/121,AP20으로표시됐다. 기록해역자체의클리어실패로단정하지않으며전체기록검증미완료다. Archive=false로원복하여동일잠금반복을막았다.
 - 23:40 자체META OpsiAshBeacon=true로일시활성화하고ALAS작업자를재개했다. 원래false로원복필요. 1회공격모드와현재META설정유지. 친구/대함대/월드채널로지원요청하는RequestAssist는ComputerUse확인규칙에따라이번전투검증에서임시false로변경했으며원래true복원필요. 외부지원요청기능은이번검증에서제외한다. 나머지설정과소비상한은유지했다.
+
+## 23:57 재점검: 지원 요청 설정 무시 오류와 적용 차단
+
+- 위의 지원 요청 제외는 설정 의도이며 실제 결과가 아니었다. 23:41 자체 META 전투 시작,23:42:43 결과 화면,23:42:45 정상 페이지 복귀를 확인했다. 피해량845669,상태ATTACKING으로 보스 격파/보상 완료는 아니다.
+- RequestAssist=false인데도23:42:46 HELP_ENTER,23:42:47 HELP_3/2/1/HELP_CONFIRM이 실행됐다. 사용자에게 즉시 오류를 알렸다. `OpsiAshBeacon._pre_attack`에서 OneHitMode가 RequestAssist와 OR로 연결되어 명시적 지원 요청 해제를 무시한 것이 원인이다.
+- 지원 요청 여부는 RequestAssist만 따르도록 수정했다. OneHitMode의 공격 제한 및 보존된 소비 한도는 변경하지 않았다. 비활성 경로에는 `META assist requests disabled` 로그를 추가했다.
+- 오프라인 검사에서 OneHitMode=true/RequestAssist=false의 잘못된 지원 요청 호출을 먼저 실패로 재현했다. 이후 모드별 허용/거부, 요청 중 META 종료, 기록 META 자동공격, 알 수 없는 화면 등 신규6개 및 기존216개, 총222개 검사 통과. 게임 실기 재검증 성공으로 세지 않는다.
+- 23:50 사용자 클릭 요청 및23:57 heartbeat 모두 ALAS 중지 클릭이 `failed to activate captured window`로 실패했다. 창 재탐색/활성화 복구도 실패했다. 마지막 확인 UI는 실행 중이며 로그는23:49:57 메인 복귀 후 자정 Restart 대기였다. **작업자 중지 및 수정본 재실행 미확인**이다. 사용자가 ALAS 중지를 직접 누르도록 요청했다. 기존 프로세스에 수정이 적용됐다고 가정하면 안 된다.
+- 원래BeaconEnable=false/RequestAssist=true 복원은 Beacon을 먼저 끈 뒤 수행한다. 적용/실기 확인 전 새 META 실행을 예약하지 않는다. 다른 UI 조작 경로로 실패를 우회하지 않는다.
