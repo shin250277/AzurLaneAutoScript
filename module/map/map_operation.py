@@ -7,6 +7,7 @@ from module.handler.mystery import MysteryHandler
 from module.logger import logger
 from module.map.assets import *
 from module.map.map_fleet_preparation import FleetPreparation
+from module.map.kr_preparation import preparation_button
 from module.retire.retirement import Retirement
 from module.ui.assets import BACK_ARROW, DAILY_CHECK
 from module.ui.page import page_event
@@ -361,7 +362,10 @@ class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHand
         # KR expands this dialog for stages with more reward icons, moving
         # the same shortcut button 56 pixels to the right (observed on 11-4).
         offset = (80, 20) if self.config.SERVER == 'kr' else (20, 20)
-        if self.appear(MAP_PREPARATION, offset=offset):
+        kr_prep = preparation_button(self)
+        if kr_prep:
+            prep_button = kr_prep
+        elif self.appear(MAP_PREPARATION, offset=offset):
             prep_button = MAP_PREPARATION
         elif self.appear(MAP_PREPARATION_HARD, offset=offset):
             prep_button = MAP_PREPARATION_HARD

@@ -392,6 +392,10 @@
     }
   },
   "handler": {
+    "AUTO_SEARCH_TITLE": {"kr": {"area": [849, 585, 918, 608], "button": [849, 585, 918, 608]}},
+    "AUTO_SEARCH_CHECK": {"kr": {"area": [927, 589, 942, 605], "button": [927, 589, 942, 605]}},
+    "CLEAR_MODE_TITLE": {"kr": {"area": [965, 585, 1034, 608], "button": [965, 585, 1034, 608]}},
+    "CLEAR_MODE_CHECK": {"kr": {"area": [1044, 586, 1078, 606], "button": [1044, 586, 1078, 606]}},
     "AUTO_SEARCH_MENU_CONTINUE": {
       "kr": {
         "area": [

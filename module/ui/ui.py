@@ -11,6 +11,7 @@ from module.handler.assets import (AUTO_SEARCH_MENU_EXIT, BATTLE_PASS_NEW_SEASON
                                    LOGIN_ANNOUNCE, LOGIN_ANNOUNCE_2, LOGIN_CHECK, LOGIN_RETURN_SIGN,
                                    MAINTENANCE_ANNOUNCE, MONTHLY_PASS_NOTICE)
 from module.handler.info_handler import InfoHandler
+from module.map.kr_preparation import preparation_button
 from module.logger import logger
 from module.map.assets import (FLEET_PREPARATION, MAP_PREPARATION,
                                MAP_PREPARATION_HARD, MAP_PREPARATION_CANCEL, WITHDRAW)
@@ -964,6 +965,12 @@ class UI(InfoHandler):
             return True
 
         # Campaign preparation
+        kr_prep = preparation_button(self, interval=3)
+        if kr_prep:
+            # Close the observed new dialog, never the Handover execution tab.
+            # Follow the matching dialog's horizontal displacement.
+            self.device.click(kr_prep.move((45, -335), name='KR_PREPARATION_CLOSE'))
+            return True
         if self.appear(MAP_PREPARATION, offset=(30, 30), interval=3) \
                 or self.appear(MAP_PREPARATION_HARD, offset=(30, 30), interval=3) \
                 or self.appear(FLEET_PREPARATION, offset=(20, 50), interval=3) \
