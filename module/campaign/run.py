@@ -401,6 +401,37 @@ class CampaignRun(CampaignEvent):
             self.config.task_call('Commission', force_call=True)
             self.config.task_stop('Commission notice found')
 
+    def _resume_kr_single_sortie(self):
+        """Finish an existing auto-search sortie under a one-sortie limit.
+
+        Called only after is_in_map() succeeds. Never enter or withdraw a map;
+        failures propagate instead of falling back to the fresh-sortie path.
+        """
+        if not (self.config.SERVER == 'kr'
+                and self.config.Campaign_Event == 'campaign_main'
+                and self.config.Campaign_Mode == 'normal'
+                and self.config.Campaign_UseClearMode
+                and self.config.Campaign_UseAutoSearch
+                and self.run_limit == 1 and self.config.StopCondition_RunCount == 1):
+            return False
+        logger.info('Resume existing KR single sortie; no retreat or new entry')
+        self.campaign.map_is_auto_search = True
+        self.campaign.map_is_clear_mode = True
+        self.campaign.map = self.campaign.MAP
+        self.campaign.battle_count = 0
+        self.campaign.lv_reset()
+        for _ in range(20):
+            try:
+                self.campaign.auto_search_execute_a_battle()
+            except CampaignEnd:
+                self.run_count = 1
+                self.config.StopCondition_RunCount = 0
+                self.config.Scheduler_Enable = False
+                logger.info('Existing single sortie ended; fresh sortie disabled')
+                self.campaign.ensure_auto_search_exit()
+                return True
+        raise RequestHumanTakeover('Existing sortie recovery exhausted its battle limit')
+
     def run(self, name, folder='campaign_main', mode='normal', total=0):
         """
         Args:
@@ -435,6 +466,8 @@ class CampaignRun(CampaignEvent):
                 self.device.screenshot()
             self.campaign.device.image = self.device.image
             if self.campaign.is_in_map():
+                if self._resume_kr_single_sortie():
+                    return
                 logger.info('Already in map, retreating.')
                 try:
                     self.campaign.withdraw()
