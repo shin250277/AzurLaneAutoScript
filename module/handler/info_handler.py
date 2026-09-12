@@ -5,11 +5,32 @@ from module.base.base import ModuleBase
 from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import *
-from module.exception import GameNotRunningError
+from module.exception import GameNotRunningError, RequestHumanTakeover
 from module.handler.assets import *
 from module.logger import logger
 from module.os_handler.assets import CLICK_SAFE_AREA as OS_CLICK_SAFE_AREA
 from module.ui_white.assets import POPUP_CANCEL_WHITE, POPUP_CONFIRM_WHITE, POPUP_SINGLE_WHITE
+
+KR_HANDOVER_TUTORIAL = Button(
+    area=(490, 317, 791, 400), color=(110, 148, 201),
+    button=(600, 330, 690, 380),
+    file='./assets/kr/handler/KR_HANDOVER_TUTORIAL.png',
+    name='KR_HANDOVER_TUTORIAL',
+)
+KR_HANDOVER_TUTORIAL_2 = Button(
+    area=(490, 317, 791, 400), color=(110, 148, 201),
+    button=(600, 330, 690, 380),
+    file='./assets/kr/handler/KR_HANDOVER_TUTORIAL_2.png',
+    name='KR_HANDOVER_TUTORIAL_2',
+)
+KR_HANDOVER_TUTORIAL_3 = Button(
+    area=(490, 317, 791, 400), color=(110, 148, 201),
+    # This page requires the highlighted Handover tab, not the text panel.
+    # It opens instructions; it is not the subsequent execution confirmation.
+    button=(810, 500, 880, 530),
+    file='./assets/kr/handler/KR_HANDOVER_TUTORIAL_3.png',
+    name='KR_HANDOVER_TUTORIAL_3',
+)
 
 
 def kr_data_key_five_appear(image):
@@ -541,6 +562,8 @@ class InfoHandler(ModuleBase):
         self.interval_clear(STORY_LETTERS_ONLY)
 
     def handle_story_skip(self, drop=None):
+        if self.handle_kr_handover_tutorial():
+            return True
         # Rerun events in clear mode but still have stories.
         # No stories in clear mode
         # but B3/D3 still have stories til threat safe
@@ -549,6 +572,23 @@ class InfoHandler(ModuleBase):
             return False
 
         return self.story_skip(drop=drop)
+
+    def handle_kr_handover_tutorial(self):
+        # Exact localized instructional text, not a generic confirmation.
+        # The third page opens the highlighted tab; no handover execution here.
+        if self.config.SERVER != 'kr':
+            return False
+        for button in (KR_HANDOVER_TUTORIAL, KR_HANDOVER_TUTORIAL_2, KR_HANDOVER_TUTORIAL_3):
+            if self.appear(button, offset=(5, 5), similarity=0.92, interval=3):
+                counts = getattr(self, '_kr_handover_tutorial_clicks', {})
+                if counts.get(button.name, 0) >= 3:
+                    logger.warning('KR handover tutorial did not advance; stop repeated clicks')
+                    raise RequestHumanTakeover
+                counts[button.name] = counts.get(button.name, 0) + 1
+                self._kr_handover_tutorial_clicks = counts
+                self.device.click(button)
+                return True
+        return False
 
     def ensure_no_story(self, skip_first_screenshot=True):
         logger.info('Ensure no story')
