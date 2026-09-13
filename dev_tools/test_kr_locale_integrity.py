@@ -57,6 +57,12 @@ class KoreanLocaleIntegrityTest(unittest.TestCase):
                 with self.subTest(key=key):
                     self.assertNotEqual(value, '.'.join(key))
 
+    def test_new_island_and_event_shop_settings_are_not_keys(self):
+        for key, value in self.locales['ko-KR'].items():
+            if key[0].startswith('Island') or key[0] == 'EventShop':
+                with self.subTest(key=key):
+                    self.assertNotEqual(value, '.'.join(key))
+
     def test_officially_sourced_archive_titles(self):
         expected = {
             'war_archives_20190321_en': '작전문서: 홍염의 방문자',

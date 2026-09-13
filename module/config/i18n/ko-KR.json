@@ -1400,29 +1400,29 @@
   },
   "EventShop": {
     "_info": {
-      "name": "EventShop._info.name",
-      "help": "EventShop._info.help"
+      "name": "이벤트 상점 설정",
+      "help": ""
     },
     "UnlockSSRShip": {
-      "name": "EventShop.UnlockSSRShip.name",
-      "help": "EventShop.UnlockSSRShip.help"
+      "name": "SSR 함선 해금",
+      "help": ""
     },
     "BuyURShip": {
-      "name": "EventShop.BuyURShip.name",
-      "help": "EventShop.BuyURShip.help",
+      "name": "UR 함선 구매 수량",
+      "help": "",
       "0": "0",
       "1": "1",
       "2": "2"
     },
     "PresetFilter": {
-      "name": "EventShop.PresetFilter.name",
-      "help": "EventShop.PresetFilter.help",
+      "name": "이벤트 상점 필터",
+      "help": "일반적으로 변경할 필요가 없습니다.",
       "all": "all",
       "custom": "custom"
     },
     "CustomFilter": {
-      "name": "EventShop.CustomFilter.name",
-      "help": "EventShop.CustomFilter.help"
+      "name": "사용자 지정 필터",
+      "help": "직접 작성한 필터를 사용하려면 이벤트 상점 필터를 사용자 지정으로 설정하세요. 사용 가능한 항목: <https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/filter_string_en>"
     }
   },
   "Commission": {
@@ -2652,118 +2652,118 @@
   },
   "IslandProduction": {
     "_info": {
-      "name": "IslandProduction._info.name",
-      "help": "IslandProduction._info.help"
+      "name": "섬 생산 설정",
+      "help": ""
     },
     "HardFloorItems": {
-      "name": "IslandProduction.HardFloorItems.name",
-      "help": "IslandProduction.HardFloorItems.help"
+      "name": "최소 보존 재고",
+      "help": "수동 사용을 위해 보존할 재고입니다.\n제작·상점 운영·일반 의뢰에서 소비하지 않습니다.\n생산 계획의 선형계획 제약 조건으로는 사용하지 않습니다.\n입력 형식:\n(현재 서버의 아이템 이름): (수량)"
     },
     "DailyBufferItems": {
-      "name": "IslandProduction.DailyBufferItems.name",
-      "help": "IslandProduction.DailyBufferItems.help"
+      "name": "일일 여유 재고",
+      "help": "생산 계획 도구가 계산한 보존 재고 위의 추가 재고 범위입니다.\n제작 목표는 최소 보존 재고 + 상점 메뉴 예약분(저장된 메뉴 기준, 용량 이내) + 일일 여유 재고입니다.\n도구의 섬 생산 계획에서 자동 생성합니다."
     },
     "ManualBufferItems": {
-      "name": "IslandProduction.ManualBufferItems.name",
-      "help": "IslandProduction.ManualBufferItems.help"
+      "name": "수동 여유 재고",
+      "help": "일일 여유 재고에 추가하는 사용자 설정으로, 생산 계획 도구가 덮어쓰지 않습니다.\n계획에서 여유 재고가 없는 품목도 일반 의뢰 등에 사용할 재고를 확보합니다.\n품목별로 일일 여유 재고와 이 값 중 큰 값을 사용합니다.\n입력 형식:\n(현재 서버의 아이템 이름): (수량)"
     },
     "IdleAccumulatingItems": {
-      "name": "IslandProduction.IdleAccumulatingItems.name",
-      "help": "IslandProduction.IdleAccumulatingItems.help"
+      "name": "유휴 시간 비축 품목",
+      "help": "생산이 쉬고 있고 재료가 충분할 때 비축할 품목입니다.\n값은 유휴 생산 우선순위 계산에 사용하는 예상 일일 비축량입니다.\n도구의 섬 생산 계획에서 자동 생성할 수 있습니다."
     }
   },
   "IslandOrder": {
     "_info": {
-      "name": "IslandOrder._info.name",
-      "help": "IslandOrder._info.help"
+      "name": "섬 의뢰 설정",
+      "help": "일반 의뢰는 기본 보존량과 수동 최소 보존 재고를 유지합니다.\n긴급·시즌 의뢰는 보존 재고도 소비할 수 있습니다.\n시즌 의뢰는 우선 의뢰로 취급하며 모든 재고를 사용할 수 있습니다."
     },
     "StuckSeasonOrderId": {
-      "name": "IslandOrder.StuckSeasonOrderId.name",
-      "help": "IslandOrder.StuckSeasonOrderId.help"
+      "name": "미완료 시즌 의뢰 ID",
+      "help": "0이면 막힌 의뢰가 없습니다.\n일반적으로 수정할 필요가 없습니다."
     }
   },
   "IslandFreebie": {
     "_info": {
-      "name": "IslandFreebie._info.name",
-      "help": "IslandFreebie._info.help"
+      "name": "섬 무료 보상 설정",
+      "help": ""
     },
     "Share": {
-      "name": "IslandFreebie.Share.name",
-      "help": "IslandFreebie.Share.help"
+      "name": "보급품을 친구에게 공유",
+      "help": ""
     }
   },
   "IslandRestaurant": {
     "_info": {
-      "name": "IslandRestaurant._info.name",
-      "help": "IslandRestaurant._info.help"
+      "name": "섬 상점 운영 설정",
+      "help": ""
     },
     "KoiGrade": {
-      "name": "IslandRestaurant.KoiGrade.name",
-      "help": "IslandRestaurant.KoiGrade.help",
+      "name": "Golden Koi 등급",
+      "help": "",
       "bronze": "bronze",
       "silver": "silver",
       "gold": "gold",
       "diamond": "diamond"
     },
     "KoiWaitress1": {
-      "name": "IslandRestaurant.KoiWaitress1.name",
-      "help": "IslandRestaurant.KoiWaitress1.help",
+      "name": "Golden Koi 직원 1",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Chao_Ho": "Chao_Ho",
       "Chang_Feng": "Chang_Feng"
     },
     "KoiWaitress2": {
-      "name": "IslandRestaurant.KoiWaitress2.name",
-      "help": "IslandRestaurant.KoiWaitress2.help",
+      "name": "Golden Koi 직원 2",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Chao_Ho": "Chao_Ho",
       "Chang_Feng": "Chang_Feng"
     },
     "KoiMenu": {
-      "name": "IslandRestaurant.KoiMenu.name",
-      "help": "IslandRestaurant.KoiMenu.help"
+      "name": "Golden Koi 판매 메뉴",
+      "help": "여기에 지정한 요리만 판매합니다.\n도구의 섬 생산 계획에서 자동 생성합니다."
     },
     "BearGrade": {
-      "name": "IslandRestaurant.BearGrade.name",
-      "help": "IslandRestaurant.BearGrade.help",
+      "name": "Polar Bear 등급",
+      "help": "",
       "bronze": "bronze",
       "silver": "silver",
       "gold": "gold",
       "diamond": "diamond"
     },
     "BearWaitress1": {
-      "name": "IslandRestaurant.BearWaitress1.name",
-      "help": "IslandRestaurant.BearWaitress1.help",
+      "name": "Polar Bear 직원 1",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Cheshire": "Cheshire",
       "Chang_Feng": "Chang_Feng"
     },
     "BearWaitress2": {
-      "name": "IslandRestaurant.BearWaitress2.name",
-      "help": "IslandRestaurant.BearWaitress2.help",
+      "name": "Polar Bear 직원 2",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Cheshire": "Cheshire",
       "Chang_Feng": "Chang_Feng"
     },
     "BearMenu": {
-      "name": "IslandRestaurant.BearMenu.name",
-      "help": "IslandRestaurant.BearMenu.help"
+      "name": "Polar Bear 판매 메뉴",
+      "help": "여기에 지정한 요리만 판매합니다.\n도구의 섬 생산 계획에서 자동 생성합니다."
     },
     "EateryGrade": {
-      "name": "IslandRestaurant.EateryGrade.name",
-      "help": "IslandRestaurant.EateryGrade.help",
+      "name": "Manjuu Eatery 등급",
+      "help": "",
       "bronze": "bronze",
       "silver": "silver",
       "gold": "gold",
       "diamond": "diamond"
     },
     "EateryWaitress1": {
-      "name": "IslandRestaurant.EateryWaitress1.name",
-      "help": "IslandRestaurant.EateryWaitress1.help",
+      "name": "Manjuu Eatery 직원 1",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Helena": "Helena",
@@ -2771,8 +2771,8 @@
       "Chang_Feng": "Chang_Feng"
     },
     "EateryWaitress2": {
-      "name": "IslandRestaurant.EateryWaitress2.name",
-      "help": "IslandRestaurant.EateryWaitress2.help",
+      "name": "Manjuu Eatery 직원 2",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Helena": "Helena",
@@ -2780,20 +2780,20 @@
       "Chang_Feng": "Chang_Feng"
     },
     "EateryMenu": {
-      "name": "IslandRestaurant.EateryMenu.name",
-      "help": "IslandRestaurant.EateryMenu.help"
+      "name": "Manjuu Eatery 판매 메뉴",
+      "help": "여기에 지정한 요리만 판매합니다.\n도구의 섬 생산 계획에서 자동 생성합니다."
     },
     "GrillGrade": {
-      "name": "IslandRestaurant.GrillGrade.name",
-      "help": "IslandRestaurant.GrillGrade.help",
+      "name": "Fin-'n'-Feather 등급",
+      "help": "",
       "bronze": "bronze",
       "silver": "silver",
       "gold": "gold",
       "diamond": "diamond"
     },
     "GrillWaitress1": {
-      "name": "IslandRestaurant.GrillWaitress1.name",
-      "help": "IslandRestaurant.GrillWaitress1.help",
+      "name": "Fin-'n'-Feather 직원 1",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "August_von_Parseval": "August_von_Parseval",
@@ -2801,8 +2801,8 @@
       "Chang_Feng": "Chang_Feng"
     },
     "GrillWaitress2": {
-      "name": "IslandRestaurant.GrillWaitress2.name",
-      "help": "IslandRestaurant.GrillWaitress2.help",
+      "name": "Fin-'n'-Feather 직원 2",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "August_von_Parseval": "August_von_Parseval",
@@ -2810,20 +2810,20 @@
       "Chang_Feng": "Chang_Feng"
     },
     "GrillMenu": {
-      "name": "IslandRestaurant.GrillMenu.name",
-      "help": "IslandRestaurant.GrillMenu.help"
+      "name": "Fin-'n'-Feather 판매 메뉴",
+      "help": "여기에 지정한 요리만 판매합니다.\n도구의 섬 생산 계획에서 자동 생성합니다."
     },
     "CafeGrade": {
-      "name": "IslandRestaurant.CafeGrade.name",
-      "help": "IslandRestaurant.CafeGrade.help",
+      "name": "Café Manjuu 등급",
+      "help": "",
       "bronze": "bronze",
       "silver": "silver",
       "gold": "gold",
       "diamond": "diamond"
     },
     "CafeWaitress1": {
-      "name": "IslandRestaurant.CafeWaitress1.name",
-      "help": "IslandRestaurant.CafeWaitress1.help",
+      "name": "Café Manjuu 직원 1",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Cheshire": "Cheshire",
@@ -2831,8 +2831,8 @@
       "Chang_Feng": "Chang_Feng"
     },
     "CafeWaitress2": {
-      "name": "IslandRestaurant.CafeWaitress2.name",
-      "help": "IslandRestaurant.CafeWaitress2.help",
+      "name": "Café Manjuu 직원 2",
+      "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
       "any": "any",
       "Cheshire": "Cheshire",
@@ -2840,18 +2840,18 @@
       "Chang_Feng": "Chang_Feng"
     },
     "CafeMenu": {
-      "name": "IslandRestaurant.CafeMenu.name",
-      "help": "IslandRestaurant.CafeMenu.help"
+      "name": "Café Manjuu 판매 메뉴",
+      "help": "여기에 지정한 요리만 판매합니다.\n도구의 섬 생산 계획에서 자동 생성합니다."
     }
   },
   "IslandSeasonTask": {
     "_info": {
-      "name": "IslandSeasonTask._info.name",
-      "help": "IslandSeasonTask._info.help"
+      "name": "섬 시즌 임무 설정",
+      "help": ""
     },
     "TaskTarget": {
-      "name": "IslandSeasonTask.TaskTarget.name",
-      "help": "IslandSeasonTask.TaskTarget.help"
+      "name": "임무용 보존 품목",
+      "help": ""
     }
   },
   "Daemon": {
@@ -2892,38 +2892,38 @@
   },
   "IslandProductionPlanner": {
     "_info": {
-      "name": "IslandProductionPlanner._info.name",
-      "help": "IslandProductionPlanner._info.help"
+      "name": "섬 생산 계획",
+      "help": "설정한 조건을 바탕으로 선형계획법을 사용해 섬 생산 계획을 최적화하고 생산 설정을 생성합니다.\n먼저 섬 상점 운영 및 생산 보존 품목을 설정하세요.\n섬 기술을 다시 스캔하려면 작업 상태를 비우세요."
     },
     "RescanIslandTechnology": {
-      "name": "IslandProductionPlanner.RescanIslandTechnology.name",
-      "help": "IslandProductionPlanner.RescanIslandTechnology.help"
+      "name": "이번 실행에서 섬 기술 다시 스캔",
+      "help": "섬 기술을 다시 확인해 새 기술 레벨에 맞게 생산 설정을 갱신합니다.\n섬 기술을 업그레이드한 뒤 생산 계획을 갱신할 때 사용하세요."
     },
     "DailyProfitLowerLimit": {
-      "name": "IslandProductionPlanner.DailyProfitLowerLimit.name",
-      "help": "IslandProductionPlanner.DailyProfitLowerLimit.help"
+      "name": "일일 최소 수익",
+      "help": "음수는 일일 손실 허용, 0은 손익분기, 양수는 수익을 의미합니다."
     },
     "DailyBufferSafetyMargin": {
-      "name": "IslandProductionPlanner.DailyBufferSafetyMargin.name",
-      "help": "IslandProductionPlanner.DailyBufferSafetyMargin.help"
+      "name": "일일 여유 재고 안전 여유율",
+      "help": "계획 도구가 계산한 일일 여유 재고에 적용하는 여유율입니다. 0.2이면 계산된 일일 수요의 120%를 설정합니다."
     },
     "FieldsEfficiency": {
-      "name": "IslandProductionPlanner.FieldsEfficiency.name",
-      "help": "IslandProductionPlanner.FieldsEfficiency.help",
+      "name": "밭 수집 효율",
+      "help": "캐릭터의 수집 보상에 표시된 값을 확인하세요.",
       "0": "0",
       "0.04": "0.04",
       "0.12": "0.12"
     },
     "OrchardEfficiency": {
-      "name": "IslandProductionPlanner.OrchardEfficiency.name",
-      "help": "IslandProductionPlanner.OrchardEfficiency.help",
+      "name": "과수원 수집 효율",
+      "help": "캐릭터의 수집 보상에 표시된 값을 확인하세요.",
       "0": "0",
       "0.04": "0.04",
       "0.12": "0.12"
     },
     "NurseryEfficiency": {
-      "name": "IslandProductionPlanner.NurseryEfficiency.name",
-      "help": "IslandProductionPlanner.NurseryEfficiency.help",
+      "name": "묘목장 수집 효율",
+      "help": "캐릭터의 수집 보상에 표시된 값을 확인하세요.",
       "0": "0",
       "0.04": "0.04",
       "0.12": "0.12"
