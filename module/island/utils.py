@@ -38,8 +38,8 @@ def normalize_item_id(item_id):
             return normalized_id
         raise ValueError(f'Unknown item id: {item_text}')
 
-    for normalized_id, item_data in DIC_ISLAND_ITEM.items():
-        if item_data['name'][server.server] == item_text:
+    for normalized_id in DIC_ISLAND_ITEM:
+        if item_name(normalized_id) == item_text:
             return normalized_id
 
     raise ValueError(f'Unknown item key: {item_text}')
@@ -56,7 +56,13 @@ def normalize_item_keys(items=None):
 
 
 def item_name(item_id):
-    return DIC_ISLAND_ITEM[item_id]['name'][server.server]
+    names = DIC_ISLAND_ITEM[item_id]['name']
+    if server.server == 'kr':
+        # Configuration/export labels only. Missing Korean game data must not
+        # turn into KeyError, nor be used as foreign-language OCR candidates.
+        # Exported names retain the stable numeric ID in item_export_key().
+        return names.get('kr') or names.get('en') or str(item_id)
+    return names[server.server]
 
 
 def item_export_key(item_id, use_item_name=False):
