@@ -1,6 +1,7 @@
 from module.config.utils import get_os_reset_remain
 from module.logger import logger
 from module.os.config import OSConfig
+from module.os.globe_operation import OSZoneLockedError
 from module.os.map_operation import OSMapOperation
 from module.os.operation_siren import OperationSiren
 from module.os_handler.action_point import ActionPointLimit
@@ -40,6 +41,9 @@ class OSCampaignRun(OSMapOperation):
             campaign.os_daily()
         except ActionPointLimit:
             self.config.opsi_task_delay(ap_limit=True)
+        except OSZoneLockedError as error:
+            logger.warning(f'OpsiDaily deferred without blocking other tasks: {error}')
+            self.config.task_delay(success=False)
 
     def opsi_meowfficer_farming(self):
         try:
@@ -102,6 +106,9 @@ class OSCampaignRun(OSMapOperation):
             campaign.os_archive()
         except ActionPointLimit:
             self.config.opsi_task_delay(ap_limit=True)
+        except OSZoneLockedError as error:
+            logger.warning(f'OpsiArchive deferred without blocking other tasks: {error}')
+            self.config.task_delay(success=False)
 
     def opsi_stronghold(self):
         try:

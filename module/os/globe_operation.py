@@ -27,6 +27,10 @@ class OSExploreError(Exception):
     pass
 
 
+class OSZoneLockedError(OSExploreError):
+    """The game positively identified a locked zone, not a navigation timeout."""
+
+
 class RewardUncollectedError(Exception):
     pass
 
@@ -382,13 +386,15 @@ class GlobeOperation(ActionPointHandler):
                 if self.is_zone_pinned():
                     break
 
-    def globe_enter(self, zone):
+    def globe_enter(self, zone, zone_label=None):
         """
         Args:
             zone (Zone): Zone to enter.
+            zone_label (str): Display label when zone is only an AP-cost placeholder.
 
         Raises:
-            OSExploreError: If zone locked.
+            OSZoneLockedError: If the game shows a locked zone.
+            OSExploreError: If entry fails without a verified lock.
 
         Pages:
             in: is_zone_pinned
@@ -397,6 +403,7 @@ class GlobeOperation(ActionPointHandler):
         click_timer = Timer(10)
         click_count = 0
         pinned = None
+        label = str(zone) if zone_label is None else zone_label
         for _ in self.loop():
             if pinned is None:
                 pinned = self.get_zone_pinned_name()
@@ -407,10 +414,13 @@ class GlobeOperation(ActionPointHandler):
 
             if self.is_zone_pinned():
                 if self.appear(ZONE_LOCKED, offset=(20, 20)):
-                    logger.warning(f'Zone {zone} locked, neighbouring zones may not have been explored')
-                    raise OSExploreError
+                    message = f'Zone {label} locked, neighbouring zones may not have been explored'
+                    logger.warning(message)
+                    if self.config.SERVER == 'kr':
+                        self.device.image_save('./log/kr_os_zone_locked.png')
+                    raise OSZoneLockedError(message)
                 if click_count > 5:
-                    logger.warning(f'Unable to enter zone {zone}, neighbouring zones may not have been explored')
+                    logger.warning(f'Unable to enter zone {label}, neighbouring zones may not have been explored')
                     raise OSExploreError
                 if click_timer.reached():
                     self.device.click(ZONE_ENTRANCE)

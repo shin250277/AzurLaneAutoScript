@@ -139,16 +139,20 @@ class MissionHandler(GlobeOperation, ZoneManager):
             return False
 
         logger.info('Checkout os mission')
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_os_mission_checkout.png')
         for _ in self.loop():
             # End
             if self.is_zone_pinned():
                 if self.get_zone_pinned_name() == 'ARCHIVE':
                     logger.info('Pinned at archive zone')
-                    self.globe_enter(zone=self.name_to_zone(72))
+                    self.globe_enter(zone=self.name_to_zone(72), zone_label='archive mission target')
                     return 'pinned_at_archive_zone'
                 else:
                     logger.info('Pinned at mission zone')
-                    self.globe_enter(zone=self.name_to_zone(72))
+                    # Zone 72 supplies an AP-cost estimate, not the selected
+                    # mission's identity. Do not report it as the locked zone.
+                    self.globe_enter(zone=self.name_to_zone(72), zone_label='mission target (unidentified)')
                     return 'pinned_at_mission_zone'
             if self.is_in_map() and self.info_bar_count():
                 logger.info('Already at mission zone')
