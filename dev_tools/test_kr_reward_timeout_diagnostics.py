@@ -17,6 +17,26 @@ def load_method(path, name, **scope):
 
 
 class TimeoutDiagnosticsTest(unittest.TestCase):
+    def test_unexecuted_free_supply_retains_kr_frame_only(self):
+        method = load_method('module/freebies/supply_pack.py', 'run',
+                             page_shop='shop', FREE_SUPPLY_PACK='free',
+                             get_server_weekday=lambda: 0, day_name=['Monday'])
+        for server in ('kr', 'jp'):
+            for executed in (False, True):
+                with self.subTest(server=server, executed=executed):
+                    ui = SimpleNamespace(
+                        config=SimpleNamespace(SERVER=server, SupplyPack_DayOfWeek=0),
+                        device=Mock(), ui_ensure=Mock(), goto_supply_pack=Mock(),
+                        get_oil=Mock(return_value=19757),
+                        supply_pack_buy=Mock(return_value=executed))
+                    method(ui)
+                    ui.supply_pack_buy.assert_called_once_with('free')
+                    if server == 'kr' and not executed:
+                        ui.device.image_save.assert_called_once_with('./log/kr_free_supply_unexecuted.png')
+                    else:
+                        ui.device.image_save.assert_not_called()
+                    ui.device.click.assert_not_called()
+
     def test_unknown_month_boss_retains_kr_frame_without_combat(self):
         method = load_method('module/os/tasks/month_boss.py', 'clear_month_boss',
                              OS_MONTHBOSS_NORMAL='normal', OS_MONTHBOSS_HARD='hard')

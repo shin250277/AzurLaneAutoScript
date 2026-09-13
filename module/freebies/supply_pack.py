@@ -87,7 +87,9 @@ class SupplyPack(CampaignStatus):
             target = self.config.SupplyPack_DayOfWeek
             target_name = day_name[target]
             if server_today >= target:
-                self.supply_pack_buy(FREE_SUPPLY_PACK)
+                executed = self.supply_pack_buy(FREE_SUPPLY_PACK)
+                if not executed and self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_free_supply_unexecuted.png')
             else:
                 logger.info(f'Delaying free week supply pack to {target_name}')
         else:

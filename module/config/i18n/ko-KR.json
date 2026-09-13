@@ -29,8 +29,8 @@
       "help": ""
     },
     "Island": {
-      "name": "Menu.Island.name",
-      "help": "Menu.Island.help"
+      "name": "섬",
+      "help": ""
     },
     "Tool": {
       "name": "도구",
@@ -91,8 +91,8 @@
       "help": ""
     },
     "EventShop": {
-      "name": "Task.EventShop.name",
-      "help": "Task.EventShop.help"
+      "name": "이벤트 상점",
+      "help": ""
     },
     "WarArchives": {
       "name": "작전문서",
@@ -259,28 +259,28 @@
       "help": "ALAS가 대형 작전 초기화 10분 전에 진입해 화면을 나가지 않고 초기화를 기다립니다. 이후 일일 임무, 비밀 해역, 심연 해역, 지휘냥 파밍을 실행해 추가 강화 부품을 획득합니다. 일일 임무에는 '대형 작전 일일 임무' 작업 설정을 사용하며 나머지 기능은 동일합니다.\n중요: ALAS가 대형 작전 초기화를 기다리는 동안 게임을 조작하지 마세요."
     },
     "IslandProduction": {
-      "name": "Task.IslandProduction.name",
-      "help": "Task.IslandProduction.help"
+      "name": "섬 생산",
+      "help": "먼저 섬 상점 운영에서 식당 레벨과 종업원을 설정한 다음, 도구 - 섬 생산 계획을 설정하고 실행해 생산 계획을 생성하세요.\n이후 섬 생산 작업을 정상적으로 실행할 수 있습니다.\n안내: https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Island-Planner-Auto-Farming-&-Configure"
     },
     "IslandOrder": {
-      "name": "Task.IslandOrder.name",
-      "help": "Task.IslandOrder.help"
+      "name": "섬 주문",
+      "help": ""
     },
     "IslandFreebie": {
-      "name": "Task.IslandFreebie.name",
-      "help": "Task.IslandFreebie.help"
+      "name": "섬 무료 보상",
+      "help": ""
     },
     "IslandCollect": {
-      "name": "Task.IslandCollect.name",
-      "help": "Task.IslandCollect.help"
+      "name": "섬 수집",
+      "help": "관리 화면에서 시즌 특산물과 석탄·목재를 수집합니다.\n필요한 체력을 충족할 때까지 레벨이 낮은 캐릭터부터 여러 명을 배치합니다."
     },
     "IslandSeasonTask": {
-      "name": "Task.IslandSeasonTask.name",
-      "help": "Task.IslandSeasonTask.help"
+      "name": "섬 시즌 임무",
+      "help": ""
     },
     "IslandBusiness": {
-      "name": "Task.IslandBusiness.name",
-      "help": "Task.IslandBusiness.help"
+      "name": "섬 상점 운영",
+      "help": ""
     },
     "Daemon": {
       "name": "일반 반자동",
@@ -295,8 +295,8 @@
       "help": ""
     },
     "IslandProductionPlanner": {
-      "name": "Task.IslandProductionPlanner.name",
-      "help": "Task.IslandProductionPlanner.help"
+      "name": "섬 생산 계획",
+      "help": "지정한 일일 수익 조건에 맞춰 포인트 획득을 최적화하는 섬 생산 계획 도구입니다.\n실행 후 초기 재고와 누적할 품목 수량을 설정에 저장하므로, 이후에는 기술을 다시 스캔하지 않고 생산 계획에 사용할 수 있습니다.\n주의: 스캔 당시의 기술 상태를 기준으로 최적화합니다. 기술 상태가 바뀌면 도구를 다시 실행해 생산 계획을 갱신하는 것을 권장합니다."
     },
     "Benchmark": {
       "name": "성능 테스트",

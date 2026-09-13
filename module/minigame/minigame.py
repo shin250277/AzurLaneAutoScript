@@ -53,6 +53,10 @@ class MinigameRun(UI):
             # unable to get more ticket popup
             if self.deal_popup():
                 continue
+            # Recover a game-room exit using a positively identified page.
+            if self.ui_page_appear(page_academy, interval=3):
+                self.device.click(ACADEMY_GOTO_GAME_ROOM)
+                continue
             if self.appear_then_click(GOTO_CHOOSE_GAME, offset=(5, 5), interval=3):
                 # note: GOTO_CHOOSE_GAME is some where safe to click
                 # that won't enter any minigame on the minigame list page
@@ -157,7 +161,8 @@ class Minigame(UI):
             if self.appear_then_click(COIN_POPUP, offset=(5, 5), interval=2):
                 continue
             if self.appear(GAME_ROOM_CHECK, offset=(5, 5)) \
-                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)):
+                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)) \
+                    and MINIGAME_SCROLL.appear(main=self):
                 self.appear_then_click(BACK, offset=(5, 5), interval=2)
                 continue
             if self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)):
@@ -180,8 +185,11 @@ class Minigame(UI):
             if self.appear_then_click(COIN_POPUP, offset=(5, 5), interval=3):
                 continue
             # game room and choose game have same header, go to game room first
+            # Reward dismissal can briefly hide GOTO_CHOOSE_GAME. Only go
+            # back when the list scrollbar confirms that this is the list.
             if self.appear(GAME_ROOM_CHECK, offset=(5, 5)) \
-                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)):
+                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)) \
+                    and MINIGAME_SCROLL.appear(main=self):
                 self.appear_then_click(BACK, offset=(5, 5), interval=3)
                 continue
             # collect coins
