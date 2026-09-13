@@ -4,6 +4,7 @@ from module.base.timer import Timer
 from module.campaign.campaign_status import CampaignStatus
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2
 from module.config.utils import get_server_weekday
+from module.exception import HumanTakeover
 from module.freebies.assets import *
 from module.logger import logger
 from module.ocr.ocr import Digit
@@ -42,14 +43,18 @@ class SupplyPack(CampaignStatus):
                 click_count += 1
                 confirm_timer.reset()
                 continue
-            if self.appear_then_click(BUY_CONFIRM, offset=(20, 20), interval=3):
-                confirm_timer.reset()
-                continue
-            if self.handle_popup_confirm('BUY_SUPPLY_PACK'):
-                self.interval_reset(supply_pack)
-                self.interval_reset(BUY_CONFIRM)
-                executed = True
-                continue
+            if not click_count and self.appear(BUY_CONFIRM, offset=(20, 20)):
+                raise HumanTakeover('Unselected supply-pack purchase confirmation; refusing to confirm')
+            # A confirmation left by another action is not authorization to buy.
+            if click_count:
+                if self.appear_then_click(BUY_CONFIRM, offset=(20, 20), interval=3):
+                    confirm_timer.reset()
+                    continue
+                if self.handle_popup_confirm('BUY_SUPPLY_PACK'):
+                    self.interval_reset(supply_pack)
+                    self.interval_reset(BUY_CONFIRM)
+                    executed = True
+                    continue
             for button in [GET_ITEMS_1, GET_ITEMS_2]:
                 if self.appear_then_click(button, offset=(30, 30), interval=3):
                     confirm_timer.reset()
