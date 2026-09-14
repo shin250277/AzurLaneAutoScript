@@ -1,11 +1,12 @@
 import re
+from pathlib import Path
 
 import cv2
 import numpy as np
 
 import module.config.server as server
 
-from module.base.utils import color_similarity_2d, color_similar, rgb2luma
+from module.base.utils import color_similarity_2d, color_similar, rgb2luma, load_image
 from module.logger import logger
 from module.ocr.ocr import Ocr, Digit
 from module.shop_event.selector import FILTER_REGEX
@@ -216,6 +217,21 @@ class EventShopItemGrid(ItemGrid):
         self.counter_ocr = CounterOcr([], letter=COUNTER_COLOR, name="CounterOcr")
         self.counter_area = counter_area
         self.price_ocr = PRICE_OCR
+        self.kr_templates = {}
+        if server.server == 'kr':
+            for path in Path('./assets/shop/event_kr').glob('*.png'):
+                # Omit the numeric amount and border; compare the actual icon.
+                self.kr_templates[path.stem] = load_image(str(path))[:45, :63]
+
+    def match_template(self, image, similarity=None):
+        best_name, best_score = None, 0.97
+        for name, template in self.kr_templates.items():
+            score = cv2.minMaxLoc(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED))[1]
+            if score > best_score:
+                best_name, best_score = name, score
+        if best_name is not None:
+            return best_name
+        return super().match_template(image, similarity=similarity)
 
     def predict_tag(self, image):
         color = cv2.mean(np.array(image))[:3]
@@ -225,6 +241,12 @@ class EventShopItemGrid(ItemGrid):
 
     def predict(self, image, name=True, amount=True, cost=False, price=True, tag=True, counter=True, scroll_pos=None):
         super().predict(image, name=name, amount=amount, cost=cost, price=price, tag=tag)
+        if server.server == 'kr' and amount:
+            for item in self.items:
+                if item.name == 'SkinBox':
+                    # This icon's white decoration resembles an extra 1.
+                    # Keep the wide crop for four-digit oil/coin amounts.
+                    item.amount = self.amount_ocr.ocr([item.crop((40, 50, 63, 63))], direct_ocr=True)[0]
         if counter and len(self.items):
             counter_list = [item.crop(self.counter_area) for item in self.items]
             counter_list = self.counter_ocr.ocr(counter_list, direct_ocr=True)
