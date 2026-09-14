@@ -399,8 +399,17 @@ def research_jp_detect(image):
 
 def research_kr_detect(image):
     """Detect a Korean-server project from its detail panel."""
+    series = get_research_series_jp(image)
+    code = OCR_RESEARCH_DETAIL_KR.ocr(image).upper().strip()
+    # KR displays exact requirement codes, unlike JP. Remaining time is not
+    # project identity: after dismantling it may already read 01:59:24.
+    # Only use exact known codes; never guess which dismantling quota applies.
+    if code in ('E-031-MI', 'E-315-MI') and re.fullmatch(r'S[1-9][0-9]*', series):
+        known = ResearchProject(code, series=int(series[1:]))
+        if known.valid:
+            return known
     project = ResearchProjectJp()
-    project.series = get_research_series_jp(image)
+    project.series = series
     project.duration = removesuffix(str(get_research_duration_jp(image) / 3600), '.0')
     if project.duration == '':
         project.duration = '0'
@@ -415,6 +424,9 @@ def research_kr_detect(image):
     project.name = f'{project.series}-{project.genre}-{project.duration}{project.ship}'
     if not project.check_valid():
         logger.warning(f'Invalid research {project}')
+    if project.genre == 'E':
+        project.valid = False
+        logger.warning('Unknown KR requirement code; do not infer Japanese dismantling quota')
     return project
 
 

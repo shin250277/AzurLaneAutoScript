@@ -219,6 +219,7 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
         self.popup_interval_clear()
         available = False
         start_confirmed = False
+        self._kr_research_started_now = False
         click_timer = Timer(10)
         click_count = 0
         while 1:
@@ -254,10 +255,12 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
             # KR returns directly to the project list after confirming a
             # research instead of keeping the running-project detail open.
             if self.config.SERVER == 'kr' and start_confirmed and self.is_in_research():
+                self._kr_research_started_now = True
                 self.research_project_started = project
                 self._research_project_offset = (index - 2) % 5
                 return True
             if self.appear(RESEARCH_STOP, offset=(20, 20)):
+                self._kr_research_started_now = available or start_confirmed
                 # RESEARCH_STOP is a semi-transparent button,
                 # color will vary depending on the background.
                 if add_queue:
@@ -300,7 +303,14 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
             logger.info(f'Going to start an E series research: {project} '
                         f'and disassemble {project.equipment_amount} equipment')
             # Start it
-            self.research_project_start(project, add_queue=False)
+            started = self.research_project_start(project, add_queue=False)
+            if not started:
+                return started
+            if self.config.SERVER == 'kr' and not self._kr_research_started_now:
+                # The running card may reappear after interruption. Its quota
+                # was not necessarily zero: try queuing without dismantling
+                # again; the queue handler preserves unmet requirements.
+                return self.research_project_start(project, add_queue=add_queue)
             # Disassemble
             self.storage_disassemble_equipment(amount=project.equipment_amount)
             # Get back
