@@ -246,6 +246,15 @@ class IslandProduction(IslandRecipe, IslandDock):
         if worker == 'manjuu':
             self.island_dock_select_manjuu()
         self.island_dock_select_confirm(self.is_in_recipe_menu)
+        if self.config.SERVER == 'kr':
+            self.working_slot_id = slot_id
+            del_cached_property(self, 'recipe_grid')
+            del_cached_property(self, 'recipe_ids')
+            stocks = self.scan_all_recipe_stocks()
+            logger.attr('KR recipe probe', stocks)
+            logger.attr('KR ingredient probe', self.probe_korean_recipe_counters(stocks))
+            self.device.image_save('./log/kr_island_recipe_probe.png')
+            raise RequestHumanTakeover('Korean recipe names/stocks scanned; ingredient spending and production remain blocked')
         target_time = super().run(slot_id=slot_id)
         if target_time is not None:
             target_time = target_time.replace(microsecond=0)
@@ -263,6 +272,21 @@ class IslandProduction(IslandRecipe, IslandDock):
             self.ui_back(check_button=page_island_manage.check_button)
             self.ensure_island_production_page()
             return False
+
+    def probe_korean_recipe_counters(self, stocks):
+        """Validate selection/counters without buying ingredients or starting work."""
+        self.all_recipe_stocks = stocks
+        results = {}
+        for recipe_id in stocks:
+            if not self.set_recipe(recipe_id):
+                self.device.image_save('./log/kr_island_recipe_selection_unknown.png')
+                raise RequestHumanTakeover('Korean recipe selection could not be verified')
+            counters = self.get_recipe_ingredient_counters()
+            if not counters or any(counter[0] < 0 or counter[1] <= 0 for counter in counters):
+                self.device.image_save('./log/kr_island_ingredient_unknown.png')
+                raise RequestHumanTakeover('Korean ingredient counters could not be verified')
+            results[recipe_id] = counters
+        return results
 
     def dispatch_place(self, place_id):
         if place_id not in self.slot_grids:
@@ -283,6 +307,12 @@ class IslandProduction(IslandRecipe, IslandDock):
 
     def dispatch_all(self):
         if self.config.SERVER == 'kr':
+            if self.slot_grids:
+                self.ensure_top_page()
+                if 101 in self.slot_grids:
+                    for slot_id, button in zip(DIC_ISLAND_PRODUCTION_PLACE[101]['slot'], self.slot_grids[101].buttons):
+                        if self.is_slot_empty(button):
+                            self.dispatch_slot(slot_id, button)
             raise RequestHumanTakeover('Korean production recipe text OCR is not validated; '
                                        'finished rewards were checked, but new production is not started.')
         logger.hr("Dispatch Production", level=2)
@@ -319,6 +349,8 @@ class IslandProduction(IslandRecipe, IslandDock):
                 break
 
     def run(self):
+        if self.config.SERVER == 'kr' and self.is_in_recipe_menu():
+            self.ui_back(check_button=page_island_manage.check_button)
         self.ensure_island_production_page()
         slot_finish_time = self.config.cross_get("IslandProduction.Storage.Storage.SlotFinishTime", default={})
         self.slot_finish_time = {int(k): datetime.fromisoformat(v) for k, v in slot_finish_time.items()}

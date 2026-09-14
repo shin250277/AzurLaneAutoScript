@@ -6,6 +6,41 @@ from dev_tools.test_os_task_stop_boundaries import method, TaskStopped
 
 
 class IslandProductionNamesTest(unittest.TestCase):
+    def test_recipe_probe_rejects_missing_or_invalid_counters(self):
+        probe = method('module/island/production.py', 'IslandProduction', 'probe_korean_recipe_counters')
+        ui = Mock()
+        ui.set_recipe.return_value = True
+        for counters in (None, [], [(0, 0, 0)]):
+            ui.get_recipe_ingredient_counters.return_value = counters
+            with self.assertRaises(TaskStopped):
+                probe(ui, {101001: 790})
+        ui.run_recipe.assert_not_called()
+        ui.prepare_ingredients.assert_not_called()
+
+    def test_recipe_probe_selects_and_reads_without_starting(self):
+        probe = method('module/island/production.py', 'IslandProduction', 'probe_korean_recipe_counters')
+        ui = Mock()
+        ui.set_recipe.return_value = True
+        ui.get_recipe_ingredient_counters.return_value = [(0, 9, -9)]
+        result = probe(ui, {101001: 790, 101002: 800})
+        self.assertEqual(set(result), {101001, 101002})
+        self.assertEqual(ui.set_recipe.call_count, 2)
+        ui.run_recipe.assert_not_called()
+        ui.prepare_ingredients.assert_not_called()
+
+    def test_korean_empty_field_runs_read_only_recipe_probe(self):
+        dispatch = method('module/island/production.py', 'IslandProduction', 'dispatch_all',
+                          DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [9001]}})
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.slot_grids = {101: Mock(buttons=['slot'])}
+        ui.is_slot_empty.return_value = True
+        ui.dispatch_slot.side_effect = TaskStopped('Read-only recipe probe')
+        with self.assertRaises(TaskStopped):
+            dispatch(ui)
+        ui.dispatch_slot.assert_called_once_with(9001, 'slot')
+        ui.dispatch_place.assert_not_called()
+
     def test_empty_korean_menu_does_not_choose_staff_or_start(self):
         run = method('module/island_handler/restaurant.py', 'IslandRestaurant', 'run',
                      KR_RESTAURANT_EMPTY=Mock())

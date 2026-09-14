@@ -12,7 +12,7 @@ from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.base.timer import Timer
 from module.base.utils import color_similarity_2d, extract_letters, random_rectangle_vector_opted
-from module.exception import GameTooManyClickError
+from module.exception import GameTooManyClickError, RequestHumanTakeover
 from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_RECIPE, DIC_ISLAND_SHOP_ITEM_TO_RECIPE, DIC_ISLAND_SLOT
 from module.island.utils import (
     ceil_div_or_ceil,
@@ -56,6 +56,9 @@ elif server.server == 'tw':
 else:
     lang = 'cnocr'
 RECIPE_PRODUCT_NAME_OCR = Ocr([], lang=lang, letter=(57, 59, 61), threshold=160, name='product_name_ocr')
+if server.server == 'kr':
+    from module.island_handler.korean_ocr import KoreanIslandNameOcr
+    RECIPE_PRODUCT_NAME_OCR = KoreanIslandNameOcr([], name='product_name_ocr_kr')
 RECIPE_PRODUCT_STOCK_OCR = Digit([], lang='cnocr', letter=(80, 80, 80), threshold=160, name='product_stock_ocr')
 ISLAND_RECIPE_AMOUNT_OCR = Digit(ISLAND_RECIPE_AMOUNT, letter=(50, 50, 57), name='recipe_amount_ocr')
 
@@ -213,6 +216,15 @@ def recipe_product_name_to_recipe_id(name, slotcode=None):
     else:
         recipe_lists = DIC_ISLAND_RECIPE.keys()
 
+    if server.server == 'kr':
+        normalized = re.sub(r'\s+', '', name or '')
+        matches = [recipe_id for recipe_id in recipe_lists if normalized and normalized ==
+                   re.sub(r'\s+', '', DIC_ISLAND_ITEM[get_recipe_product_id(recipe_id)]['name'].get('kr', ''))]
+        if len(matches) == 1:
+            return matches[0]
+        logger.warning('KR recipe name is empty, unknown or ambiguous; do not guess a product')
+        return None
+
     for recipe_id in recipe_lists:
         product_id = get_recipe_product_id(recipe_id)
         product_name = DIC_ISLAND_ITEM[product_id]['name'][server.server]
@@ -299,6 +311,9 @@ class IslandRecipe(IslandExchange, IslandShop):
         product_name_images = [self.image_crop(button.area, copy=True) for button in product_name_grid.buttons]
         product_names = RECIPE_PRODUCT_NAME_OCR.ocr(product_name_images, direct_ocr=True)
         corrected_ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]
+        if server.server == 'kr' and (not corrected_ids or None in corrected_ids):
+            self.device.image_save('./log/kr_island_recipe_unknown.png')
+            raise RequestHumanTakeover('Korean recipe names are not all uniquely recognized; no production started')
         return corrected_ids
 
     def get_recipe_product_stocks(self):

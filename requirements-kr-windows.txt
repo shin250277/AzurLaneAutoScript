@@ -1,0 +1,3 @@
+# Optional Korean island text recognition, Python 3.7 bundled Windows runtime.
+# Requires the installed Windows Korean OCR language pack; no network OCR.
+winrt==1.0.21033.1; sys_platform == 'win32' and python_version == '3.7'
