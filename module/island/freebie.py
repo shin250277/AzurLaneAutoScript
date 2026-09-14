@@ -42,9 +42,8 @@ class IslandFreebie(IslandUI):
             raise GameStuckError(f'Failed to move to location of freebie after 30 seconds')
 
     def freebie_claim(self):
-        if not self.appear(ISLAND_FREEBIE_CLAIM, offset=(20, 20)):
-            logger.warning('No freebie claim button')
-            return False
+        # The island HUD can appear before the freebie interaction button.
+        # Recheck fresh frames instead of rejecting the first arrival frame.
         retry_wait = Timer(3, count=5).reset()
         for _ in self.loop(timeout=30):
             if self.appear_then_click(ISLAND_FREEBIE_CLAIM, offset=(20, 20), interval=3):
@@ -62,6 +61,8 @@ class IslandFreebie(IslandUI):
                 continue
         else:
             logger.warning('Failed to claim freebie after 30 seconds')
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_island_freebie_claim_failed.png')
             return False
 
     def freebie_receive(self):
@@ -71,6 +72,8 @@ class IslandFreebie(IslandUI):
         self.device.screenshot()
         if not self.appear(ISLAND_FREEBIE_RECEIVE, offset=(20, 20)):
             logger.warning('Failed to receive freebie')
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_island_freebie_receive_failed.png')
             return False
         confirm_timer = Timer(3, count=5).reset()
         for _ in self.loop(timeout=30, skip_first=False):
@@ -120,8 +123,12 @@ class IslandFreebie(IslandUI):
 
         if self.island_freebie_notice_appear():
             self.freebie_move_to()
-            self.freebie_claim()
-            self.freebie_receive()
+            if not self.freebie_claim():
+                self.config.task_delay(success=False)
+                return False
+            if not self.freebie_receive():
+                self.config.task_delay(success=False)
+                return False
             if self.config.IslandFreebie_Share:
                 self.freebie_share()
         else:

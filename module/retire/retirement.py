@@ -310,6 +310,9 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
             rarity = self._retire_rarity
         logger.hr('Retirement')
         logger.info(f'Amount={amount}. Rarity={rarity}')
+        if not rarity:
+            raise RequestHumanTakeover(
+                'Automatic retirement is disabled: no ship rarities are selected')
 
         # transfer N R SR SSR to filter name
         correspond_name = {
@@ -421,6 +424,12 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
         Returns:
             bool: If retired.
         """
+        # An empty old-retire selection is a prohibition, not an unrestricted
+        # dock filter. Stop before entering the dock or changing its filters.
+        if self.config.Retirement_RetireMode == 'old_retire' and not self._retire_rarity:
+            if self.retirement_appear() or self.appear(IN_RETIREMENT_CHECK, offset=(20, 20)):
+                raise RequestHumanTakeover(
+                    'Dock full and automatic retirement disabled; free dock space manually')
         # 2025.05.29 game tips that infos skin feature when you enter dock
         if self.handle_game_tips():
             return True

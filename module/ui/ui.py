@@ -23,7 +23,7 @@ from module.raid.assets import *
 from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_coalition,
                             page_channel, page_commission, page_dock, page_dorm, page_event, page_event_list, page_exercise, page_fleet,
-                            page_guild, page_main, page_main_white, page_mail, page_meowfficer, page_meta, page_mission,
+                            page_guild, page_island_manage, page_main, page_main_white, page_mail, page_meowfficer, page_meta, page_mission,
                             page_munitions, page_private_quarters, page_research, page_reshmenu, page_reward,
                             page_shipyard, page_shop, page_sp, page_storage, page_supply_pack)
 from module.ui_white.assets import *
@@ -332,6 +332,10 @@ class UI(InfoHandler):
                 if self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8):
                     return False
                 if self.appear(KR_PRIVATE_QUARTERS_CHECK, offset=(10, 10), similarity=0.8):
+                    return False
+                # Island management has a white background at the main dock
+                # tab coordinates. Require its localized title to exclude it.
+                if self.appear(page_island_manage.check_button, offset=(10, 10), similarity=0.8):
                     return False
                 # The channel is an overlay over the main screen, so the
                 # bottom dock tab remains visible behind it.
