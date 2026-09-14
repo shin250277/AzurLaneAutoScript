@@ -30,7 +30,9 @@ class IslandCollect(IslandDock):
                 break
         else:
             logger.warning('Cannot find collect enter button, collect may not be available')
-            return False
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_island_collect_enter_failed.png')
+            return None
 
         available = None
         for _ in self.loop(skip_first=False, timeout=20):
@@ -54,7 +56,9 @@ class IslandCollect(IslandDock):
                 continue
         else:
             logger.warning('Cannot determine collect availability, possibly due to network issues')
-            available = False
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_island_collect_availability_failed.png')
+            return None
 
         if available:
             return True
@@ -121,19 +125,29 @@ class IslandCollect(IslandDock):
         self.ui_ensure(page_island_manage)
         self.island_manage_side_navbar_ensure(upper=3)
 
-        if self.collect_available():
+        available = self.collect_available()
+        if available is None:
+            # A missing localized button is not proof of a daily cooldown.
+            self.config.task_delay(success=False)
+            return False
+        if available:
             success = self.collect_execute()
             if success:
                 logger.info('Collect successfully')
                 self.config.task_delay(server_update=True)
             else:
                 logger.warning('Failed to collect, will retry later')
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_island_collect_execute_failed.png')
                 self.config.task_delay(success=False)
         else:
             logger.info('Collect not available, possibly due to cooldown')
-            for _ in self.loop():
+            for _ in self.loop(timeout=10):
                 if self.appear_then_click(ISLAND_COLLECT_SELECT_CANCEL, offset=(20, 20), interval=3):
                     continue
                 if self.appear(ISLAND_COLLECT_SELECT_ENTER, offset=(20, 20)):
                     break
+            else:
+                self.config.task_delay(success=False)
+                return False
             self.config.task_delay(server_update=True)

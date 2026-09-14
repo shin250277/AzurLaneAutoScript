@@ -32,6 +32,11 @@ class IslandFreebie(IslandUI):
         for _ in self.loop(timeout=30):
             if self.appear_then_click(ISLAND_FREEBIE_AVAILABLE, offset=(20, 20), interval=3):
                 continue
+            if self.config.SERVER == 'kr' and self.appear_then_click(
+                    ISLAND_FREEBIE_UNAVAILABLE, offset=(20, 20), interval=3):
+                # The notice clears when the dispenser runs, before the
+                # dropped supply is collected. Its icon still opens the site.
+                continue
 
             if self.ui_page_appear(page_island_phone):
                 logger.info('Moved to location of freebie')
@@ -56,7 +61,7 @@ class IslandFreebie(IslandUI):
                 logger.info('Misclicked into page_island_phone, go back')
                 self.ui_goto(page_island)
                 continue
-            elif retry_wait.reached_and_reset():
+            elif retry_wait.reached_and_reset() and self.appear(STORY_SKIP, offset=(20, 20)):
                 self.device.click(STORY_SKIP)
                 continue
         else:
@@ -70,6 +75,9 @@ class IslandFreebie(IslandUI):
         p2 = (217 - 8, 507 + 36)
         self.device.drag(p1, p2, point_random=(0, 0, 0, 0), shake_random=(0, 0, 0, 0), hold_duration=1.05)
         self.device.screenshot()
+        if self.appear(ISLAND_FREEBIE_SHARE, offset=(20, 20)):
+            logger.info('Freebie already received; sharing remains optional')
+            return True
         if not self.appear(ISLAND_FREEBIE_RECEIVE, offset=(20, 20)):
             logger.warning('Failed to receive freebie')
             if self.config.SERVER == 'kr':
@@ -92,6 +100,8 @@ class IslandFreebie(IslandUI):
                     return True
         else:
             logger.warning('Failed to receive freebie after 30 seconds')
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_island_freebie_receive_timeout.png')
             return False
 
     def freebie_share(self):
@@ -121,7 +131,9 @@ class IslandFreebie(IslandUI):
     def run(self):
         self.ui_ensure(page_island_manage)
 
-        if self.island_freebie_notice_appear():
+        if self.island_freebie_notice_appear() or (
+                self.config.SERVER == 'kr' and self.match_template_color(
+                    ISLAND_FREEBIE_UNAVAILABLE, offset=(20, 20))):
             self.freebie_move_to()
             if not self.freebie_claim():
                 self.config.task_delay(success=False)
