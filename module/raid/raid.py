@@ -6,7 +6,7 @@ from module.base.timer import Timer
 from module.base.utils import color_mask, image_size
 from module.campaign.campaign_event import CampaignEvent
 from module.combat.assets import *
-from module.exception import ScriptError
+from module.exception import ScriptError, RequestHumanTakeover
 from module.logger import logger
 from module.map.map_operation import MapOperation
 from module.ocr.ocr import Digit, DigitCounter
@@ -343,11 +343,18 @@ class Raid(MapOperation, RaidCombat, CampaignEvent):
             out: BATTLE_PREPARATION
         """
         entrance = raid_entrance(raid=raid, mode=mode)
+        prepare_timeout = Timer(30, count=30).start()
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
+
+            if self.config.SERVER == 'kr' and prepare_timeout.reached() and not self.combat_appear():
+                self.device.save_screenshot('kr_raid_preparation_timeout')
+                raise RequestHumanTakeover(
+                    'Raid preparation did not complete; check the selected difficulty fleet. '
+                    'No automatic game restart or fleet selection will be attempted.')
 
             if self.appear(entrance, offset=(10, 10), interval=5):
                 # Items appear from right
