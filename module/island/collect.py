@@ -23,6 +23,9 @@ class IslandCollect(IslandDock):
 
     def collect_available(self):
         for _ in self.loop(timeout=10):
+            if self.match_template_color(ISLAND_COLLECT_START_UNAVAILABLE, offset=(20, 20)):
+                # Resume after returning from an interrupted character selection.
+                return True
             if self.appear_then_click(ISLAND_COLLECT_SELECT_ENTER, offset=(20, 20), interval=3):
                 continue
             # End

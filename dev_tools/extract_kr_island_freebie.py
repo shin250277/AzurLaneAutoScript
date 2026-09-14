@@ -8,13 +8,19 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('frame', type=Path)
     parser.add_argument('--state', choices=('CLAIM', 'COOLDOWN', 'RECEIVE', 'SHARE', 'COLLECT_ENTER',
-                        'COLLECT_CONFIRM', 'COLLECT_CANCEL', 'COLLECT_START_UNAVAILABLE'), default='CLAIM')
+                        'COLLECT_CONFIRM', 'COLLECT_CANCEL', 'COLLECT_START_UNAVAILABLE',
+                        'DOCK_CHECK', 'DOCK_CONFIRM', 'DOCK_OCCUPIED'), default='CLAIM')
     args = parser.parse_args()
     name = ('ISLAND_COLLECT_SELECT_' + args.state.replace('COLLECT_', '')
             if args.state.startswith('COLLECT_') else 'ISLAND_FREEBIE_' + args.state)
     if args.state == 'COLLECT_START_UNAVAILABLE':
         name = 'ISLAND_COLLECT_START_UNAVAILABLE'
-    target = Path('assets/kr/island/{}.png'.format(name))
+    if args.state.startswith('DOCK_'):
+        name = 'ISLAND_DOCK_CHECK' if args.state == 'DOCK_CHECK' else 'ISLAND_DOCK_CHARACTER_CONFIRM'
+    if args.state == 'DOCK_OCCUPIED':
+        name = 'TEMPLATE_ISLAND_DOCK_OCCUPIED'
+    folder = 'island_handler' if args.state.startswith('DOCK_') else 'island'
+    target = Path('assets/kr/{}/{}.png'.format(folder, name))
     if target.exists():
         raise SystemExit('Asset exists; inspect before replacing')
     with Image.open(str(args.frame)) as frame:
@@ -26,9 +32,14 @@ def main():
                 'COLLECT_ENTER': (900, 474, 1028, 500),
                 'COLLECT_CONFIRM': (755, 543, 804, 571),
                 'COLLECT_CANCEL': (478, 543, 528, 571),
-                'COLLECT_START_UNAVAILABLE': (1023, 474, 1066, 500)}[args.state]
+                'COLLECT_START_UNAVAILABLE': (1023, 474, 1066, 500),
+                'DOCK_CHECK': (116, 20, 229, 47),
+                'DOCK_CONFIRM': (1067, 595, 1114, 623),
+                'DOCK_OCCUPIED': (78, 209, 158, 233)}[args.state]
         canvas = Image.new('RGB', frame.size)
         canvas.paste(frame.crop(area).convert('RGB'), area)
+        if args.state == 'DOCK_OCCUPIED':
+            canvas = frame.crop(area).convert('RGB')
     target.parent.mkdir(parents=True, exist_ok=True)
     canvas.save(str(target))
 

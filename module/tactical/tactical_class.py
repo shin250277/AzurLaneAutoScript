@@ -40,7 +40,7 @@ KR_TACTICAL_REWARD_CARD = Button(
     name='KR_TACTICAL_REWARD_CARD')
 KR_SHIP_CONFIRM = Button(
     area=(935, 610, 1110, 700), color=(64, 123, 194),
-    button=(935, 610, 1110, 700), name='KR_SHIP_CONFIRM')
+    button=(952, 650, 1092, 690), name='KR_SHIP_CONFIRM')
 KR_SKILL_CONFIRM = Button(
     area=(552, 550, 728, 610), color=(64, 123, 194),
     button=(552, 550, 728, 610), name='KR_SKILL_CONFIRM')

@@ -11,6 +11,7 @@ def method(name):
     tree.body = [next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
                       and n.name == name)]
     scope = dict(logger=Mock(), page_island_manage='manage',
+        ISLAND_COLLECT_START_UNAVAILABLE='start_unavailable',
         ISLAND_COLLECT_SELECT_ENTER='enter', ISLAND_COLLECT_SELECT_CONFIRM='confirm',
         ISLAND_COLLECT_SELECT_CANCEL='cancel')
     exec(compile(tree, 'module/island/collect.py', 'exec'), scope)
@@ -18,6 +19,11 @@ def method(name):
 
 
 class IslandCollectNavigationTest(unittest.TestCase):
+    def test_prepared_collection_resumes_without_reopening_location_picker(self):
+        ui = SimpleNamespace(loop=lambda **kw: iter([1]),
+            match_template_color=lambda *args, **kwargs: True)
+        self.assertTrue(method('collect_available')(ui))
+
     def test_collection_controls_have_korean_assets(self):
         tree = ast.parse(Path('module/island/assets.py').read_text(encoding='utf-8'))
         for suffix in ('ENTER', 'CONFIRM', 'CANCEL'):
