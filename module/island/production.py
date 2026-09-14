@@ -253,6 +253,9 @@ class IslandProduction(IslandRecipe, IslandDock):
             stocks = self.scan_all_recipe_stocks()
             logger.attr('KR recipe probe', stocks)
             logger.attr('KR ingredient probe', self.probe_korean_recipe_counters(stocks))
+            if getattr(self, 'kr_potato_trial', False):
+                from module.island.potato_trial import run_trial
+                run_trial(self)
             self.device.image_save('./log/kr_island_recipe_probe.png')
             raise RequestHumanTakeover('Korean recipe names/stocks scanned; ingredient spending and production remain blocked')
         target_time = super().run(slot_id=slot_id)

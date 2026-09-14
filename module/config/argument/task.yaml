@@ -365,6 +365,7 @@ Tool:
       - EventStory
     IslandProductionPlanner:
       - IslandProductionPlanner
+    IslandProductionTrial: []
     Benchmark:
       - Benchmark
     AzurLaneUncensored:

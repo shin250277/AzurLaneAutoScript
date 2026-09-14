@@ -415,6 +415,21 @@ class AzurLaneAutoScript:
         from module.island.production import IslandProduction
         IslandProduction(config=self.config, device=self.device).run()
 
+    def island_production_trial(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.island.production import IslandProduction
+        from module.island.potato_trial import RECEIPT, inspect_trial
+        ui = IslandProduction(config=self.config, device=self.device, task='IslandProduction')
+        if ui.config.SERVER != 'kr':
+            raise RequestHumanTakeover('This bounded trial is only for KR')
+        ui.kr_potato_trial = True
+        ui.device.screenshot()
+        if RECEIPT.exists():
+            inspect_trial(ui)
+            return
+        ui.run()
+
     def island_order(self):
         from module.island.order import IslandOrder
         IslandOrder(config=self.config, device=self.device).run()

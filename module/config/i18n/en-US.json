@@ -38,6 +38,7 @@
     }
   },
   "Task": {
+    "IslandProductionTrial": {"name": "KR potato trial (9 seeds)", "help": "Approved one-batch trial. No purchases or exchanges. An attempt receipt prevents retries."},
     "Alas": {
       "name": "Alas",
       "help": ""

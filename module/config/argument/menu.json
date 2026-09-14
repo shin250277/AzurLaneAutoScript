@@ -116,6 +116,7 @@
       "OpsiDaemon",
       "EventStory",
       "IslandProductionPlanner",
+      "IslandProductionTrial",
       "Benchmark",
       "AzurLaneUncensored",
       "GameManager"
