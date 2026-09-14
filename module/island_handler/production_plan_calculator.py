@@ -52,7 +52,7 @@ def get_current_activity_list(time):
         start_time = datetime.strptime(content['start_time'][server.server], "%Y-%m-%d %H:%M:%S")
         end_time = datetime.strptime(content['end_time'][server.server], "%Y-%m-%d %H:%M:%S")
         if start_time <= time < end_time:
-            return content['activity']
+            return content.get('activity_by_server', {}).get(server.server, content['activity'])
 
 
 class ProductionPlanCalculator:

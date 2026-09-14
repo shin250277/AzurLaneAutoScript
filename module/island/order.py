@@ -21,6 +21,7 @@ from module.island.utils import (
 from module.island_handler.restaurant_config import get_menu_reserve_items
 from module.island_handler.recipe import IslandReversedDigitCounter
 from module.logger import logger
+from module.exception import RequestHumanTakeover
 from module.map_detection.utils import Points
 from module.ocr.ocr import Duration, Ocr
 from module.ui.page import page_island_order
@@ -387,6 +388,9 @@ class IslandOrder(IslandUI):
         return False
 
     def run(self):
+        if self.config.SERVER == 'kr':
+            raise RequestHumanTakeover('Korean island order text OCR is not validated; '
+                                       'localized data alone does not enable order submission.')
         self.ui_ensure(page_island_order)
         self.next_runtime = []
         self.update_production_plan = False

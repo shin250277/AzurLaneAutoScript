@@ -10,6 +10,7 @@ from module.island.data import DIC_ISLAND_TASK
 from module.island.ui import IslandUI
 from module.island.utils import item_mapping_to_yaml, load_item_mapping, normalize_item_keys
 from module.logger import logger
+from module.exception import RequestHumanTakeover
 from module.map_detection.utils import Points
 from module.ocr.ocr import Ocr
 from module.ui.navbar import Navbar
@@ -240,6 +241,9 @@ class IslandSeasonTask(IslandUI):
         return unfinished_tasks
 
     def run(self):
+        if self.config.SERVER == 'kr':
+            raise RequestHumanTakeover('Korean island season-task text OCR is not validated; '
+                                       'do not replace production targets from Chinese OCR.')
         self.ui_ensure(page_island_season)
         self.island_season_bottom_navbar_ensure(left=3)
         self.receive_all_reward()
