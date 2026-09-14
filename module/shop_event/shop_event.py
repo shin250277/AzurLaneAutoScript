@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 from module.base.decorator import del_cached_property
 from module.base.timer import Timer
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.shop.assets import NAV_GENERAL, NAV_EVENT
 from module.shop_event.assets import NO_NAV_EVENT_CHECK
@@ -194,6 +195,10 @@ class EventShop(EventShopClerk):
         if not len(items):
             logger.warning("No items found in event shop.")
             return True
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_event_shop_currency_unverified.png')
+            raise RequestHumanTakeover('Korean event-shop currency recognition is not validated; '
+                                       'scanned items only, no purchase or ship unlock.')
         logger.hr("Event Shop buy", level=2)
         self.get_current_pts()
         items, urpt_related_items = self.handle_items_related_with_urpt(items, self.config.EventShop_BuyURShip)

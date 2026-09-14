@@ -22,7 +22,9 @@ COUNTER_COLOR = (106, 120, 131)
 COUNTER_THRESHOLD = 150
 PRICE_THRESHOLD = 230
 PRICE_BACKGROUND_COLOR = (61, 78, 91)
-if server.server == 'jp':
+if server.server == 'kr':
+    COUNTER_LEFT_STRIP = 52
+elif server.server == 'jp':
     COUNTER_LEFT_STRIP = 54
 elif server.server == 'en':
     COUNTER_LEFT_STRIP = 42
@@ -31,6 +33,17 @@ else:
 
 
 class CounterOcr(Ocr):
+    @staticmethod
+    def parse_counter(value):
+        if not isinstance(value, str) or not re.fullmatch(r'[0-9]+/[0-9]+', value):
+            logger.warning(f'Invalid counter format: {value}')
+            return [0, 0]
+        current, total = map(int, value.split('/'))
+        if total <= 0 or current > total:
+            logger.warning(f'Invalid counter range: {value}')
+            return [0, 0]
+        return [current, total]
+
     def __init__(self, buttons, lang='azur_lane', letter=(255, 255, 255), threshold=128,
                  alphabet='0123456789/IDSB', name=None):
         super().__init__(buttons, lang=lang, letter=letter, threshold=threshold, alphabet=alphabet, name=name)
@@ -75,32 +88,8 @@ class CounterOcr(Ocr):
         """
         result_list = super().ocr(image, direct_ocr=direct_ocr)
         if isinstance(result_list, list):
-            parsed = []
-            for i in result_list:
-                if not i or '/' not in i:
-                    logger.warning(f'Invalid OCR result format: {i}')
-                    parsed.append([0, 0])
-                    continue
-
-                parts = i.split('/')
-                if len(parts) != 2:
-                    logger.warning(f'Invalid counter format: {i}')
-                    parsed.append([0, 0])
-                    continue
-                parsed.append([int(j) for j in parts])
-
-            return parsed
-        else:
-            if not result_list or '/' not in result_list:
-                logger.warning(f'Invalid OCR result: {result_list}')
-                return [0, 0]
-
-            parts = result_list.split('/')
-            if len(parts) != 2:
-                logger.warning(f'Invalid counter format: {result_list}')
-                return [0, 0]
-
-            return [int(i) for i in parts]
+            return [self.parse_counter(value) for value in result_list]
+        return self.parse_counter(result_list)
 
 
 class PriceOcr(Digit):

@@ -258,6 +258,9 @@ class MeowfficerCollect(MeowfficerBase):
             else:
                 self.device.screenshot()
 
+            # KR SKIP may return directly to the cattery instead of the queue.
+            if self.config.SERVER == 'kr' and self.appear(MEOWFFICER_TRAIN_ENTER, offset=(20, 20)):
+                break
             # End
             if self.appear(MEOWFFICER_TRAIN_START, offset=(20, 20)):
                 if confirm_timer.reached():

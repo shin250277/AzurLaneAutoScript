@@ -200,6 +200,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         self.wait_os_map_buttons()
         logger.info('Get zone name')
         timeout = Timer(1.5, count=5).start()
+        kr_name_failures = 0
         for _ in self.loop():
             # Handle popups
             if self.handle_map_event():
@@ -232,6 +233,11 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 try:
                     return self.get_current_zone()
                 except MapDetectionError:
+                    if self.config.SERVER == 'kr' and fallback_init:
+                        kr_name_failures += 1
+                        if kr_name_failures >= 2 and hasattr(self, 'get_current_zone_from_globe'):
+                            logger.info('KR zone name failed twice; use observed globe position')
+                            break
                     continue
             else:
                 timeout.reset()
