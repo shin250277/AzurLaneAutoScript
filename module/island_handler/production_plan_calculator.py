@@ -46,6 +46,9 @@ def get_current_activity_list(time):
             or None if no season covers it.
     """
     for season, content in DIC_ISLAND_SEASON.items():
+        if (server.server not in content['start_time']
+                or server.server not in content['end_time']):
+            raise ValueError('Missing {} island season schedule (season {})'.format(server.server, season))
         start_time = datetime.strptime(content['start_time'][server.server], "%Y-%m-%d %H:%M:%S")
         end_time = datetime.strptime(content['end_time'][server.server], "%Y-%m-%d %H:%M:%S")
         if start_time <= time < end_time:

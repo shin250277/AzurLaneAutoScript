@@ -3,6 +3,8 @@ from datetime import datetime
 from module.base.decorator import cached_property
 from module.config.utils import server_time_offset
 from module.daemon.daemon_base import DaemonBase
+from module.exception import RequestHumanTakeover
+from module.logger import logger
 from module.island.utils import (
     load_hard_floor_items,
     load_item_mapping,
@@ -71,6 +73,13 @@ class IslandProductionPlanner(DaemonBase):
             export=True,
             use_item_name_in_export=True,
     ):
+        # Do not spend minutes scanning the game or export a foreign season's
+        # production plan when regional schedule data is unavailable.
+        try:
+            self.current_activity_list
+        except ValueError as exc:
+            logger.critical(str(exc))
+            raise RequestHumanTakeover(str(exc))
         if tech_status_yaml is not None:
             technology_status = tech_status_yaml
         else:

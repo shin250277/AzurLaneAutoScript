@@ -9,7 +9,7 @@ def main():
     parser.add_argument('frame', type=Path)
     parser.add_argument('--state', choices=('CLAIM', 'COOLDOWN', 'RECEIVE', 'SHARE', 'COLLECT_ENTER',
                         'COLLECT_CONFIRM', 'COLLECT_CANCEL', 'COLLECT_START', 'COLLECT_START_UNAVAILABLE',
-                        'DOCK_CHECK', 'DOCK_CONFIRM', 'DOCK_OCCUPIED'), default='CLAIM')
+                        'DOCK_CHECK', 'DOCK_CONFIRM', 'DOCK_OCCUPIED', 'TECHNOLOGY_CHECK'), default='CLAIM')
     args = parser.parse_args()
     name = ('ISLAND_COLLECT_SELECT_' + args.state.replace('COLLECT_', '')
             if args.state.startswith('COLLECT_') else 'ISLAND_FREEBIE_' + args.state)
@@ -20,6 +20,8 @@ def main():
     if args.state == 'DOCK_OCCUPIED':
         name = 'TEMPLATE_ISLAND_DOCK_OCCUPIED'
     folder = 'island_handler' if args.state.startswith('DOCK_') else 'island'
+    if args.state == 'TECHNOLOGY_CHECK':
+        name, folder = 'ISLAND_TECHNOLOGY_CHECK', 'ui'
     target = Path('assets/kr/{}/{}.png'.format(folder, name))
     if target.exists():
         raise SystemExit('Asset exists; inspect before replacing')
@@ -36,7 +38,8 @@ def main():
                 'COLLECT_START': (1023, 474, 1066, 500),
                 'DOCK_CHECK': (116, 20, 229, 47),
                 'DOCK_CONFIRM': (1067, 595, 1114, 623),
-                'DOCK_OCCUPIED': (78, 209, 158, 233)}[args.state]
+                'DOCK_OCCUPIED': (78, 209, 158, 233),
+                'TECHNOLOGY_CHECK': (124, 19, 216, 46)}[args.state]
         canvas = Image.new('RGB', frame.size)
         canvas.paste(frame.crop(area).convert('RGB'), area)
         if args.state == 'DOCK_OCCUPIED':
