@@ -23,7 +23,8 @@ class IslandCollect(IslandDock):
 
     def collect_available(self):
         for _ in self.loop(timeout=10):
-            if self.match_template_color(ISLAND_COLLECT_START_UNAVAILABLE, offset=(20, 20)):
+            if (self.match_template_color(ISLAND_COLLECT_START_UNAVAILABLE, offset=(20, 20))
+                    or self.match_template_color(ISLAND_COLLECT_START, offset=(20, 20))):
                 # Resume after returning from an interrupted character selection.
                 return True
             if self.appear_then_click(ISLAND_COLLECT_SELECT_ENTER, offset=(20, 20), interval=3):
@@ -77,7 +78,10 @@ class IslandCollect(IslandDock):
         return False
 
     def collect_execute(self):
-        for workslot, button in enumerate(ISLAND_COLLECT_WORKSLOT_GRID.buttons):
+        # Resuming an already prepared party must not reassign occupied slots.
+        slots = ([] if self.match_template_color(ISLAND_COLLECT_START, offset=(20, 20))
+                 else ISLAND_COLLECT_WORKSLOT_GRID.buttons)
+        for workslot, button in enumerate(slots):
             click_timer = Timer(1, count=3)
             for _ in self.loop(timeout=10):
                 # End

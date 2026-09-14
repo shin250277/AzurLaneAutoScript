@@ -11,6 +11,7 @@ def method(name):
     tree.body = [next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
                       and n.name == name)]
     scope = dict(logger=Mock(), page_island_manage='manage',
+        ISLAND_COLLECT_START='start',
         ISLAND_COLLECT_START_UNAVAILABLE='start_unavailable',
         ISLAND_COLLECT_SELECT_ENTER='enter', ISLAND_COLLECT_SELECT_CONFIRM='confirm',
         ISLAND_COLLECT_SELECT_CANCEL='cancel')
@@ -19,6 +20,11 @@ def method(name):
 
 
 class IslandCollectNavigationTest(unittest.TestCase):
+    def test_ready_collection_resumes_without_reselecting_locations(self):
+        ui = SimpleNamespace(loop=lambda **kw: iter([1]),
+            match_template_color=lambda button, **kwargs: button == 'start')
+        self.assertTrue(method('collect_available')(ui))
+
     def test_prepared_collection_resumes_without_reopening_location_picker(self):
         ui = SimpleNamespace(loop=lambda **kw: iter([1]),
             match_template_color=lambda *args, **kwargs: True)

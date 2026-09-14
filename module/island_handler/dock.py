@@ -1,6 +1,7 @@
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.base.utils import random_rectangle_vector_opted
+from module.exception import GameStuckError
 from module.island.ui import IslandUI
 from module.island_handler.assets import *
 from module.island_handler.dock_scanner import CharacterScanner
@@ -116,7 +117,7 @@ class IslandDock(IslandUI):
             button (Button): Character button to select
             skip_first (bool):
         """
-        for _ in self.loop(skip_first=skip_first):
+        for _ in self.loop(skip_first=skip_first, timeout=8):
             if self.is_button_selected(button, color=(19, 181, 231)):
                 logger.info(f'Button {button.name} is selected')
                 return True
@@ -125,19 +126,27 @@ class IslandDock(IslandUI):
                     self.device.click(button)
                 continue
 
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_island_character_select_failed.png')
+        raise GameStuckError('Island character selection did not complete')
+
     def island_dock_select_confirm(self, check_button, skip_first=True):
         """
         Args:
             check_button (callable, Button):
             skip_first (bool):
         """
-        for _ in self.loop(skip_first=skip_first):
+        for _ in self.loop(skip_first=skip_first, timeout=10):
             if self.ui_process_check_button(check_button):
                 del_cached_property(self, 'dock_grid')
-                break
+                return
 
             if self.appear_then_click(ISLAND_DOCK_CHARACTER_CONFIRM, offset=(20, 20), interval=2):
                 continue
+
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_island_character_confirm_failed.png')
+        raise GameStuckError('Island character confirmation did not complete')
 
     def island_dock_select_manjuu(self):
         self.island_dock_sort_method_dsc_set(enable=False, wait_loading=True)
