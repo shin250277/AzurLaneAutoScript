@@ -457,9 +457,17 @@ class IslandRestaurant(IslandDock):
             if self.restaurant_running():
                 return True
 
+    def is_korean_menu_empty(self):
+        from module.base.template import Template
+        template = Template('./assets/kr/island_handler/KR_RESTAURANT_EMPTY.png')
+        return template.match(self.image_crop((565, 190, 1065, 420), copy=True), similarity=0.9)
+
     def run(self):
         if self.restaurant_running():
             logger.info("Restaurant is already running, skip this round")
+            return False
+        if self.config.SERVER == 'kr' and self.is_korean_menu_empty():
+            logger.info('Korean restaurant has no dishes available; do not assign staff or start')
             return False
         self.receive_revenue()
         if self.restaurant_resting():

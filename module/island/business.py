@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.config.utils import get_server_next_update
+from module.exception import RequestHumanTakeover
 from module.island.assets import *
 from module.island_handler.restaurant import IslandRestaurant, WaitressOccupied
 from module.island_handler.restaurant_config import (
@@ -89,6 +90,9 @@ class IslandBusiness(IslandRestaurant):
                     return id
         else:
             logger.warning("Failed to recognize restaurant")
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_island_restaurant_unknown.png')
+                raise RequestHumanTakeover('Korean restaurant is not recognized; do not report it as checked.')
         return None
 
     def is_restaurant_running(self, button):
@@ -128,6 +132,8 @@ class IslandBusiness(IslandRestaurant):
             logger.info("No more restaurants")
 
     def run(self):
+        if self.config.SERVER == 'kr' and self.is_in_island_restaurant():
+            self.ui_back(page_island_manage.check_button)
         self.ui_ensure(page_island_manage)
         self.island_manage_side_navbar_ensure(upper=2)
         self.handle_restaurant_popup()

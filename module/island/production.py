@@ -104,7 +104,14 @@ class IslandProduction(IslandRecipe, IslandDock):
                 logger.warning('Failed to recognize production name')
                 codenames.append(None)
         logger.attr('Codenames', codenames)
+        self._check_kr_production_names(codenames)
         return codenames
+
+    def _check_kr_production_names(self, codenames):
+        if self.config.SERVER == 'kr' and (not codenames or None in codenames):
+            self.device.image_save('./log/kr_island_production_unknown.png')
+            raise RequestHumanTakeover('Korean production place name is not recognized; '
+                                       'do not swipe repeatedly or guess a production slot.')
 
     @cached_property
     def slot_grids(self):
@@ -126,6 +133,8 @@ class IslandProduction(IslandRecipe, IslandDock):
         return slot_grids
 
     def is_slot_finished(self, slot_button: Button):
+        if self.config.SERVER == 'kr' and self.is_slot_empty(slot_button):
+            return False
         tick_button = slot_button.crop(area=TICK_AREA, name=f'{slot_button.name}_TICK')
         return self.image_color_count(tick_button, (255, 255, 255), threshold=15, count=85)
 
@@ -193,6 +202,9 @@ class IslandProduction(IslandRecipe, IslandDock):
                 self.device.click(ISLAND_CLICK_SAFE_AREA)
                 continue
             if self.match_template_color(page_island_manage.check_button) and not self.is_enter_window_shown() and not self.appear(ISLAND_PRODUCTION_SELECT_CHARACTER, offset=(60, 20)):
+                if self.config.SERVER == 'kr' and self.is_slot_finished(slot_button):
+                    self.device.image_save('./log/kr_island_production_unclaimed.png')
+                    raise RequestHumanTakeover('Production reward remains unclaimed after closing the popup')
                 return True
 
     def claim_reward_in_page(self, finished_slots=[]):
@@ -270,6 +282,9 @@ class IslandProduction(IslandRecipe, IslandDock):
         del_cached_property(super(), 'all_recipe_stocks')
 
     def dispatch_all(self):
+        if self.config.SERVER == 'kr':
+            raise RequestHumanTakeover('Korean production recipe text OCR is not validated; '
+                                       'finished rewards were checked, but new production is not started.')
         logger.hr("Dispatch Production", level=2)
         self.ensure_top_page()
         self.failed_buy_items = set()
