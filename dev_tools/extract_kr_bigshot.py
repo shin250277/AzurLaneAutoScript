@@ -15,8 +15,12 @@ AREAS = {
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('frame', type=Path)
+    parser.add_argument('--fleet-modal', action='store_true')
     args = parser.parse_args()
-    targets = [(Path('assets/kr/' + name + '.png'), area) for name, area in AREAS.items()]
+    areas = ({'raid/BIGSHOT_FLEET_HEADER': (126, 76, 255, 109),
+              'raid/BIGSHOT_FLEET_CLOSE': (1145, 74, 1178, 108)}
+             if args.fleet_modal else AREAS)
+    targets = [(Path('assets/kr/' + name + '.png'), area) for name, area in areas.items()]
     if any(path.exists() for path, _ in targets):
         raise SystemExit('Asset exists; inspect before replacing')
     with Image.open(str(args.frame)) as source:

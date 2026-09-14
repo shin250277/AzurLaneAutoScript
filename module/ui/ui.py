@@ -20,6 +20,7 @@ from module.ocr.ocr import Ocr
 from module.os_handler.assets import (ACTION_POINT_CANCEL, ACTION_POINT_USE, CURRENT_AP_CHECK,
                                       AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
 from module.raid.assets import *
+from module.raid.kr_fleet import BIGSHOT_FLEET_HEADER, BIGSHOT_FLEET_CLOSE
 from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_coalition,
                             page_channel, page_commission, page_dock, page_dorm, page_event, page_event_list, page_exercise, page_fleet,
@@ -515,6 +516,16 @@ class UI(InfoHandler):
             return True
         return False
 
+    def _handle_kr_raid_fleet_back(self):
+        if self.config.SERVER != 'kr':
+            return False
+        if self.appear(BIGSHOT_FLEET_HEADER, offset=(0, 0), similarity=0.9) and self.appear(
+                BIGSHOT_FLEET_CLOSE, offset=(0, 0), interval=2, similarity=0.9):
+            logger.info('Leave KR raid fleet selection before changing tasks')
+            self.device.click(BIGSHOT_FLEET_CLOSE)
+            return True
+        return False
+
     def ui_get_current_page(self, skip_first_screenshot=True):
         """
         Args:
@@ -552,6 +563,8 @@ class UI(InfoHandler):
 
             # Known pages
             if self._handle_kr_island_character_back():
+                continue
+            if self._handle_kr_raid_fleet_back():
                 continue
             for page in Page.iter_pages():
                 if page.check_button is None:

@@ -351,7 +351,7 @@ class Raid(MapOperation, RaidCombat, CampaignEvent):
                 self.device.screenshot()
 
             if self.config.SERVER == 'kr' and prepare_timeout.reached() and not self.combat_appear():
-                self.device.save_screenshot('kr_raid_preparation_timeout')
+                self.device.image_save('./log/kr_raid_preparation_timeout.png')
                 raise RequestHumanTakeover(
                     'Raid preparation did not complete; check the selected difficulty fleet. '
                     'No automatic game restart or fleet selection will be attempted.')
