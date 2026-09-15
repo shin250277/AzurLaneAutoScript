@@ -415,6 +415,16 @@ class AzurLaneAutoScript:
         from module.island.production import IslandProduction
         IslandProduction(config=self.config, device=self.device).run()
 
+    def event_shop_scan(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.shop_event.scan import EventShopScan
+        ui = EventShopScan(config=self.config, device=self.device, task='EventShop')
+        if ui.config.SERVER != 'kr':
+            raise RequestHumanTakeover('This inspection tool is only for KR')
+        ui.device.screenshot()
+        ui.run()
+
     def island_production_trial(self):
         from module.config.server import set_server
         set_server(self.config.Emulator_PackageName)

@@ -38,6 +38,7 @@
     }
   },
   "Task": {
+    "EventShopScan": {"name": "Event shop scan (no purchases)", "help": "Inspect event shop items without purchases."},
     "IslandProductionTrial": {"name": "KR potato trial (9 seeds)", "help": "Approved one-batch trial. No purchases or exchanges. An attempt receipt prevents retries."},
     "Alas": {
       "name": "Alas",

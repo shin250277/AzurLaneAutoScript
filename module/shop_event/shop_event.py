@@ -11,6 +11,7 @@ from module.shop_event.item import EventShopItem, UR_SHIP_PRICES_IN_URPT, COIN_P
 from module.shop_event.selector import EVENT_SHOP_PRESET_FILTER, FILTER
 from module.ui.assets import SHOP_GOTO_MUNITIONS
 from module.ui.page import page_shop, page_munitions
+from module.ui.ui import KR_MUNITIONS_CHECK
 
 
 class EventShop(EventShopClerk):
@@ -246,6 +247,9 @@ class EventShop(EventShopClerk):
                 self.get_current_pts()
         return True
 
+    def schedule_next_run(self):
+        self.config.task_delay(server_update=True)
+
     def run(self):
         """
         There may be multiple event shops.
@@ -255,19 +259,27 @@ class EventShop(EventShopClerk):
         self.ui_ensure(page_shop)
         timeout = Timer(2, count=4)
         for _ in self.loop():
-            if self.appear(page_munitions.check_button, threshold=20):
+            if self.ui_page_appear(page_munitions):
                 break
             if timeout.reached():
-                self.device.click(SHOP_GOTO_MUNITIONS)
+                if self.config.SERVER == 'kr':
+                    # KR keeps a fixed supply-shop category on the left. The
+                    # legacy JP tile can land on a product after a transition.
+                    KR_MUNITIONS_CHECK.clear_offset()
+                    self.device.click(KR_MUNITIONS_CHECK)
+                else:
+                    self.device.click(SHOP_GOTO_MUNITIONS)
                 timeout.reset()
 
         if self.appear(NAV_GENERAL, offset=(5, 5)):
             if self.appear(NO_NAV_EVENT_CHECK, offset=(5, 5)):
                 logger.info("There is no event shop currently. End the task.")
-                self.config.task_delay(server_update=True)
+                self.schedule_next_run()
                 return False
             else:
-                self.ui_click(NAV_EVENT, check_button=NAV_EVENT, appear_button=NAV_GENERAL)
+                NAV_EVENT.clear_offset()
+                self.ui_click(NAV_EVENT, check_button=NAV_EVENT, appear_button=NAV_GENERAL,
+                              offset=(5, 5) if self.config.SERVER == 'kr' else (30, 30))
 
         count, navbar = self.event_shop_tab_count_and_navbar
         logger.info(f"Detected {count} event shop(s). Start processing.")
@@ -289,5 +301,5 @@ class EventShop(EventShopClerk):
             del_cached_property(self, 'is_event_ended')
             del_cached_property(self, 'event_shop_has_urpt')
             del_cached_property(self, 'is_pt_reversed')
-        self.config.task_delay(server_update=True)
+        self.schedule_next_run()
         return True

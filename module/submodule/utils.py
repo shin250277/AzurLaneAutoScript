@@ -20,6 +20,7 @@ def get_available_func():
         'EventStory',
         'IslandProductionPlanner',
         'IslandProductionTrial',
+        'EventShopScan',
         'AzurLaneUncensored',
         'Benchmark',
         'GameManager',

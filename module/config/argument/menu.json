@@ -117,6 +117,7 @@
       "EventStory",
       "IslandProductionPlanner",
       "IslandProductionTrial",
+      "EventShopScan",
       "Benchmark",
       "AzurLaneUncensored",
       "GameManager"

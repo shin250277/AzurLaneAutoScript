@@ -38,6 +38,7 @@
     }
   },
   "Task": {
+    "EventShopScan": {"name": "イベントショップ確認（購入なし）", "help": "ショップを読み取り、購入は行いません。"},
     "IslandProductionTrial": {"name": "KR potato trial (9 seeds)", "help": "Approved one-batch trial. No purchases or exchanges. An attempt receipt prevents retries."},
     "Alas": {
       "name": "Alas設定",

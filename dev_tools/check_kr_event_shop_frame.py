@@ -26,8 +26,8 @@ if __name__ == '__main__':
     parser.add_argument('frame')
     args = parser.parse_args()
     frame, grid = scan_frame(args.frame)
-    # Disable classification side effects (unknown-template writing) here.
-    from module.statistics.item import ItemGrid
-    ItemGrid.predict(grid, frame, price=True)
+    # Use the runtime recognition path, including KR amount and counter OCR,
+    # while keeping this saved-frame diagnostic free of template writes.
+    grid.predict(frame, save_unknown=False)
     for item in grid.items:
         print(item.button, str(item))

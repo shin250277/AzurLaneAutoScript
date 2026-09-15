@@ -5,6 +5,7 @@ from module.base.decorator import cached_property
 from module.base.timer import Timer
 from module.base.utils import color_mask, crop
 from module.combat.assets import GET_SHIP, GET_ITEMS_1, GET_ITEMS_3
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.map_detection.utils import Points
 from module.shop.assets import AMOUNT_PLUS, AMOUNT_MINUS, AMOUNT_MAX, SHOP_BUY_CONFIRM_AMOUNT, SHOP_BUY_CONFIRM, \
@@ -21,6 +22,22 @@ DETECT_AREA = (221, 194, 1049, 632)
 
 class ItemNotFoundError(Exception):
     pass
+
+
+def merge_scan_page(items, previous_last_row, new_items):
+    """Only compare adjacent observed rows, never historical screen coordinates."""
+    if not new_items:
+        raise ValueError('Empty event shop scan page')
+    first_row = [item for item in new_items if item.button[1] == new_items[0].button[1]]
+    last_row = [item for item in new_items if item.button[1] == new_items[-1].button[1]]
+
+    def identity(item):
+        return item.name, item.amount, item.price, item.cost, item.button[0]
+
+    if previous_last_row and [identity(i) for i in previous_last_row] == [identity(i) for i in first_row]:
+        # Use the newer row: a settled screenshot may repair an invalid counter.
+        return items[:-len(previous_last_row)] + new_items, last_row
+    return items + new_items, last_row
 
 
 class EventShopClerk(EventShopUI):
@@ -86,24 +103,16 @@ class EventShopClerk(EventShopUI):
 
     def scan_all(self):
         items = []
+        previous_last_row = []
         self.device.click_record_clear()
 
         logger.hr('Event Shop Scan', level=2)
         EVENT_SHOP_SCROLL.set_top(main=self)
         while 1:
             new_items = self.event_shop_get_items(scroll_pos=EVENT_SHOP_SCROLL.cal_position(main=self))
-            if len(items):
-                old_last_row = [item for item in items if item.button[1] == items[-1].button[1]]
-                new_first_row = [item for item in new_items if item.button[1] == new_items[0].button[1]]
-                new_second_row = [item for item in new_items if item.button[1] != new_items[0].button[1]]
-                if len(old_last_row) == len(new_first_row) and all(
-                        old.name == new.name for old, new in zip(old_last_row, new_first_row)):
-                    logger.info('Ignore duplicated items')
-                    items += new_second_row
-                else:
-                    items += new_items
-            else:
-                items += new_items
+            if not new_items:
+                raise RequestHumanTakeover('Empty event shop scan page; refuse incomplete inventory')
+            items, previous_last_row = merge_scan_page(items, previous_last_row, new_items)
             if EVENT_SHOP_SCROLL.at_bottom(main=self):
                 logger.info('Event shop reach bottom')
                 break

@@ -147,7 +147,7 @@ class EventShopItem(Item):
     def __eq__(self, other):
         return id(self) == id(other)
 
-    def correct_name_and_cost(self):
+    def correct_name_and_cost(self, save_unknown=True):
         if self.price in UR_SHIP_PRICES_IN_URPT and self.total_count == 1:
             self.name = 'ShipUR'
             self.cost = 'URpt'
@@ -172,7 +172,7 @@ class EventShopItem(Item):
                 self.name = 'EquipUR'
             elif self.price == URPT_PRICE_IN_PT and self.total_count == 500:
                 self.name = 'URpt'
-            elif self.name.isdigit():
+            elif self.name.isdigit() and save_unknown:
                 logger.warning(f'Unrecognized item with price {self.price} and total count {self.total_count}, '
                                # f'defaulting to EquipSSR')
                                f'saving image for analysis.')
@@ -225,12 +225,22 @@ class EventShopItemGrid(ItemGrid):
 
     def match_template(self, image, similarity=None):
         best_name, best_score = None, 0.97
+        plate_matches = {}
         for name, template in self.kr_templates.items():
             score = cv2.minMaxLoc(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED))[1]
+            if name.startswith('Plate'):
+                item_name = name.split('__', 1)[0]
+                plate_matches[item_name] = max(score, plate_matches.get(item_name, 0))
             if score > best_score:
                 best_name, best_score = name, score
         if best_name is not None:
-            return best_name
+            return best_name.split('__', 1)[0]
+        # Fractional scroll rasterization can lower the correct plate match to
+        # 0.967. Require both a high score and separation from other plates.
+        plate_scores = sorted(((score, name) for name, score in plate_matches.items()), reverse=True)
+        if len(plate_scores) >= 2 and plate_scores[0][0] >= 0.95 \
+                and plate_scores[0][0] - plate_scores[1][0] >= 0.04:
+            return plate_scores[0][1]
         return super().match_template(image, similarity=similarity)
 
     def predict_tag(self, image):
@@ -239,7 +249,8 @@ class EventShopItemGrid(ItemGrid):
             return 'unobtained'
         return None
 
-    def predict(self, image, name=True, amount=True, cost=False, price=True, tag=True, counter=True, scroll_pos=None):
+    def predict(self, image, name=True, amount=True, cost=False, price=True, tag=True, counter=True, scroll_pos=None,
+                save_unknown=True):
         super().predict(image, name=name, amount=amount, cost=cost, price=price, tag=tag)
         if server.server == 'kr' and amount:
             for item in self.items:
@@ -258,7 +269,7 @@ class EventShopItemGrid(ItemGrid):
                 i.scroll_pos = scroll_pos
 
         for i in self.items:
-            i.correct_name_and_cost()
+            i.correct_name_and_cost(save_unknown=save_unknown)
             i.predict_genre()
 
         return self.items
