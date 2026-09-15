@@ -52,6 +52,68 @@ def run_trial(ui):
     raise RequestHumanTakeover('Potato start outcome uncertain; receipt prevents another click')
 
 
+def collect_trial(ui):
+    """Collect the original completed first field slot, without dispatching."""
+    from module.exception import RequestHumanTakeover
+    from module.logger import logger
+    if not RECEIPT.exists():
+        raise RequestHumanTakeover('Original potato trial receipt is required')
+    ui.ensure_island_production_page()
+    ui.ensure_top_page()
+    grid = ui.slot_grids.get(101)
+    if grid is None or not grid.buttons:
+        raise RequestHumanTakeover('Original first field slot is not visible')
+    slot = grid.buttons[0]
+    ui.device.screenshot()
+    if not ui.is_slot_finished(slot):
+        if ui.is_slot_empty(slot):
+            return audit_trial_stock(ui, slot)
+        raise RequestHumanTakeover('Original slot is not finished or was already collected; no action')
+    ui.device.image_save('./log/kr_potato_trial_collection_before.png')
+    if not ui.claim_slot_reward(slot):
+        raise RequestHumanTakeover('Original slot reward collection was not confirmed')
+    ui.device.screenshot()
+    ui.device.image_save('./log/kr_potato_trial_collection_after.png')
+    if ui.is_slot_finished(slot):
+        raise RequestHumanTakeover('Original slot still has a reward; no dispatch or retry')
+    logger.info('KR potato trial reward collected; no new production, purchase, or exchange')
+    return True
+
+
+def audit_trial_stock(ui, slot):
+    """Read farm stock and potato seed balance from an empty slot, never start."""
+    from module.exception import RequestHumanTakeover
+    from module.island.assets import ISLAND_PRODUCTION_SELECT_CHARACTER
+    from module.island.data import DIC_ISLAND_PRODUCTION_PLACE
+    from module.ui.page import page_island_manage
+    from module.logger import logger
+    if not RECEIPT.exists() or not ui.is_slot_empty(slot):
+        raise RequestHumanTakeover('Stock audit requires the original receipt and an empty first slot')
+    for _ in ui.loop(timeout=15):
+        if ui.is_in_island_dock():
+            break
+        if ui.appear_then_click(ISLAND_PRODUCTION_SELECT_CHARACTER, offset=(60, 20), interval=1):
+            continue
+        if ui.match_template_color(page_island_manage.check_button, interval=1) and not ui.is_enter_window_shown():
+            ui.device.click(slot)
+    if not ui.is_in_island_dock():
+        raise RequestHumanTakeover('Could not open read-only stock selection')
+    ui.island_dock_select_manjuu()
+    ui.island_dock_select_confirm(ui.is_in_recipe_menu)
+    ui.working_slot_id = DIC_ISLAND_PRODUCTION_PLACE[101]['slot'][0]
+    stocks = ui.scan_all_recipe_stocks()
+    logger.attr('KR potato post-collection stocks', stocks)
+    if not ui.set_recipe(101007):
+        raise RequestHumanTakeover('Potato stock selection was not recognized')
+    counters = ui.get_recipe_ingredient_counters()
+    logger.attr('KR potato post-collection seeds', counters)
+    ui.device.image_save('./log/kr_potato_trial_stock_audit.png')
+    # Close the recipe without pressing its production or material buttons.
+    ui.ui_back(check_button=page_island_manage.check_button)
+    logger.info('KR potato stock audit complete; recipe closed without starting work')
+    return True
+
+
 def inspect_trial(ui):
     """Only open the already-used first field slot; never confirm/cancel work."""
     from module.exception import RequestHumanTakeover

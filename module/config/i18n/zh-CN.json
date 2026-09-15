@@ -39,7 +39,7 @@
   },
   "Task": {
     "EventShopScan": {"name": "活动商店识别（不购买）", "help": "仅识别活动商店，禁止购买。"},
-    "IslandProductionTrial": {"name": "KR potato trial (9 seeds)", "help": "Approved one-batch trial. No purchases or exchanges. An attempt receipt prevents retries."},
+    "IslandProductionTrial": {"name": "KR potato trial (9 seeds)", "help": "Approved one-batch trial. No purchases or exchanges. With an attempt receipt, only collect the first finished slot or inspect stock from an empty slot; never start another batch."},
     "Alas": {
       "name": "Alas设置",
       "help": ""
