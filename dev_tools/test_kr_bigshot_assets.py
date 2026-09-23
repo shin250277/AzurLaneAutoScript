@@ -45,10 +45,11 @@ server.server = 'kr'
 from module.ui.page import page_raid
 from module.ui.assets import RAID_CHECK_20260827
 from module.raid.raid import raid_entrance
+from module.raid.assets import RAID_FLEET_PREPARATION
 from module.raid.kr_fleet import BIGSHOT_FLEET_HEADER, BIGSHOT_FLEET_CLOSE
 buttons = [RAID_CHECK_20260827] + [raid_entrance('raid_20260827', mode)
                                   for mode in ('easy', 'normal', 'hard')]
-buttons.extend([BIGSHOT_FLEET_HEADER, BIGSHOT_FLEET_CLOSE])
+buttons.extend([BIGSHOT_FLEET_HEADER, BIGSHOT_FLEET_CLOSE, RAID_FLEET_PREPARATION])
 for button in buttons:
     assert '/kr/' in button.file.replace('\\\\', '/'), button.file
     frame = np.array(Image.open(button.file).convert('RGB'))

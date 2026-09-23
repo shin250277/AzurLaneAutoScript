@@ -16,10 +16,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('frame', type=Path)
     parser.add_argument('--fleet-modal', action='store_true')
+    parser.add_argument('--fleet-shortcut', action='store_true')
     args = parser.parse_args()
     areas = ({'raid/BIGSHOT_FLEET_HEADER': (126, 76, 255, 109),
               'raid/BIGSHOT_FLEET_CLOSE': (1145, 74, 1178, 108)}
              if args.fleet_modal else AREAS)
+    if args.fleet_shortcut:
+        areas = {'raid/RAID_FLEET_PREPARATION': (983, 579, 1180, 635)}
     targets = [(Path('assets/kr/' + name + '.png'), area) for name, area in areas.items()]
     if any(path.exists() for path, _ in targets):
         raise SystemExit('Asset exists; inspect before replacing')
