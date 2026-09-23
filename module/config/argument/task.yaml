@@ -367,6 +367,8 @@ Tool:
       - IslandProductionPlanner
     IslandProductionTrial: []
     EventShopScan: []
+    RaidInspect: []
+    RaidTrial: []
     Benchmark:
       - Benchmark
     AzurLaneUncensored:

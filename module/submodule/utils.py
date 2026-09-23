@@ -21,6 +21,8 @@ def get_available_func():
         'IslandProductionPlanner',
         'IslandProductionTrial',
         'EventShopScan',
+        'RaidInspect',
+        'RaidTrial',
         'AzurLaneUncensored',
         'Benchmark',
         'GameManager',

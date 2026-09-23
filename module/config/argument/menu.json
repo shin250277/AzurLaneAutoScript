@@ -118,6 +118,8 @@
       "IslandProductionPlanner",
       "IslandProductionTrial",
       "EventShopScan",
+      "RaidInspect",
+      "RaidTrial",
       "Benchmark",
       "AzurLaneUncensored",
       "GameManager"

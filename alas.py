@@ -379,6 +379,34 @@ class AzurLaneAutoScript:
         from module.raid.run import RaidRun
         RaidRun(config=self.config, device=self.device).run()
 
+    def raid_inspect(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.raid.run import RaidRun
+        from module.ui.page import page_raid
+        ui = RaidRun(config=self.config, device=self.device, task='Raid')
+        if ui.config.SERVER != 'kr':
+            raise RequestHumanTakeover('KR event inspection only')
+        ui.device.screenshot()
+        ui.ui_ensure(page_raid)
+        ui.device.screenshot()
+        ui.device.image_save('./log/kr_raid_inspect.png')
+        logger.info('Raid inspection complete; no battle or purchases')
+
+    def raid_trial(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.raid.run import RaidRun
+        ui = RaidRun(config=self.config, device=self.device, task='Raid')
+        if ui.config.SERVER != 'kr' or ui.config.Raid_Mode not in ('easy', 'normal', 'hard'):
+            raise RequestHumanTakeover('Only configured KR non-EX difficulty may run')
+        ui.config.override(Raid_UseTicket=False, StopCondition_RunCount=1,
+                           StopCondition_OilLimit=20000, TaskBalancer_Enable=False,
+                           Retirement_RetireMode='old_retire', OldRetire_N=False,
+                           OldRetire_R=False, OldRetire_SR=False, OldRetire_SSR=False)
+        ui.device.screenshot()
+        ui.run(total=1)
+
     def hospital(self):
         from module.event_hospital.hospital import Hospital
         Hospital(config=self.config, device=self.device).run()
