@@ -80,3 +80,25 @@ The above run verified non-EX entry, combat, result handling and return.
 
 The EX fixes were revalidated from the blocked result screens, not by repeating
 an entire battle after the patch. No premium currency was used.
+
+## Approved real EX run — 22:06–22:08 KST
+
+The user subsequently approved consuming one special ticket. A temporary,
+single-run EX override was launched via the Alas.exe RaidTrial GUI. The original
+non-EX trial guard and 20,000 oil floor were restored after the worker loaded.
+No persistent EX mode change or general scheduler start was made.
+
+- 22:07:00–01: ticket OCR confirmed 5 twice.
+- 22:07:01–04: normal EX entrance, fleet shortcut and battle preparation.
+- 22:07:11: battle started; no practice button used.
+- 22:08:34: KR_RAID_EX_RESULT recognized automatically.
+- 22:08:37: GET_ITEMS_1 reward popup processed.
+- 22:08:41: KR_RAID_EX_CONFIRM recognized automatically.
+- 22:08:43: Combat end / RAID END / Finish; exactly one battle.
+- Final live screen: special tickets 4, PT 10,437 (increase 284), all non-EX
+  counters still 14/15. No premium purchase, retirement or second sortie.
+
+This supersedes the earlier approval-pending status and supplies an uninterrupted
+real-EX end-to-end pass with both result-screen fixes in place. It verifies
+execution/reward/return behavior, not maximum damage or a boss-kill guarantee.
+The 10 focused raid regression tests passed after restoring the trial code.
