@@ -368,6 +368,7 @@ Tool:
     IslandProductionTrial: []
     EventShopScan: []
     RaidInspect: []
+    RaidRewardClaim: []
     RaidTrial: []
     Benchmark:
       - Benchmark

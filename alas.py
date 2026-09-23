@@ -393,6 +393,14 @@ class AzurLaneAutoScript:
         ui.device.image_save('./log/kr_raid_inspect.png')
         logger.info('Raid inspection complete; no battle or purchases')
 
+    def raid_reward_claim(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.raid.run import RaidRun
+        from module.raid.kr_rewards import claim_visible_rewards
+        ui = RaidRun(config=self.config, device=self.device, task='Raid')
+        claim_visible_rewards(ui)
+
     def raid_trial(self):
         from module.config.server import set_server
         set_server(self.config.Emulator_PackageName)

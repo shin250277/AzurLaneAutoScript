@@ -1,5 +1,6 @@
 from module.combat.combat import Combat
 from module.guild.assets import BATTLE_STATUS_CF, EXP_INFO_CF
+from module.raid.kr_fleet import KR_RAID_EX_RESULT, KR_RAID_EX_EXP, KR_RAID_EX_CONFIRM
 
 
 class RaidCombat(Combat):
@@ -13,6 +14,9 @@ class RaidCombat(Combat):
         """
         if self.is_combat_executing():
             return False
+        if self.config.SERVER == 'kr' and self.appear_then_click(
+                KR_RAID_EX_RESULT, offset=(5, 5), interval=2):
+            return True
         if super().handle_battle_status(drop=drop):
             return True
         if self.appear(BATTLE_STATUS_CF, interval=self.battle_status_click_interval):
@@ -46,6 +50,9 @@ class RaidCombat(Combat):
         """
         if self.is_combat_executing():
             return False
+        if self.config.SERVER == 'kr' and self.appear(KR_RAID_EX_EXP, offset=(5, 5)):
+            if self.appear_then_click(KR_RAID_EX_CONFIRM, offset=(5, 5), interval=2):
+                return True
         if super().handle_exp_info():
             return True
         if self.appear_then_click(EXP_INFO_CF):

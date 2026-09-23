@@ -17,12 +17,23 @@ def main():
     parser.add_argument('frame', type=Path)
     parser.add_argument('--fleet-modal', action='store_true')
     parser.add_argument('--fleet-shortcut', action='store_true')
+    parser.add_argument('--rewards', action='store_true')
+    parser.add_argument('--ex-result', action='store_true')
+    parser.add_argument('--ex-exp', action='store_true')
     args = parser.parse_args()
     areas = ({'raid/BIGSHOT_FLEET_HEADER': (126, 76, 255, 109),
               'raid/BIGSHOT_FLEET_CLOSE': (1145, 74, 1178, 108)}
              if args.fleet_modal else AREAS)
     if args.fleet_shortcut:
         areas = {'raid/RAID_FLEET_PREPARATION': (983, 579, 1180, 635)}
+    if args.rewards:
+        areas = {'raid/BIGSHOT_REWARDS_HEADER': (390, 135, 515, 166),
+                 'raid/BIGSHOT_REWARDS_CLAIM': (794, 576, 852, 603)}
+    if args.ex_result:
+        areas = {'raid/KR_RAID_EX_RESULT': (132, 197, 497, 286)}
+    if args.ex_exp:
+        areas = {'raid/KR_RAID_EX_EXP': (62, 64, 282, 121),
+                 'raid/KR_RAID_EX_CONFIRM': (1147, 649, 1208, 680)}
     targets = [(Path('assets/kr/' + name + '.png'), area) for name, area in areas.items()]
     if any(path.exists() for path, _ in targets):
         raise SystemExit('Asset exists; inspect before replacing')

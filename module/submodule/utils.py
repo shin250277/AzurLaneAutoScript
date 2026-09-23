@@ -22,6 +22,7 @@ def get_available_func():
         'IslandProductionTrial',
         'EventShopScan',
         'RaidInspect',
+        'RaidRewardClaim',
         'RaidTrial',
         'AzurLaneUncensored',
         'Benchmark',
