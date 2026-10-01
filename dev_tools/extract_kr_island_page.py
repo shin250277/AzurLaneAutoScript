@@ -7,16 +7,21 @@ from PIL import Image
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('frame', type=Path)
-    parser.add_argument('--page', choices=('order', 'season', 'tasks', 'task', 'obtained'), required=True)
+    parser.add_argument('--page', choices=('order', 'season', 'tasks', 'task', 'obtained', 'item'), required=True)
     parser.add_argument('--task-id', type=int)
+    parser.add_argument('--item-id', type=int)
     parser.add_argument('--area', type=int, nargs=4)
     args = parser.parse_args()
-    if args.page in ('task', 'obtained'):
+    if args.page in ('task', 'obtained', 'item'):
         if args.page == 'task' and (not args.task_id or not args.area):
             parser.error('task extraction requires --task-id and --area')
         target = (Path('assets/kr/island_task_name/%s.png' % args.task_id)
                   if args.page == 'task' else
                   Path('assets/kr/island/TEMPLATE_ISLAND_SEASON_TASK_OBTAINED.png'))
+        if args.page == 'item':
+            if not args.item_id or not args.area:
+                parser.error('item extraction requires --item-id and --area')
+            target = Path('assets/kr/island_item_name/%s_order.png' % args.item_id)
         if target.exists():
             raise SystemExit('Refusing to replace a verified asset')
         area = tuple(args.area) if args.area else (708, 320, 779, 346)

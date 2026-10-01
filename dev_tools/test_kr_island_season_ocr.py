@@ -34,7 +34,7 @@ set_server('kr')
 from module.island.season_task import IslandSeasonTask
 from module.base.utils import load_image
 from module.island.data import DIC_ISLAND_TASK
-ids = [80001401, 80001402, 80001405, 80001406, 80001407, 80001408, 80001409, 80001410, 80001412]
+ids = [80001401, 80001402, 80001405, 80001406, 80001407, 80001408, 80001409, 80001410, 80001412, 80001414, 80001415, 80001420]
 frames = [load_image('assets/kr/island_task_name/%s.png' % code) for code in ids]
 ocr = IslandSeasonTask.task_name_ocr.fget(None)
 with patch('module.ocr.windows_ocr.WindowsKoreanOcr.atomic_ocr_for_single_lines',

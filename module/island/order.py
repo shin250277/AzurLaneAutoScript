@@ -116,6 +116,10 @@ class IslandOrder(IslandUI):
 
     @cached_property
     def requirement_name_ocr(self):
+        if server.server == 'kr':
+            from module.island.korean_order_ocr import KoreanOrderNameOcr
+            return KoreanOrderNameOcr(self.requirement_name_grid.buttons, lang='ko',
+                                      name='REQUIREMENTS_NAME_OCR_KR')
         if server.server == 'jp':
             lang = 'jp'
         elif server.server == 'tw':
@@ -132,6 +136,15 @@ class IslandOrder(IslandUI):
                                           name='REQUIREMENTS_COUNTER_OCR')
 
     def item_name_to_item_id(self, name):
+        if server.server == 'kr':
+            if not isinstance(name, str):
+                return None
+            normalized = ''.join(name.split())
+            if not normalized:
+                return None
+            matches = [item for item, data in DIC_ISLAND_ITEM.items()
+                       if ''.join(data['name'].get('kr', '').split()) == normalized]
+            return matches[0] if len(matches) == 1 else None
         if name == '':
             return None
         if server.server == 'jp':

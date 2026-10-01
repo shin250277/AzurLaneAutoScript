@@ -8,6 +8,26 @@ from pathlib import Path
 
 
 class IslandInspectionTest(unittest.TestCase):
+    def test_order_inspection_only_selects_left_side_orders(self):
+        code = '''
+from unittest.mock import Mock
+from module.island.inspect import IslandInspect
+ui = Mock()
+ui.regular_orders = [Mock(button=(10, 200, 100, 300)), Mock(button=(900, 600, 1200, 680))]
+ui.urgent_orders = []
+ui.season_orders = []
+IslandInspect.inspect_order_pages(ui)
+assert ui.click_order.call_count == 1
+assert ui.scan_current_order_requirements.call_count == 1
+ui.submit_order.assert_not_called()
+ui.reject_order.assert_not_called()
+ui.run_any_order.assert_not_called()
+ui.config.cross_set.assert_not_called()
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', code], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout.decode('utf-8', errors='replace'))
+
     def test_task_inspection_is_bounded_and_never_changes_targets(self):
         code = '''
 from unittest.mock import Mock, patch

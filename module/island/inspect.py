@@ -5,9 +5,27 @@ from module.ui.page import page_island_order, page_island_season
 from module.island.season_task import (IslandSeasonTask, ISLAND_SEASON_TASK_SCROLL,
                                       TEMPLATE_ISLAND_SEASON_TASK_OBTAINED)
 from module.base.decorator import del_cached_property
+from module.island.order import IslandOrder
 
 
-class IslandInspect(IslandSeasonTask):
+class IslandInspect(IslandSeasonTask, IslandOrder):
+    def inspect_order_pages(self):
+        self.detect_all_orders()
+        orders = ([(button, False) for button in self.regular_orders]
+                  + [(button, True) for button in self.urgent_orders]
+                  + [(button, False) for button in self.season_orders])
+        for index, (button, urgent) in enumerate(orders[:15]):
+            x1, y1, x2, y2 = button.button
+            # Only select map portraits, never the right-hand submit/reject panel.
+            if not (0 <= x1 < x2 < 800 and 150 <= y1 < y2 <= 650):
+                logger.warning('Order inspection ignored out-of-map detection')
+                continue
+            self.click_order(button, is_urgent=urgent)
+            self.device.screenshot()
+            self.device.image_save('./log/kr_island_inspect_order_%02d.png' % index)
+            logger.attr('Inspected order requirements', self.scan_current_order_requirements())
+        logger.info('Order requirements inspected; no submission or rejection')
+
     def inspect_task_pages(self):
         """Bounded read-only scan; never return production targets to a caller."""
         ISLAND_SEASON_TASK_SCROLL.set_top(main=self, skip_first_screenshot=False)
@@ -39,6 +57,8 @@ class IslandInspect(IslandSeasonTask):
             self.device.screenshot()
             self.device.image_save('./log/kr_island_inspect_%s.png' % name)
             logger.info(f'Island {name} page inspected; no submission or target changes')
+            if name == 'order':
+                self.inspect_order_pages()
         if not self.island_season_bottom_navbar_ensure(left=3):
             raise RequestHumanTakeover('Unable to inspect season task tab')
         self.device.screenshot()
