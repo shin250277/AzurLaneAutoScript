@@ -96,6 +96,12 @@ class CounterOcr(Ocr):
 class PriceOcr(Digit):
     def pre_process(self, image):
         mask = color_similarity_2d(image, PRICE_BACKGROUND_COLOR)
+        if server.server == 'kr':
+            # A shifted row can include the price pill's outer edge. Locate
+            # the currency icon through its middle, not that edge, before
+            # stripping it (the October icon otherwise reads as a leading 4).
+            height = mask.shape[0]
+            mask = mask[height // 3:height * 2 // 3]
         brightness = np.min(mask, axis=0)
         match = np.where(brightness < PRICE_THRESHOLD)[0]
         if len(match):
