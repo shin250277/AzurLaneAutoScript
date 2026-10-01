@@ -5,7 +5,7 @@ import argparse
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument('frame', type=int)
-parser.add_argument('label', choices=('design_raster', 'design_counter', 'plate_raster', 'blueprint_amount'))
+parser.add_argument('label', choices=('design_raster', 'design_counter', 'plate_raster', 'blueprint_amount', 'general_label', 'blueprint_unknown'))
 args = parser.parse_args()
 for number, label in ((args.frame, args.label),):
     target = Path('dev_tools/fixtures/kr_event_shop_%s.png' % label)

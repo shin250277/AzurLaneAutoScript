@@ -226,7 +226,10 @@ class EventShopItemGrid(ItemGrid):
         self.counter_area = counter_area
         self.price_ocr = PRICE_OCR
         self.kr_templates = {}
+        self.kr_names = None
         if server.server == 'kr':
+            from module.shop_event.korean_names import KoreanShopNames
+            self.kr_names = KoreanShopNames()
             for path in Path('./assets/shop/event_kr').glob('*.png'):
                 # Omit the numeric amount and border; compare the actual icon.
                 self.kr_templates[path.stem] = load_image(str(path))[:45, :63]
@@ -277,10 +280,12 @@ class EventShopItemGrid(ItemGrid):
         super().predict(image, name=name, amount=amount, cost=cost, price=price, tag=tag)
         if server.server == 'kr' and amount:
             for item in self.items:
-                if item.name in ('SkinBox', 'AugmentChangeT2') or re.fullmatch(r'(PR|DR)S[0-9]+', item.name):
+                blueprint = bool(re.fullmatch(r'(PR|DR)S[0-9]+', item.name)) or item.name in (
+                    'PRSeriesUnknown', 'DRSeriesUnknown')
+                if item.name in ('SkinBox', 'AugmentChangeT2') or blueprint:
                     # White icon decorations can resemble an extra digit.
                     # Keep the wide crop for four-digit oil/coin amounts.
-                    left = 48 if re.fullmatch(r'(PR|DR)S[0-9]+', item.name) else 40
+                    left = 48 if blueprint else 40
                     item.amount = self.amount_ocr.ocr([item.crop((left, 50, 63, 63))], direct_ocr=True)[0]
         if counter and len(self.items):
             counter_list = [item.crop(self.counter_area) for item in self.items]
@@ -294,6 +299,14 @@ class EventShopItemGrid(ItemGrid):
 
         for i in self.items:
             i.correct_name_and_cost(save_unknown=save_unknown)
+            if self.kr_names is not None:
+                name_from_label = self.kr_names.match(i.crop((-44, 72, 108, 100)))
+                if name_from_label is not None:
+                    i.name = name_from_label
+                elif i.name.startswith('Plate'):
+                    # Similar purple icons are not sufficient to choose a type.
+                    # Unreadable labels remain outside purchase filters.
+                    i.name = 'PlateUnknown'
             if server.server == 'kr' and re.fullmatch(r'(PR|DR)S[0-9]+', i.name):
                 # The generic ALL icon is reused across series. An icon alone
                 # cannot prove the printed series; keep it out of buy filters.

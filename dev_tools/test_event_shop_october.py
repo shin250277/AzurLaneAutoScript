@@ -42,6 +42,10 @@ grid.predict(frame, save_unknown=False)
 for item, expected in zip(grid.items[6:8], ('PRSeriesUnknown', 'DRSeriesUnknown')):
     assert item.name == expected, str(item)
     assert not FILTER_REGEX.fullmatch(item.name.lower())
+frame, grid = scan_frame('dev_tools/fixtures/kr_event_shop_blueprint_unknown.png')
+grid.predict(frame, save_unknown=False)
+assert grid.items[1].name == 'PRSeriesUnknown', str(grid.items[1])
+assert grid.items[2].name == 'DRSeriesUnknown', str(grid.items[2])
 '''
         result = subprocess.run([sys.executable, '-B', '-c', code], stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT, timeout=30)
