@@ -27,6 +27,22 @@ def method(path, name):
 
 
 class OsLockedZoneTest(unittest.TestCase):
+    def test_explore_verified_lock_is_delayed_not_restarted(self):
+        campaign = Mock()
+        campaign.os_explore.side_effect = LockedError('zone 44 locked')
+        ui = SimpleNamespace(config=Mock(), load_campaign=Mock(return_value=campaign))
+        method('module/campaign/os_run.py', 'opsi_explore')(ui)
+        ui.config.task_delay.assert_called_once_with(minute=30)
+        ui.config.opsi_task_delay.assert_not_called()
+
+    def test_explore_preserves_verified_lock_after_one_ny_retry(self):
+        ui = SimpleNamespace(config=Mock(), _os_explore=Mock(side_effect=LockedError('locked')),
+                             globe_goto=Mock())
+        with self.assertRaises(LockedError):
+            method('module/os/tasks/explore.py', 'os_explore')(ui)
+        self.assertEqual(ui._os_explore.call_count, 2)
+        ui.globe_goto.assert_called_once_with(0)
+
     def test_monthly_only_mission_exits_without_entering_boss(self):
         ui = SimpleNamespace(
             os_mission_enter=Mock(), appear=Mock(return_value=True),

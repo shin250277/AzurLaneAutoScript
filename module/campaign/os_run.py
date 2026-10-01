@@ -20,6 +20,11 @@ class OSCampaignRun(OSMapOperation):
             campaign.os_explore()
         except ActionPointLimit:
             self.config.opsi_task_delay(ap_limit=True)
+        except OSZoneLockedError as error:
+            logger.warning(f'OpsiExplore deferred without restarting the game: {error}')
+            # Explore's configured failure interval can be zero. Avoid a hot
+            # retry loop while leaving the uncompleted task scheduled.
+            self.config.task_delay(minute=30)
 
     def opsi_shop(self):
         try:

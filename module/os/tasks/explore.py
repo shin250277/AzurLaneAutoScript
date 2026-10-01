@@ -4,7 +4,7 @@ from module.config.utils import get_os_next_reset, DEFAULT_TIME, get_os_reset_re
 from module.exception import GameStuckError, ScriptError
 from module.logger import logger
 from module.map.map_grids import SelectedGrids
-from module.os.globe_operation import OSExploreError
+from module.os.globe_operation import OSExploreError, OSZoneLockedError
 from module.os.map import OSMap
 
 
@@ -104,9 +104,17 @@ class OpsiExplore(OSMap):
                 end()
 
     def os_explore(self):
-        for _ in range(2):
+        for attempt in range(2):
             try:
                 self._os_explore()
+            except OSZoneLockedError:
+                # Retry from NY once, but a confirmed lock is not a stuck app.
+                # Preserve the specific exception for the scheduler to defer.
+                if attempt == 1:
+                    raise
+                logger.info('Zone locked; retry once from NY')
+                self.config.OpsiExplore_LastZone = 0
+                self.globe_goto(0)
             except OSExploreError:
                 logger.info('Go back to NY, explore again')
                 self.config.OpsiExplore_LastZone = 0
