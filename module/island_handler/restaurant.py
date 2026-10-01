@@ -162,7 +162,7 @@ class IslandRestaurant(IslandDock):
 
     def receive_revenue(self):
         confirm_timer = Timer(1, count=3)
-        for _ in self.loop():
+        for _ in self.loop(timeout=15 if self.config.SERVER == 'kr' else None):
             if self.appear_then_click(ISLAND_RESTAURANT_RECEIVE, offset=self._restaurant_offset, interval=2):
                 confirm_timer.reset()
                 continue
@@ -178,6 +178,10 @@ class IslandRestaurant(IslandDock):
                     or self.restaurant_resting()):
                 if confirm_timer.reached():
                     return True
+        if self.config.SERVER == 'kr':
+            from module.exception import RequestHumanTakeover
+            self.device.image_save('./log/kr_restaurant_revenue_unknown.png')
+            raise RequestHumanTakeover('KR restaurant revenue/ready state not identified; no staff or start actions')
 
     @cached_property
     def restaurant_grid(self):
@@ -449,13 +453,17 @@ class IslandRestaurant(IslandDock):
         return not plan
 
     def restaurant_start(self):
-        for _ in self.loop():
+        for _ in self.loop(timeout=15 if self.config.SERVER == 'kr' else None):
             if self.handle_island_additional():
                 continue
             if self.appear_then_click(ISLAND_RESTAURANT_START, offset=self._restaurant_offset, interval=2):
                 continue
             if self.restaurant_running():
                 return True
+        if self.config.SERVER == 'kr':
+            from module.exception import RequestHumanTakeover
+            self.device.image_save('./log/kr_restaurant_start_unknown.png')
+            raise RequestHumanTakeover('KR restaurant start outcome not identified; inspect before retry')
 
     def is_korean_menu_empty(self):
         from module.base.template import Template

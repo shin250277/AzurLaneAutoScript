@@ -132,11 +132,21 @@ class IslandBusiness(IslandRestaurant):
             logger.info("No more restaurants")
 
     def run(self):
+        if self.config.SERVER == 'kr' and self.appear(ISLAND_BUSINESS_EVENT_POPUP_CANCEL, offset=(20, 20)):
+            self.handle_restaurant_popup()
         if self.config.SERVER == 'kr' and self.is_in_island_restaurant():
             self.ui_back(page_island_manage.check_button)
         self.ui_ensure(page_island_manage)
-        self.island_manage_side_navbar_ensure(upper=2)
-        self.handle_restaurant_popup()
+        ready = self.island_manage_side_navbar_ensure(upper=2)
+        cleared = self.handle_restaurant_popup()
+        if self.config.SERVER == 'kr':
+            if not cleared:
+                raise RequestHumanTakeover('KR restaurant notice did not close; no list scanning')
+            if not ready:
+                if not self.island_manage_side_navbar_ensure(upper=2, skip_first_screenshot=False):
+                    raise RequestHumanTakeover('KR restaurant tab not confirmed after notice')
+                if not self.handle_restaurant_popup():
+                    raise RequestHumanTakeover('KR restaurant notice remains after tab selection')
         self.restaurant_swipe_to_top()
         unchecked_restaurants = list(RESTAURANT_IDS)
         next_run_time = {
