@@ -25,7 +25,7 @@ ui.device.click.assert_not_called()
 ui.appear_then_click.assert_not_called()
 ui.handle_popup_confirm.assert_not_called()
 '''
-        result = subprocess.run([sys.executable, '-B', '-c', code],
+        result = subprocess.run([sys.executable, '-B', '-c', code], timeout=30,
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         self.assertEqual(result.returncode, 0, result.stdout.decode('utf-8', errors='replace'))
 
