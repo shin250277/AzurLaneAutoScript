@@ -165,7 +165,9 @@ class EventShopItem(Item):
         else:
             self.cost = 'pt'
             if self.price == 2000:
-                if self.total_count == 10:
+                if self.total_count == 10 or (self.total_count == 0 and self.name == 'SkinBox'):
+                    # Invalid OCR must not turn a recognized box into equipment.
+                    # Keep count=0 so it remains unavailable for purchase.
                     self.name = 'SkinBox'
                 elif self.total_count == 4:
                     self.name = 'Meta'
@@ -232,13 +234,28 @@ class EventShopItemGrid(ItemGrid):
     def match_template(self, image, similarity=None):
         best_name, best_score = None, 0.97
         plate_matches = {}
+        inset_matches = {}
         for name, template in self.kr_templates.items():
+            item_name = name.split('__', 1)[0]
+            inset_score = cv2.minMaxLoc(cv2.matchTemplate(
+                image, template[4:41, 4:59], cv2.TM_CCOEFF_NORMED))[1]
+            inset_matches[item_name] = max(inset_score, inset_matches.get(item_name, 0))
             score = cv2.minMaxLoc(cv2.matchTemplate(image, template, cv2.TM_CCOEFF_NORMED))[1]
             if name.startswith('Plate'):
                 item_name = name.split('__', 1)[0]
                 plate_matches[item_name] = max(score, plate_matches.get(item_name, 0))
             if score > best_score:
                 best_name, best_score = name, score
+        # Fractional scrolling changes borders and rasterization. Require a
+        # distinct icon match, not price/position, before overriding fallback.
+        ranked = sorted(((v, k) for k, v in inset_matches.items()), reverse=True)
+        if len(ranked) >= 2:
+            score, candidate = ranked[0]
+            margin = score - ranked[1][0]
+            if candidate.startswith('Design') and score >= 0.90 and margin >= 0.15:
+                return candidate
+            if candidate.startswith('Plate') and score >= 0.93 and margin >= 0.04:
+                return candidate
         if best_name is not None:
             return best_name.split('__', 1)[0]
         # Fractional scroll rasterization can lower the correct plate match to
@@ -260,10 +277,11 @@ class EventShopItemGrid(ItemGrid):
         super().predict(image, name=name, amount=amount, cost=cost, price=price, tag=tag)
         if server.server == 'kr' and amount:
             for item in self.items:
-                if item.name == 'SkinBox':
-                    # This icon's white decoration resembles an extra 1.
+                if item.name in ('SkinBox', 'AugmentChangeT2') or re.fullmatch(r'(PR|DR)S[0-9]+', item.name):
+                    # White icon decorations can resemble an extra digit.
                     # Keep the wide crop for four-digit oil/coin amounts.
-                    item.amount = self.amount_ocr.ocr([item.crop((40, 50, 63, 63))], direct_ocr=True)[0]
+                    left = 48 if re.fullmatch(r'(PR|DR)S[0-9]+', item.name) else 40
+                    item.amount = self.amount_ocr.ocr([item.crop((left, 50, 63, 63))], direct_ocr=True)[0]
         if counter and len(self.items):
             counter_list = [item.crop(self.counter_area) for item in self.items]
             counter_list = self.counter_ocr.ocr(counter_list, direct_ocr=True)
@@ -276,6 +294,10 @@ class EventShopItemGrid(ItemGrid):
 
         for i in self.items:
             i.correct_name_and_cost(save_unknown=save_unknown)
+            if server.server == 'kr' and re.fullmatch(r'(PR|DR)S[0-9]+', i.name):
+                # The generic ALL icon is reused across series. An icon alone
+                # cannot prove the printed series; keep it out of buy filters.
+                i.name = i.name[:2] + 'SeriesUnknown'
             i.predict_genre()
 
         return self.items

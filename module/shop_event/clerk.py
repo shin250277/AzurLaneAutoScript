@@ -34,7 +34,21 @@ def merge_scan_page(items, previous_last_row, new_items):
     def identity(item):
         return item.name, item.amount, item.price, item.cost, item.button[0]
 
-    if previous_last_row and [identity(i) for i in previous_last_row] == [identity(i) for i in first_row]:
+    def same_visible_item(old, new):
+        if identity(old) == identity(new):
+            return True
+        # Names can disagree after fractional-scroll rasterization. Compare
+        # the adjacent actual icon as well; never merge by price alone.
+        if identity(old)[1:] != identity(new)[1:]:
+            return False
+        if not hasattr(old, 'image') or not hasattr(new, 'image'):
+            return False
+        score = cv2.minMaxLoc(cv2.matchTemplate(
+            old.image, new.image[4:41, 4:59], cv2.TM_CCOEFF_NORMED))[1]
+        return score >= 0.93
+
+    if previous_last_row and len(previous_last_row) == len(first_row) and all(
+            same_visible_item(old, new) for old, new in zip(previous_last_row, first_row)):
         # Use the newer row: a settled screenshot may repair an invalid counter.
         return items[:-len(previous_last_row)] + new_items, last_row
     return items + new_items, last_row
@@ -108,7 +122,9 @@ class EventShopClerk(EventShopUI):
 
         logger.hr('Event Shop Scan', level=2)
         EVENT_SHOP_SCROLL.set_top(main=self)
-        while 1:
+        # KR's clipped bottom row needs more overlap to avoid skipping products.
+        stride = 0.4 if self.config.SERVER == 'kr' else 0.66
+        for _ in range(40):
             new_items = self.event_shop_get_items(scroll_pos=EVENT_SHOP_SCROLL.cal_position(main=self))
             if not new_items:
                 raise RequestHumanTakeover('Empty event shop scan page; refuse incomplete inventory')
@@ -117,8 +133,10 @@ class EventShopClerk(EventShopUI):
                 logger.info('Event shop reach bottom')
                 break
             else:
-                EVENT_SHOP_SCROLL.next_page(main=self, page=0.66)
+                EVENT_SHOP_SCROLL.next_page(main=self, page=stride)
                 continue
+        else:
+            raise RequestHumanTakeover('Event shop scan did not reach bottom; refuse incomplete inventory')
         return items
 
     def event_shop_buy_item(self, item_to_buy, amount=None):
