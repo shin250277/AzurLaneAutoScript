@@ -107,6 +107,11 @@ KR_DOCK_CHECK = Button(
     name='KR_DOCK_CHECK',
 )
 
+KR_DOCK_FULL_CLOSE = Button(
+    area=(354, 308, 927, 378), color=(119, 130, 140),
+    button=(865, 177, 925, 215),
+    file='./assets/kr/ui/KR_DOCK_FULL_CLOSE.png', name='KR_DOCK_FULL_CLOSE')
+
 KR_STORAGE_CHECK = Button(
     area=(120, 13, 176, 41),
     color=(112, 124, 162),
@@ -526,6 +531,15 @@ class UI(InfoHandler):
             return True
         return False
 
+    def ui_close_kr_dock_full(self):
+        # Startup/page recovery only. Keep combat/gacha retirement guards intact.
+        if server.server == 'kr' and self.appear(
+                KR_DOCK_FULL_CLOSE, offset=(5, 5), similarity=0.9, interval=3):
+            logger.info('Dismiss dock-full warning without retirement or expansion')
+            self.device.click(KR_DOCK_FULL_CLOSE)
+            return True
+        return False
+
     def ui_get_current_page(self, skip_first_screenshot=True):
         """
         Args:
@@ -562,6 +576,8 @@ class UI(InfoHandler):
                 break
 
             # Known pages
+            if self.ui_close_kr_dock_full():
+                continue
             if self._handle_kr_island_character_back():
                 continue
             if self._handle_kr_raid_fleet_back():
