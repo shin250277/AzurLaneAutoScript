@@ -11,6 +11,13 @@ from module.logger import logger
 from module.os_handler.assets import CLICK_SAFE_AREA as OS_CLICK_SAFE_AREA
 from module.ui_white.assets import POPUP_CANCEL_WHITE, POPUP_CONFIRM_WHITE, POPUP_SINGLE_WHITE
 
+KR_GUILD_NOTICE_CLOSE = Button(
+    area=(470, 340, 621, 363), color=(0, 0, 0),
+    button=(440, 452, 607, 482),
+    file='./assets/kr/handler/KR_GUILD_NOTICE_CLOSE.png',
+    name='KR_GUILD_NOTICE_CLOSE',
+)
+
 KR_HANDOVER_TUTORIAL = Button(
     area=(490, 317, 791, 400), color=(110, 148, 201),
     button=(600, 330, 690, 380),
@@ -356,6 +363,11 @@ class InfoHandler(ModuleBase):
         return False
 
     def handle_guild_popup_cancel(self):
+        # Match the completion notice, never a generic purchase confirmation.
+        # The left button closes it; the right button navigates to the guild.
+        if self.config.SERVER == 'kr' and self.appear(KR_GUILD_NOTICE_CLOSE, offset=(10, 10), interval=2):
+            self.device.click(KR_GUILD_NOTICE_CLOSE)
+            return True
         if self.appear(GUILD_POPUP_CONFIRM, offset=self._popup_offset) \
                 and self.appear(GUILD_POPUP_CANCEL, offset=self._popup_offset, interval=2):
             self.device.click(GUILD_POPUP_CANCEL)

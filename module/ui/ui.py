@@ -883,10 +883,8 @@ class UI(InfoHandler):
             logger.info(f'UI additional: {SHIPYARD_CHECK} -> {GOTO_MAIN}')
             if self.appear_then_click(GOTO_MAIN, offset=(30, 30)):
                 return True
-        if self.appear(META_CHECK, offset=(30, 30), interval=5):
-            logger.info(f'UI additional: {META_CHECK} -> {GOTO_MAIN}')
-            if self.appear_then_click(GOTO_MAIN, offset=(30, 30)):
-                return True
+        if self.ui_handle_meta_return():
+            return True
         # Mistaken click
         if self.appear(PLAYER_CHECK, offset=(30, 30), interval=3):
             logger.info(f'UI additional: {PLAYER_CHECK} -> {GOTO_MAIN}')
@@ -1136,6 +1134,19 @@ class UI(InfoHandler):
             return True
         return False
 
+    def ui_handle_meta_return(self):
+        if self.config.SERVER == 'kr':
+            # Share the localized check's timer with ui_goto. An inherited
+            # META check can otherwise click HOME again during its fade-out,
+            # opening Settings on the main screen underneath.
+            if not self.ui_page_appear(page_meta, offset=(30, 30), interval=5):
+                return False
+            return self.appear_then_click(GOTO_MAIN, offset=(30, 30), interval=2)
+        if self.appear(META_CHECK, offset=(30, 30), interval=5):
+            logger.info(f'UI additional: {META_CHECK} -> {GOTO_MAIN}')
+            return self.appear_then_click(GOTO_MAIN, offset=(30, 30))
+        return False
+
     def ui_button_interval_reset(self, button):
         """
         Reset interval of some button to avoid mistaken clicks
@@ -1143,6 +1154,9 @@ class UI(InfoHandler):
         Args:
             button (Button):
         """
+        if self.config.SERVER == 'kr' and button == GOTO_MAIN:
+            self.interval_reset(GOTO_MAIN)
+            self.interval_reset(KR_META_CHECK)
         if button == MEOWFFICER_GOTO_DORMMENU:
             self.interval_reset(GET_SHIP)
         if button == DORMMENU_GOTO_DORM:
