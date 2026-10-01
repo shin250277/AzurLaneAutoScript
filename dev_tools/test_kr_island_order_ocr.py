@@ -5,6 +5,62 @@ import unittest
 
 
 class KoreanOrderOcrTest(unittest.TestCase):
+    def test_incomplete_requirement_scan_fails_closed(self):
+        code = '''
+from unittest.mock import Mock
+from module.config.server import set_server
+set_server('kr')
+from module.island.order import IslandOrder
+from module.exception import RequestHumanTakeover
+ui = Mock()
+ui.item_name_to_item_id.side_effect = lambda name: IslandOrder.item_name_to_item_id(ui, name)
+cases = [
+    (['철광석', '???', ''], [(43, 6, 37), (5, 1, 4), (0, 0, 0)]),
+    (['철광석', '', ''], [(43, 6, 37), (5, 1, 4), (0, 0, 0)]),
+    (['철광석', '', ''], [(0, 0, 0), (0, 0, 0), (0, 0, 0)]),
+    (['철광석', '철광석', ''], [(43, 6, 37), (43, 2, 41), (0, 0, 0)]),
+    (['', '', ''], [(0, 0, 0)] * 3),
+    (['철광석', '', ''], [(43, 6, 37)]),
+    (['철광석', '', ''], [None, (0, 0, 0), (0, 0, 0)]),
+    (['철광석', '', ''], [(43, 6, 99), (0, 0, 0), (0, 0, 0)]),
+]
+for names, counters in cases:
+    ui.requirement_name_ocr.ocr.return_value = names
+    ui.requirement_counter_ocr.ocr.return_value = counters
+    try:
+        IslandOrder.scan_current_order_requirements(ui)
+    except RequestHumanTakeover:
+        pass
+    else:
+        raise AssertionError('Unsafe partial scan accepted: %r %r' % (names, counters))
+ui.submit_order.assert_not_called()
+ui.reject_order.assert_not_called()
+ui.config.cross_set.assert_not_called()
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', code], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout.decode('utf-8', errors='replace'))
+
+    def test_complete_requirement_scan_keeps_stock_and_blank_rows(self):
+        code = '''
+from unittest.mock import Mock
+from module.config.server import set_server
+set_server('kr')
+from module.island.order import IslandOrder
+ui = Mock()
+ui.item_name_to_item_id.side_effect = lambda name: IslandOrder.item_name_to_item_id(ui, name)
+ui.requirement_name_ocr.ocr.return_value = ['철광석', '', '']
+ui.requirement_counter_ocr.ocr.return_value = [(43, 6, 37), (0, 0, 0), (0, 0, 0)]
+assert IslandOrder.scan_current_order_requirements(ui) == {2703: (43, 6, 37)}
+ui.requirement_name_ocr.ocr.return_value = ['목초', '알루미늄 광석', '달걀']
+ui.requirement_counter_ocr.ocr.return_value = [(0, 41, -41), (61, 1, 60), (519, 8, 511)]
+assert IslandOrder.scan_current_order_requirements(ui) == {
+    2008: (0, 41, -41), 2702: (61, 1, 60), 2601: (519, 8, 511)}
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', code], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout.decode('utf-8', errors='replace'))
+
     def test_observed_order_names_without_os_fallback(self):
         code = '''
 from unittest.mock import patch

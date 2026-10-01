@@ -175,6 +175,27 @@ class IslandOrder(IslandUI):
         names = name_ocr.ocr(self.device.image)
         ids = [self.item_name_to_item_id(name) for name in names]
         counters = counter_ocr.ocr(self.device.image)
+        if server.server == 'kr':
+            # Do not silently discard an unread row and approve the remaining
+            # subset. Zero counters are OCR failure sentinels, not free orders.
+            if len(names) != 3 or len(counters) != len(names):
+                raise RequestHumanTakeover('Incomplete Korean order requirement rows')
+            requirements = {}
+            for name, item_id, counter in zip(names, ids, counters):
+                if isinstance(name, str) and not name.strip() and counter == (0, 0, 0):
+                    continue  # Unused rows in the fixed three-row panel.
+                if (item_id is None or item_id in requirements
+                        or not isinstance(counter, (tuple, list)) or len(counter) != 3
+                        or any(not isinstance(value, (int, np.integer)) or isinstance(value, bool)
+                               for value in counter)):
+                    raise RequestHumanTakeover('Unknown or ambiguous Korean order requirement')
+                stock, required, difference = counter
+                if stock < 0 or required <= 0 or difference != stock - required:
+                    raise RequestHumanTakeover('Invalid Korean order quantity; no order action taken')
+                requirements[item_id] = counter
+            if not requirements:
+                raise RequestHumanTakeover('No Korean order requirements could be verified')
+            return requirements
         requirements = {}
         for id, counter in zip(ids, counters):
             if id is not None and counter is not None:
