@@ -270,6 +270,8 @@ class IslandOrder(IslandUI):
             logger.info('click timer timeout, assuming requirements page appeared')
 
     def submit_order(self, is_urgent=False):
+        korean = self.config.SERVER == 'kr'
+        submitted = False
         if is_urgent:
             submit_button = ISLAND_ORDER_ACCEPT_URGENT
         else:
@@ -284,11 +286,14 @@ class IslandOrder(IslandUI):
             if self.handle_island_order_level_up():
                 confirm_timer.reset()
                 continue
-            if not clicked and self.match_template_color(submit_button, offset=(20, 20), interval=1):
+            if not clicked and not (korean and submitted) and self.match_template_color(submit_button, offset=(20, 20), interval=1):
                 self.device.click(submit_button)
+                submitted = True
                 confirm_timer.reset()
                 continue
             if not confirm_timer.reached():
+                continue
+            if korean and not submitted:
                 continue
             if self.match_template_color(ISLAND_ORDER_BACKGROUND, offset=(20, 20)):
                 logger.info('Submit success')
@@ -300,7 +305,7 @@ class IslandOrder(IslandUI):
             if not is_urgent and self.match_template_color(ISLAND_ORDER_COOLDOWN_SPEED_UP, offset=(20, 20)):
                 logger.info('Previous order submitted, wait for next order to appear')
                 continue
-            if clicked and self.match_template_color(ISLAND_ORDER_ACCEPT, offset=(20, 20)):
+            if not korean and clicked and self.match_template_color(ISLAND_ORDER_ACCEPT, offset=(20, 20)):
                 logger.info('Confirm timer timeout, assuming submit success')
                 return True
         else:

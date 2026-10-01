@@ -38,6 +38,7 @@
     }
   },
   "Task": {
+    "IslandOrderTrial": {"name": "铁矿石订单单次验证", "help": "仅提交一次消耗6个铁矿石的韩服普通订单。不购买、不拒绝、不重复尝试。"},
     "RaidRewardClaim": {"name": "Bigshot reward claim", "help": "Claim earned rewards from the open personal rewards dialog. No purchases or combat."},
     "RaidTrial": {"name": "Raid one-run trial", "help": "Run configured raid difficulty once. No tickets or retirement. Oil floor 20000."},
     "RaidInspect": {"name": "Raid inspection", "help": "Inspect current raid page only. No combat or purchases."},

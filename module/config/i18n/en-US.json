@@ -38,6 +38,7 @@
     }
   },
   "Task": {
+    "IslandOrderTrial": {"name": "One iron-ore order trial", "help": "Submit one KR regular order costing six iron ore. No purchases, rejections or repeat attempts."},
     "RaidRewardClaim": {"name": "Bigshot reward claim", "help": "Claim earned rewards from the open personal rewards dialog. No purchases or combat."},
     "RaidTrial": {"name": "Raid one-run trial", "help": "Run configured raid difficulty once. No tickets or retirement. Oil floor 20000."},
     "RaidInspect": {"name": "Raid inspection", "help": "Inspect current raid page only. No combat or purchases."},

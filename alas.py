@@ -459,6 +459,15 @@ class AzurLaneAutoScript:
         ui.device.screenshot()
         ui.run()
 
+    def island_order_trial(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.island.order import IslandOrder
+        from module.island.order_trial import run_trial
+        ui = IslandOrder(config=self.config, device=self.device, task='IslandOrder')
+        ui.device.screenshot()
+        run_trial(ui)
+
     def event_shop_scan(self):
         from module.config.server import set_server
         set_server(self.config.Emulator_PackageName)

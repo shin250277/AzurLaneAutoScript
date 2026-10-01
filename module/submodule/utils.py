@@ -22,6 +22,7 @@ def get_available_func():
         'IslandProductionTrial',
         'EventShopScan',
         'IslandInspect',
+        'IslandOrderTrial',
         'RaidInspect',
         'RaidRewardClaim',
         'RaidTrial',
