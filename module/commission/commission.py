@@ -32,6 +32,9 @@ COMMISSION_SCROLL = Scroll(COMMISSION_SCROLL_AREA, color=(247, 211, 66), name='C
 KR_COMMISSION_OIL_CONFIRM = Button(
     area=(422, 329, 856, 360), color=(), button=(422, 329, 856, 360),
     file='./assets/kr/commission/KR_OIL_NOTICE.png', name='KR_COMMISSION_OIL_CONFIRM')
+KR_COMMISSION_OIL_MAXED = Button(
+    area=(359, 310, 663, 337), color=(), button=(359, 310, 663, 337),
+    file='./assets/kr/commission/KR_OIL_MAXED.png', name='KR_COMMISSION_OIL_MAXED')
 OCR_KR_COMMISSION_OIL = Digit(
     Button(area=(585, 331, 660, 359), color=(), button=(585, 331, 660, 359),
            name='KR_COMMISSION_OIL_COST'), letter=(132, 211, 74), threshold=128)
@@ -636,6 +639,9 @@ class RewardCommission(UI, InfoHandler):
                 else:
                     self.device.screenshot()
 
+                if self.config.SERVER == 'kr' and self.appear(KR_COMMISSION_OIL_MAXED, offset=(20, 5)):
+                    raise OilMaxed
+
                 # End
                 if self.ui_page_appear(page_commission, offset=(20, 20)):
                     # Leaving at page_commission
@@ -711,6 +717,10 @@ class RewardCommission(UI, InfoHandler):
                 reward = self._commission_receive()
                 return reward
             except OilMaxed:
+                if self.config.SERVER == 'kr':
+                    logger.warning('KR oil storage is full; defer commission without buying food')
+                    self.config.task_delay(minute=30)
+                    self.config.task_stop()
                 logger.info("Oil maxed, buy food to consume oil")
                 RewardDorm(self.config, self.device).dorm_food_run(amount=10)
                 self.ui_ensure(page_reward)

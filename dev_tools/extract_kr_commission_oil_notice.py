@@ -7,14 +7,18 @@ from PIL import Image
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('frame', type=Path)
+    parser.add_argument('--maxed', action='store_true')
     args = parser.parse_args()
     with Image.open(str(args.frame)) as frame:
         if frame.size != (1280, 720):
             raise ValueError('Expected a 1280x720 KR commission frame')
         canvas = Image.new('RGB', frame.size)
-        area = (422, 329, 856, 360)
+        area = (359, 310, 663, 337) if args.maxed else (422, 329, 856, 360)
         canvas.paste(frame.crop(area).convert('RGB'), area)
-    target = Path(__file__).resolve().parents[1] / 'assets/kr/commission/KR_OIL_NOTICE.png'
+    filename = 'KR_OIL_MAXED.png' if args.maxed else 'KR_OIL_NOTICE.png'
+    target = Path(__file__).resolve().parents[1] / 'assets/kr/commission' / filename
+    if target.exists():
+        raise SystemExit('Refusing to replace an existing template')
     canvas.save(str(target))
 
 
