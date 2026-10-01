@@ -13,10 +13,16 @@ from module.ocr.windows_ocr import WindowsKoreanOcr
 
 
 class KoreanIslandNameOcr(Ocr):
+    template_folder = 'assets/kr/island_item_name'
+    name_dictionary = DIC_ISLAND_ITEM
+
+    def prepare_fallback(self, frame):
+        return frame
+
     @cached_property
     def templates(self):
         templates = []
-        for path in Path('assets/kr/island_item_name').glob('*.png'):
+        for path in Path(self.template_folder).glob('*.png'):
             gray = cv2.cvtColor(load_image(str(path)), cv2.COLOR_RGB2GRAY)
             y, x = np.where(gray < 110)
             if not len(x):
@@ -26,7 +32,7 @@ class KoreanIslandNameOcr(Ocr):
             template = cv2.GaussianBlur(gray, (5, 5), 0)[
                 max(int(y.min())-1, 0):min(int(y.max())+2, gray.shape[0]),
                 max(int(x.min())-2, 0):min(int(x.max())+3, gray.shape[1])]
-            templates.append((DIC_ISLAND_ITEM[int(path.stem.split('_')[0])]['name']['kr'], template))
+            templates.append((self.name_dictionary[int(path.stem.split('_')[0])]['name']['kr'], template))
         return templates
 
     def ocr(self, image, direct_ocr=False):
@@ -51,7 +57,8 @@ class KoreanIslandNameOcr(Ocr):
                 values.append('')
                 unresolved.append(index)
         if unresolved:
-            recognized = WindowsKoreanOcr().atomic_ocr_for_single_lines([frames[i] for i in unresolved])
+            recognized = WindowsKoreanOcr().atomic_ocr_for_single_lines(
+                [self.prepare_fallback(frames[i]) for i in unresolved])
             for index, result in zip(unresolved, recognized):
                 values[index] = ''.join(result)
         logger.attr(self.name or 'KR_ISLAND_NAMES', values)

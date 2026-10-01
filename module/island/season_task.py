@@ -121,6 +121,9 @@ class IslandSeasonTask(IslandUI):
 
     @property
     def task_name_ocr(self):
+        if server.server == 'kr':
+            from module.island.korean_season_ocr import KoreanSeasonTaskOcr
+            return KoreanSeasonTaskOcr([], lang='ko', name='task_name_ocr_kr')
         if server.server == 'jp':
             lang = 'jp'
         elif server.server == 'tw':
@@ -161,6 +164,18 @@ class IslandSeasonTask(IslandUI):
                 current_season_task_ids.update(season_data['task_list'])
         if not current_season_task_ids:
             logger.warning(f'No active season found or season data missing for {server.server} server.')
+            return None
+
+        if server.server == 'kr':
+            # Never turn empty/unknown Hangul into a production target by
+            # selecting the least-bad fuzzy match. Ambiguous names fail closed.
+            normalized = ''.join(name.split())
+            matches = [key for key in current_season_task_ids
+                       if normalized and normalized == ''.join(
+                           DIC_ISLAND_TASK.get(key, {}).get('name', {}).get('kr', '').split())]
+            if len(matches) == 1:
+                return matches[0]
+            logger.warning(f'Unknown or ambiguous KR season task: {name!r}')
             return None
         
         min_distance = float('inf')

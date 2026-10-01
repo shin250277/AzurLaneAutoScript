@@ -8,6 +8,32 @@ from pathlib import Path
 
 
 class IslandInspectionTest(unittest.TestCase):
+    def test_task_inspection_is_bounded_and_never_changes_targets(self):
+        code = '''
+from unittest.mock import Mock, patch
+from module.island.inspect import IslandInspect
+ui = Mock()
+ui.get_task_codename.return_value = []
+ui.season_task_grid.buttons = []
+with patch('module.island.inspect.ISLAND_SEASON_TASK_SCROLL') as scroll:
+    scroll.at_bottom.return_value = False
+    IslandInspect.inspect_task_pages(ui)
+    assert ui.device.image_save.call_count == 12
+    assert scroll.next_page.call_count == 11
+    ui.config.cross_set.assert_not_called()
+    ui.receive_all_reward.assert_not_called()
+    ui.run_any_order.assert_not_called()
+ui.reset_mock()
+with patch('module.island.inspect.ISLAND_SEASON_TASK_SCROLL') as scroll:
+    scroll.at_bottom.return_value = True
+    IslandInspect.inspect_task_pages(ui)
+    assert ui.device.image_save.call_count == 1
+    scroll.next_page.assert_not_called()
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', code], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout.decode('utf-8', errors='replace'))
+
     def test_pages_use_observed_korean_titles(self):
         tree = ast.parse(Path('module/ui/assets.py').read_text(encoding='utf-8'))
         for name in ('ISLAND_ORDER_CHECK', 'ISLAND_SEASON_CHECK'):
@@ -48,8 +74,10 @@ ui = Mock()
 ui.config.SERVER = 'kr'
 IslandInspect.run(ui)
 assert ui.ui_ensure.call_args_list == [call(page_island_order), call(page_island_season)]
-assert ui.device.screenshot.call_count == 2
-assert ui.device.image_save.call_count == 3
+ui.island_season_bottom_navbar_ensure.assert_called_once_with(left=3)
+ui.inspect_task_pages.assert_called_once_with()
+assert ui.device.screenshot.call_count == 3
+assert ui.device.image_save.call_count == 4
 ui.device.click.assert_not_called()
 ui.config.cross_set.assert_not_called()
 ui.config.task_delay.assert_not_called()
