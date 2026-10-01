@@ -3,10 +3,20 @@ import unittest
 import numpy as np
 from PIL import Image
 from module.base.button import Button
-from module.meta_reward.assets import SYNC_TAP
+from module.meta_reward.assets import SYNC_TAP, SYNC_ENTER
 
 
 class MetaSyncTest(unittest.TestCase):
+    def test_sync_enter_matches_korean_label_not_blank(self):
+        b = Button(**{k: getattr(SYNC_ENTER, 'raw_' + k)['kr']
+                      for k in ('area', 'color', 'button', 'file')})
+        with Image.open('assets/kr/meta_reward/SYNC_ENTER.png') as im:
+            frame = np.array(im.convert('RGB'))
+        self.assertTrue(b.match(frame, offset=(20, 20)))
+        self.assertFalse(b.match(np.zeros_like(frame), offset=(20, 20)))
+        shifted = np.roll(np.roll(frame, 5, axis=0), -5, axis=1)
+        self.assertTrue(b.match(shifted, offset=(20, 20)))
+
     def test_label_shift_and_blank(self):
         b = Button(**{k: getattr(SYNC_TAP, 'raw_' + k)['kr']
                       for k in ('area', 'color', 'button', 'file')})
