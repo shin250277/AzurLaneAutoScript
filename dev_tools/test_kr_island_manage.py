@@ -30,12 +30,12 @@ class KoreanIslandManageTest(unittest.TestCase):
         scope.update({n.id: SimpleNamespace(check_button=n.id) for n in ast.walk(fn)
                       if isinstance(n, ast.Name) and n.id.startswith('page_')})
         exec(compile(tree, 'module/ui/ui.py', 'exec'), scope)
-        for manage in (False, True):
-            with self.subTest(manage=manage):
+        for foreground in (None, 'page_island_manage', 'ISLAND_CHECK'):
+            with self.subTest(foreground=foreground):
                 ui = SimpleNamespace(config=SimpleNamespace(SERVER='kr'),
                     appear=lambda button, **kwargs: button == 'MAIN_GOTO_DOCK_WHITE'
-                    or (manage and button == 'page_island_manage'))
-                self.assertEqual(scope['ui_page_appear'](ui, scope['page_main']), not manage)
+                    or (foreground is not None and button == foreground))
+                self.assertEqual(scope['ui_page_appear'](ui, scope['page_main']), foreground is None)
 
 
 if __name__ == '__main__':

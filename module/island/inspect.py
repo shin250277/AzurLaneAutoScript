@@ -1,7 +1,7 @@
 """Inspect Korean island pages without submitting orders or changing targets."""
 from module.exception import RequestHumanTakeover
 from module.logger import logger
-from module.ui.page import page_island_order, page_island_season
+from module.ui.page import page_island_order, page_island_season, page_main
 from module.island.season_task import (IslandSeasonTask, ISLAND_SEASON_TASK_SCROLL,
                                       TEMPLATE_ISLAND_SEASON_TASK_OBTAINED)
 from module.base.decorator import del_cached_property
@@ -64,4 +64,5 @@ class IslandInspect(IslandSeasonTask, IslandOrder):
         self.device.screenshot()
         self.device.image_save('./log/kr_island_inspect_tasks.png')
         self.inspect_task_pages()
+        self.ui_ensure(page_main)
         logger.info('Island inspection complete; no task submission or target changes')

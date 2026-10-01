@@ -89,11 +89,11 @@ with patch('module.island.inspect.ISLAND_SEASON_TASK_SCROLL') as scroll:
         code = '''
 from unittest.mock import Mock, call
 from module.island.inspect import IslandInspect
-from module.ui.page import page_island_order, page_island_season
+from module.ui.page import page_island_order, page_island_season, page_main
 ui = Mock()
 ui.config.SERVER = 'kr'
 IslandInspect.run(ui)
-assert ui.ui_ensure.call_args_list == [call(page_island_order), call(page_island_season)]
+assert ui.ui_ensure.call_args_list == [call(page_island_order), call(page_island_season), call(page_main)]
 ui.island_season_bottom_navbar_ensure.assert_called_once_with(left=3)
 ui.inspect_task_pages.assert_called_once_with()
 assert ui.device.screenshot.call_count == 3

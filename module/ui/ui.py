@@ -339,6 +339,11 @@ class UI(InfoHandler):
                     return False
                 if self.appear(KR_PRIVATE_QUARTERS_CHECK, offset=(10, 10), similarity=0.8):
                     return False
+                # The 3D island's white avatar can resemble the dock tab.
+                # Its management icon is shared across servers and identifies
+                # the foreground scene before the main-menu color check.
+                if self.appear(ISLAND_CHECK, offset=(10, 10)):
+                    return False
                 # Island management has a white background at the main dock
                 # tab coordinates. Require its localized title to exclude it.
                 if self.appear(page_island_manage.check_button, offset=(10, 10), similarity=0.8):
@@ -628,6 +633,18 @@ class UI(InfoHandler):
         logger.critical("Please switch to a supported page before starting Alas")
         raise GamePageUnknownError
 
+    def wait_kr_island_scene(self):
+        """Observe the loading transition without clicking through its white areas."""
+        timeout = Timer(20, count=40).start()
+        while 1:
+            self.device.screenshot()
+            if self.appear(ISLAND_CHECK, offset=(10, 10)):
+                logger.info('KR island scene ready')
+                return
+            if timeout.reached():
+                self.device.image_save('./log/kr_island_loading_timeout.png')
+                raise RequestHumanTakeover('Island scene did not finish loading; no menu retry')
+
     def ui_goto(self, destination, get_ship=True, offset=(30, 30), skip_first_screenshot=True):
         """
         Args:
@@ -680,6 +697,8 @@ class UI(InfoHandler):
                     button = page.links[page.parent]
                     self.device.click(button)
                     self.ui_button_interval_reset(button)
+                    if self.config.SERVER == 'kr' and button == DORMMENU_GOTO_ISLAND:
+                        self.wait_kr_island_scene()
                     if self.config.SERVER == 'kr' and page == page_campaign_menu \
                             and destination == page_campaign:
                         suppress_kr_campaign_popups = True
