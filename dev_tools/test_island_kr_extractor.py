@@ -8,8 +8,8 @@ from dev_tools.test_os_task_stop_boundaries import method, TaskStopped
 
 
 class IslandKrExtractorTest(unittest.TestCase):
-    def test_unvalidated_korean_text_ocr_stops_before_game_input(self):
-        for file, cls in [('order', 'IslandOrder'), ('season_task', 'IslandSeasonTask')]:
+    def test_unvalidated_korean_season_targets_stop_before_game_input(self):
+        for file, cls in [('season_task', 'IslandSeasonTask')]:
             ui = Mock()
             ui.config.SERVER = 'kr'
             run = method('module/island/{}.py'.format(file), cls, 'run',
@@ -17,6 +17,15 @@ class IslandKrExtractorTest(unittest.TestCase):
             with self.assertRaises(TaskStopped):
                 run(ui)
             ui.ui_ensure.assert_not_called()
+
+    def test_korean_orders_use_only_the_quota_verified_runner(self):
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        run = method('module/island/order.py', 'IslandOrder', 'run')
+        with patch('module.island.korean_order.run_regular_orders') as runner:
+            run(ui)
+            runner.assert_called_once_with(ui)
+        ui.run_any_order.assert_not_called()
 
     def test_matching_numbers_add_only_korean_name(self):
         original = {'name': {'jp': 'JP'}, 'workload': 100}

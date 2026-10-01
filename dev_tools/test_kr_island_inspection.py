@@ -13,12 +13,14 @@ class IslandInspectionTest(unittest.TestCase):
 from unittest.mock import Mock
 from module.island.inspect import IslandInspect
 ui = Mock()
-ui.regular_orders = [Mock(button=(10, 200, 100, 300)), Mock(button=(900, 600, 1200, 680))]
+ui.regular_orders = [Mock(button=(10, 200, 100, 300)), Mock(button=(900, 600, 1200, 680)),
+                     Mock(button=(761, 35, 849, 123))]
 ui.urgent_orders = []
 ui.season_orders = []
 IslandInspect.inspect_order_pages(ui)
-assert ui.click_order.call_count == 1
-assert ui.scan_current_order_requirements.call_count == 1
+assert ui.click_order.call_count == 2
+assert ui.click_order.call_args[0][0].button == (797, 71, 813, 87)
+assert ui.scan_current_order_requirements.call_count == 2
 ui.submit_order.assert_not_called()
 ui.reject_order.assert_not_called()
 ui.run_any_order.assert_not_called()

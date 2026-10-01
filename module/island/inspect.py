@@ -15,12 +15,13 @@ class IslandInspect(IslandSeasonTask, IslandOrder):
                   + [(button, True) for button in self.urgent_orders]
                   + [(button, False) for button in self.season_orders])
         for index, (button, urgent) in enumerate(orders[:15]):
-            x1, y1, x2, y2 = button.button
+            from module.island.korean_order import safe_order_target
+            target = safe_order_target(button)
             # Only select map portraits, never the right-hand submit/reject panel.
-            if not (0 <= x1 < x2 < 800 and 150 <= y1 < y2 <= 650):
+            if target is None:
                 logger.warning('Order inspection ignored out-of-map detection')
                 continue
-            self.click_order(button, is_urgent=urgent)
+            self.click_order(target, is_urgent=urgent)
             self.device.screenshot()
             self.device.image_save('./log/kr_island_inspect_order_%02d.png' % index)
             logger.attr('Inspected order requirements', self.scan_current_order_requirements())

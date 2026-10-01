@@ -174,6 +174,10 @@ class IslandOrder(IslandUI):
         counter_ocr = self.requirement_counter_ocr
         names = name_ocr.ocr(self.device.image)
         ids = [self.item_name_to_item_id(name) for name in names]
+        if server.server == 'kr':
+            from module.island.korean_order_icons import resolve_order_icon
+            ids = [item_id if item_id is not None else resolve_order_icon(name, self.device.image, row)
+                   for row, (name, item_id) in enumerate(zip(names, ids))]
         counters = counter_ocr.ocr(self.device.image)
         if server.server == 'kr':
             # Do not silently discard an unread row and approve the remaining
@@ -428,8 +432,8 @@ class IslandOrder(IslandUI):
 
     def run(self):
         if self.config.SERVER == 'kr':
-            raise RequestHumanTakeover('Korean island order text OCR is not validated; '
-                                       'localized data alone does not enable order submission.')
+            from module.island.korean_order import run_regular_orders
+            return run_regular_orders(self)
         self.ui_ensure(page_island_order)
         self.next_runtime = []
         self.update_production_plan = False
