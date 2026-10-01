@@ -4,7 +4,7 @@ from module.base.timer import Timer
 from module.campaign.campaign_status import CampaignStatus
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2
 from module.config.utils import get_server_weekday
-from module.exception import HumanTakeover
+from module.exception import RequestHumanTakeover
 from module.freebies.assets import *
 from module.logger import logger
 from module.ocr.ocr import Digit
@@ -44,7 +44,7 @@ class SupplyPack(CampaignStatus):
                 confirm_timer.reset()
                 continue
             if not click_count and self.appear(BUY_CONFIRM, offset=(20, 20)):
-                raise HumanTakeover('Unselected supply-pack purchase confirmation; refusing to confirm')
+                raise RequestHumanTakeover('Unselected supply-pack purchase confirmation; refusing to confirm')
             # A confirmation left by another action is not authorization to buy.
             if click_count:
                 if self.appear_then_click(BUY_CONFIRM, offset=(20, 20), interval=3):

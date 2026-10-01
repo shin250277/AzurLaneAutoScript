@@ -17,7 +17,7 @@ def load_buy():
                       if isinstance(n, ast.FunctionDef) and n.name == 'supply_pack_buy')]
     timer = Mock()
     timer.return_value.start.return_value.reached.return_value = True
-    scope = dict(logger=Mock(), Timer=timer, HumanTakeover=Takeover,
+    scope = dict(logger=Mock(), Timer=timer, RequestHumanTakeover=Takeover,
                  GET_ITEMS_1='items1', GET_ITEMS_2='items2', BUY_CONFIRM='buy',
                  page_supply_pack=SimpleNamespace(check_button='page'))
     exec(compile(tree, path, 'exec'), scope)
