@@ -451,6 +451,14 @@ class AzurLaneAutoScript:
         from module.island.production import IslandProduction
         IslandProduction(config=self.config, device=self.device).run()
 
+    def island_inspect(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.island.inspect import IslandInspect
+        ui = IslandInspect(config=self.config, device=self.device, task='IslandSeasonTask')
+        ui.device.screenshot()
+        ui.run()
+
     def event_shop_scan(self):
         from module.config.server import set_server
         set_server(self.config.Emulator_PackageName)

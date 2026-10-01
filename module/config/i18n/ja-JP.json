@@ -42,6 +42,7 @@
     "RaidTrial": {"name": "Raid one-run trial", "help": "Run configured raid difficulty once. No tickets or retirement. Oil floor 20000."},
     "RaidInspect": {"name": "Raid inspection", "help": "Inspect current raid page only. No combat or purchases."},
     "EventShopScan": {"name": "イベントショップ確認（購入なし）", "help": "ショップを読み取り、購入は行いません。"},
+    "IslandInspect": {"name": "Island page inspection (read only)", "help": "Inspect KR order and season pages without submissions or target changes."},
     "IslandProductionTrial": {"name": "KR potato trial (9 seeds)", "help": "Approved one-batch trial. No purchases or exchanges. With an attempt receipt, only collect the first finished slot or inspect stock from an empty slot; never start another batch."},
     "Alas": {
       "name": "Alas設定",

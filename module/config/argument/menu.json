@@ -118,6 +118,7 @@
       "IslandProductionPlanner",
       "IslandProductionTrial",
       "EventShopScan",
+      "IslandInspect",
       "RaidInspect",
       "RaidRewardClaim",
       "RaidTrial",
