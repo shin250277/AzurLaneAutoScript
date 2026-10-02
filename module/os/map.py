@@ -521,12 +521,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
         died_timer = Timer(1.5, count=3)
         self.hp_reset()
         for _ in self.loop():
-            # End
-            if not unlock_checked and unlock_check_timer.reached():
-                logger.critical('Unable to use auto search in current zone')
-                logger.critical('Please finish the story mode of OpSi to unlock auto search '
-                                'before using any OpSi functions')
-                raise RequestHumanTakeover
             if self.is_in_map():
                 self.device.stuck_record_clear()
                 if not success:
@@ -552,6 +546,12 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
             ):
                 unlock_checked = True
                 continue
+            # A reward can arrive on the first frame after the deadline.
+            # Handle known controls before deciding that search is unavailable.
+            if not unlock_checked and unlock_check_timer.reached():
+                logger.critical('Unable to recognize auto search in current zone')
+                logger.critical('Check the current screen and OpSi auto-search unlock status')
+                raise RequestHumanTakeover
             if self.handle_retirement():
                 # Retire will interrupt auto search, need a retry
                 self.ash_popup_canceled = True
