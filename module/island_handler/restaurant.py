@@ -353,11 +353,16 @@ class IslandRestaurant(IslandDock):
         selected_waitresses = set()
         if unavailable_waitress_list:
             logger.warning(f"Unavailable waitress list: {sorted(unavailable_waitress_list)}")
-        for _ in self.loop():
+        for _ in self.loop(timeout=10 if self.config.SERVER == 'kr' else None):
             if self.appear_then_click(ISLAND_RESTAURANT_SELECT_CHARACTER, offset=self._restaurant_offset, interval=2):
                 continue
             if self.is_in_island_dock():
                 break
+        else:
+            if self.config.SERVER == 'kr':
+                from module.exception import RequestHumanTakeover
+                self.device.image_save('./log/kr_restaurant_staff_entry_unknown.png')
+                raise RequestHumanTakeover('KR restaurant staff entry not identified; no selection or start')
         success = True
         for waitress in named_waitresses:
             if waitress in unavailable_waitress_list:

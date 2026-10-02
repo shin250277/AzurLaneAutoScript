@@ -188,12 +188,16 @@ class IslandBusiness(IslandRestaurant):
                 self.next_restaurant()
                 continue
             logger.info(f"Restaurant {restaurant_id} is ready")
-            for _ in self.loop():
+            for _ in self.loop(timeout=8 if self.config.SERVER == 'kr' else None):
                 if self.appear(page_island_manage.check_button, offset=(20, 20), interval=1):
                     self.device.click(entrance_button)
                     continue
                 if self.is_in_island_restaurant():
                     break
+            else:
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_restaurant_entry_unknown.png')
+                    raise RequestHumanTakeover('KR restaurant entry not confirmed; no repeated list clicks')
             self.working_restaurant_id = restaurant_id
             already_running = self.config.SERVER == 'kr' and self.restaurant_running()
             try:

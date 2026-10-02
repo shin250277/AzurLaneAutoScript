@@ -72,6 +72,10 @@ class KoreanLocaleIntegrityTest(unittest.TestCase):
             with self.subTest(key=key):
                 self.assertEqual(self.locales['ko-KR'][('Campaign', 'Event', key)], title)
 
+    def test_observed_october_event_title(self):
+        self.assertEqual(self.locales['ko-KR'][('Campaign', 'Event', 'event_20260908_cn')],
+                         '유영 미성')
+
 
 if __name__ == '__main__':
     unittest.main()

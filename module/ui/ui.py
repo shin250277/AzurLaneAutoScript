@@ -526,6 +526,23 @@ class UI(InfoHandler):
             return True
         return False
 
+    def _handle_kr_island_restaurant_back(self):
+        if self.config.SERVER != 'kr':
+            return False
+        from module.island_handler.assets import ISLAND_RESTAURANT_CHECK, ISLAND_RESTAURANT_RESULT
+        from module.island.assets import ISLAND_CLICK_SAFE_AREA
+        from module.ui_white.assets import BACK_ARROW_WHITE
+        if self.appear(ISLAND_RESTAURANT_RESULT, offset=(20, 20), interval=2, similarity=0.9):
+            logger.info('Close KR restaurant settlement before changing tasks')
+            self.device.click(ISLAND_CLICK_SAFE_AREA)
+            return True
+        if self.appear(ISLAND_RESTAURANT_CHECK, offset=(0, 20), similarity=0.9) and self.appear(
+                BACK_ARROW_WHITE, offset=(20, 20), interval=2):
+            logger.info('Leave island restaurant before changing tasks')
+            self.device.click(BACK_ARROW_WHITE)
+            return True
+        return False
+
     def _handle_kr_raid_fleet_back(self):
         if self.config.SERVER != 'kr':
             return False
@@ -584,6 +601,8 @@ class UI(InfoHandler):
             if self.ui_close_kr_dock_full():
                 continue
             if self._handle_kr_island_character_back():
+                continue
+            if self._handle_kr_island_restaurant_back():
                 continue
             if self._handle_kr_raid_fleet_back():
                 continue

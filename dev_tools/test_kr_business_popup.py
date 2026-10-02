@@ -6,6 +6,17 @@ import unittest
 
 
 class KoreanBusinessPopupTest(unittest.TestCase):
+    def test_resting_list_rejects_active_start(self):
+        import numpy as np
+        from PIL import Image
+        from module.base.template import Template
+        template = Template('./assets/kr/island/TEMPLATE_ISLAND_BUSINESS_RESTING.png')
+        with Image.open('dev_tools/fixtures/kr_business_resting_controls.png') as im:
+            frame = np.array(im.convert('RGB'))
+        self.assertTrue(template.match(frame[526:562, 1004:1160]))
+        self.assertFalse(template.match(frame[172:208, 1004:1160]))
+        self.assertFalse(template.match(np.zeros((36, 156, 3), dtype=np.uint8)))
+
     def test_observed_running_rows_and_ready_row(self):
         import numpy as np
         from PIL import Image
