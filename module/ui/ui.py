@@ -636,14 +636,21 @@ class UI(InfoHandler):
     def wait_kr_island_scene(self):
         """Observe the loading transition without clicking through its white areas."""
         timeout = Timer(20, count=40).start()
+        retried_source_menu = False
         while 1:
             self.device.screenshot()
             if self.appear(ISLAND_CHECK, offset=(10, 10)):
                 logger.info('KR island scene ready')
                 return
             if timeout.reached():
+                if not retried_source_menu and self.appear(DORMMENU_CHECK, offset=(10, 10)):
+                    logger.info('Island entry did not leave dorm menu; retry confirmed source once')
+                    self.device.click(DORMMENU_GOTO_ISLAND)
+                    retried_source_menu = True
+                    timeout.reset()
+                    continue
                 self.device.image_save('./log/kr_island_loading_timeout.png')
-                raise RequestHumanTakeover('Island scene did not finish loading; no menu retry')
+                raise RequestHumanTakeover('Island scene did not finish loading; no further menu retry')
 
     def ui_goto(self, destination, get_ship=True, offset=(30, 30), skip_first_screenshot=True):
         """

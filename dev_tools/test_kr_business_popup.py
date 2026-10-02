@@ -6,6 +6,59 @@ import unittest
 
 
 class KoreanBusinessPopupTest(unittest.TestCase):
+    def test_observed_running_rows_and_ready_row(self):
+        import numpy as np
+        from PIL import Image
+        from module.base.template import Template
+        template = Template('./assets/kr/island/TEMPLATE_ISLAND_BUSINESS_RUNNING.png')
+        with Image.open('dev_tools/fixtures/kr_business_running_controls.png') as im:
+            frame = np.array(im.convert('RGB'))
+        for top in (252, 429, 606):
+            self.assertTrue(template.match(frame[top:top + 36, 1004:1160]))
+        self.assertFalse(template.match(frame[76:112, 1004:1160]))
+        self.assertFalse(template.match(np.zeros((36, 156, 3), dtype=np.uint8)))
+
+    def test_running_list_label_uses_korean_asset(self):
+        tree = ast.parse(Path('module/island/assets.py').read_text(encoding='utf-8'))
+        node = next(n for n in tree.body if isinstance(n, ast.Assign)
+                    and n.targets[0].id == 'TEMPLATE_ISLAND_BUSINESS_RUNNING')
+        fields = {k.arg: ast.literal_eval(k.value) for k in node.value.keywords}
+        self.assertEqual(fields['file']['kr'], './assets/kr/island/TEMPLATE_ISLAND_BUSINESS_RUNNING.png')
+
+    def test_running_detected_inside_uses_remaining_time_not_midnight(self):
+        code = '''
+from datetime import datetime, timedelta
+from unittest.mock import Mock, patch
+from module.island.business import IslandBusiness
+ui = object.__new__(IslandBusiness)
+ui.config = Mock(SERVER='kr')
+ui.device = Mock()
+ui.skip_restaurant = {601: False, 602: False, 603: False, 604: False, 901: False}
+for name in ('ui_back', 'ui_ensure', 'restaurant_swipe_to_top', 'next_restaurant'):
+    setattr(ui, name, Mock())
+ui.appear = Mock(return_value=False)
+ui.is_in_island_restaurant = Mock(return_value=True)
+ui.island_manage_side_navbar_ensure = Mock(return_value=True)
+ui.handle_restaurant_popup = Mock(return_value=True)
+ui.current_restaurant_button = Mock(return_value=Mock())
+ui.get_restaurant_id = Mock(return_value=603)
+ui.is_restaurant_running = Mock(return_value=False)
+ui.is_restaurant_resting = Mock(return_value=False)
+ui.restaurant_running = Mock(return_value=True)
+ui.get_remain_time = Mock(return_value=timedelta(minutes=20))
+ui.loop = Mock(side_effect=lambda **kwargs: iter([None]))
+before = datetime.now()
+with patch('module.island.business.RESTAURANT_IDS', [603]), \\
+     patch('module.island_handler.restaurant.IslandRestaurant.run', return_value=False):
+    ui.run()
+target = ui.config.task_delay.call_args[1]['target']
+assert before + timedelta(minutes=20) <= target <= datetime.now() + timedelta(minutes=20)
+ui.get_remain_time.assert_called_once()
+'''
+        result = subprocess.run([sys.executable, '-B', '-c', code], stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stdout.decode('utf-8', errors='replace'))
+
     def test_start_uses_korean_control_and_bounded_wait(self):
         tree = ast.parse(Path('module/island_handler/assets.py').read_text(encoding='utf-8'))
         node = next(n for n in tree.body if isinstance(n, ast.Assign)

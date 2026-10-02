@@ -195,6 +195,7 @@ class IslandBusiness(IslandRestaurant):
                 if self.is_in_island_restaurant():
                     break
             self.working_restaurant_id = restaurant_id
+            already_running = self.config.SERVER == 'kr' and self.restaurant_running()
             try:
                 success = super().run()
             except WaitressOccupied:
@@ -212,6 +213,11 @@ class IslandBusiness(IslandRestaurant):
             del_cached_property(super(), '_restaurant_offset')
             if restaurant_id in unchecked_restaurants:
                 unchecked_restaurants.remove(restaurant_id)
+            if already_running:
+                # The localized list label may miss a running restaurant even
+                # though its detail page confirms it. Do not defer to midnight.
+                self.device.image_save('./log/kr_restaurant_running_list.png')
+                next_run_time[restaurant_id] = datetime.now() + self.get_remain_time(button)
             if success:
                 next_run_time[restaurant_id] = datetime.now() + timedelta(hours=8)
                 # Since dealt restaurants will be moved to the bottom,
