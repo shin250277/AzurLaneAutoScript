@@ -55,6 +55,7 @@ class CommissionStartTest(unittest.TestCase):
         tree.body = [next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)
                           and n.name == '_kr_commission_start_confirmed')]
         scope = dict(logger=Mock(), copy=copy, timedelta=timedelta, KR_COMMISSION_OIL_CONFIRM='oil_notice',
+                     KR_COMMISSION_OIL_FIVE_CONFIRM='five_oil_notice',
                      OCR_KR_COMMISSION_OIL=Mock(ocr=Mock(return_value=10)))
         exec(compile(tree, str(path), 'exec'), scope)
         ui = SimpleNamespace(handle_info_bar=Mock(), device=Mock(),
@@ -105,6 +106,30 @@ class CommissionStartTest(unittest.TestCase):
         ui.appear.return_value = True
         self.assertFalse(confirm(ui, FakeCommission('pending')))
         ui.handle_popup_confirm.assert_called_once_with('COMMISSION_OIL_10')
+
+    def test_five_oil_notice_requires_matching_image_and_exact_amount(self):
+        for amount in (5, 10, 0, 50):
+            confirm, ui = self.confirm(items=[FakeCommission('pending')])
+            ui.appear.side_effect = lambda asset, **kwargs: asset == 'five_oil_notice'
+            ui.oil_ocr.ocr.return_value = amount
+            self.assertFalse(confirm(ui, FakeCommission('pending')))
+            if amount == 5:
+                ui.handle_popup_confirm.assert_called_once_with('COMMISSION_OIL_5')
+            else:
+                ui.handle_popup_confirm.assert_not_called()
+
+    def test_oil_notice_images_and_ocr_are_distinct(self):
+        import numpy as np
+        from module.base.utils import load_image
+        from module.commission.commission import (
+            KR_COMMISSION_OIL_CONFIRM, KR_COMMISSION_OIL_FIVE_CONFIRM, OCR_KR_COMMISSION_OIL)
+        for button, amount, other in ((KR_COMMISSION_OIL_CONFIRM, 10, KR_COMMISSION_OIL_FIVE_CONFIRM),
+                                      (KR_COMMISSION_OIL_FIVE_CONFIRM, 5, KR_COMMISSION_OIL_CONFIRM)):
+            frame = load_image(button.file)
+            self.assertTrue(button.match(frame, offset=(5, 5), similarity=0.95))
+            self.assertFalse(other.match(frame, offset=(5, 5), similarity=0.95))
+            self.assertFalse(button.match(np.zeros_like(frame), offset=(5, 5), similarity=0.95))
+            self.assertEqual(OCR_KR_COMMISSION_OIL.ocr(frame), amount)
 
     def test_limited_daily_departure_also_loses_expiry(self):
         from module.commission.project import Commission

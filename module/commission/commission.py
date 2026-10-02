@@ -32,6 +32,9 @@ COMMISSION_SCROLL = Scroll(COMMISSION_SCROLL_AREA, color=(247, 211, 66), name='C
 KR_COMMISSION_OIL_CONFIRM = Button(
     area=(422, 329, 856, 360), color=(), button=(422, 329, 856, 360),
     file='./assets/kr/commission/KR_OIL_NOTICE.png', name='KR_COMMISSION_OIL_CONFIRM')
+KR_COMMISSION_OIL_FIVE_CONFIRM = Button(
+    area=(422, 329, 856, 360), color=(), button=(422, 329, 856, 360),
+    file='./assets/kr/commission/KR_OIL_NOTICE_5.png', name='KR_COMMISSION_OIL_FIVE_CONFIRM')
 KR_COMMISSION_OIL_MAXED = Button(
     area=(359, 310, 663, 337), color=(), button=(359, 310, 663, 337),
     file='./assets/kr/commission/KR_OIL_MAXED.png', name='KR_COMMISSION_OIL_MAXED')
@@ -460,11 +463,16 @@ class RewardCommission(UI, InfoHandler):
         self.device.image_save('./log/kr_commission_departure_before_handling.png')
         self.handle_info_bar()
         self.device.screenshot()
-        # Only the observed, non-premium 10-oil departure notice is allowed.
+        # Only the observed, non-premium 5/10-oil departure notices are allowed.
         # An unrelated modal (especially Abandon) must still be cancelled.
         if (self.appear(KR_COMMISSION_OIL_CONFIRM, offset=(5, 5), similarity=0.95)
                 and OCR_KR_COMMISSION_OIL.ocr(self.device.image) == 10):
             if self.handle_popup_confirm('COMMISSION_OIL_10'):
+                self.device.sleep(1)
+                self.device.screenshot()
+        elif (self.appear(KR_COMMISSION_OIL_FIVE_CONFIRM, offset=(5, 5), similarity=0.95)
+                and OCR_KR_COMMISSION_OIL.ocr(self.device.image) == 5):
+            if self.handle_popup_confirm('COMMISSION_OIL_5'):
                 self.device.sleep(1)
                 self.device.screenshot()
         # A stale Start coordinate may have opened Abandon. Any modal other

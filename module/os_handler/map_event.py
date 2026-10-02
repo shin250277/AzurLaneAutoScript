@@ -230,6 +230,8 @@ class MapEventHandler(EnemySearchingHandler):
         """
         if self.match_template_color(AUTO_SEARCH_OS_MAP_OPTION_OFF, offset=(5, 120)):
             if self.info_bar_count() >= 2:
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_os_auto_search_info_end.png')
                 self.device.screenshot_interval_set()
                 self.os_auto_search_quit(drop=drop)
                 raise CampaignEnd
