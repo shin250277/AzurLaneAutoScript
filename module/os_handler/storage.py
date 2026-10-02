@@ -37,6 +37,13 @@ class StorageHandler(GlobeOperation, ZoneManager):
             # A game bug that AUTO_SEARCH_REWARD from the last cleared zone popups
             if self.appear_then_click(AUTO_SEARCH_REWARD, offset=(50, 50), interval=3):
                 continue
+            # KR can surface a completed battle while entering a new zone.
+            # Reuse confirmed result handlers; do not tap an unknown overlay.
+            if self.config.SERVER == 'kr':
+                if self.handle_battle_status():
+                    continue
+                if self.handle_exp_info():
+                    continue
             if self.handle_map_event():
                 continue
 
