@@ -204,6 +204,7 @@ class Homography:
             self.detect_edges(image_edge, hough_th=self.config.HOMO_EDGE_HOUGHLINES_THRESHOLD)
             self._recover_kr_os_vertical_edge(image_edge)
             self._reject_kr_os_internal_horizontal_edge(image_edge)
+            self._reject_kr_os_internal_vertical_edge(image_edge)
 
         # Log
         time_cost = round(time.time() - start_time, 3)
@@ -273,6 +274,39 @@ class Homography:
         else:
             return
         logger.info('KR OpSi: rejected short internal horizontal fog boundary')
+
+    def _reject_kr_os_internal_vertical_edge(self, image):
+        """Reject the short fog-edge pair observed in KR Caribbean Sea C.
+
+        Require an almost uninterrupted outer border opposite a weaker line;
+        never resolve two similarly supported borders by guessing their side.
+        Known OpSi maps are wider than six columns.
+        """
+        if (getattr(self.config, 'SERVER', None) != 'kr'
+                or not self.config.Scheduler_Command.startswith('Opsi')
+                or not self.left_edge or not self.right_edge
+                or not 0 < self.right_edge - self.left_edge <= 6 * self.config.HOMO_TILE[0]):
+            return
+        y0 = max(0, int(self.lower_edge or 0))
+        y1 = min(image.shape[0], int(self.upper_edge or image.shape[0]))
+        support = []
+        for edge in (self.left_edge, self.right_edge):
+            x = int(round(edge))
+            if not 1 <= x < image.shape[1] - 1 or y1 <= y0:
+                return
+            valid = self.ui_mask_homo_stroke[y0:y1, x] > 0
+            count = np.count_nonzero(valid)
+            if count < 300:
+                return
+            pixels = np.any(image[y0:y1, x - 1:x + 2] > 0, axis=1)
+            support.append(np.count_nonzero(pixels & valid) / count)
+        if support[0] >= 0.98 and support[1] < 0.8:
+            self.right_edge = None
+        elif support[1] >= 0.98 and support[0] < 0.8:
+            self.left_edge = None
+        else:
+            return
+        logger.info('KR OpSi: rejected short internal vertical fog boundary')
 
     def search_tile_center(self, image, threshold_good=0.9, threshold=0.8, encourage=1.0):
         """
