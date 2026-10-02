@@ -1,5 +1,6 @@
 """Reject a short fog boundary paired with a well-supported outer edge."""
 import ast
+import re
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
@@ -58,6 +59,13 @@ class HorizontalEdgeTest(unittest.TestCase):
         obj = self.recover(missing=True)
         self.assertIsNone(obj.lower_edge)
         self.assertEqual(obj.upper_edge, 520)
+
+    def test_known_opsi_maps_cannot_fit_between_short_pair(self):
+        tree = ast.parse(Path('module/os/map_data.py').read_text(encoding='utf-8'))
+        zones = next(ast.literal_eval(n.value) for n in tree.body
+                     if isinstance(n, ast.Assign) and isinstance(n.value, ast.Dict))
+        for zone in zones.values():
+            self.assertGreater(int(re.search(r'[0-9]+', zone['shape']).group()), 4)
 
 
 if __name__ == '__main__':
