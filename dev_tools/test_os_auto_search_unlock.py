@@ -24,6 +24,8 @@ class SearchUnlockTest(unittest.TestCase):
                      AUTO_SEARCH_OS_MAP_OPTION_ON='on')
         exec(compile(tree, str(path), 'exec'), scope)
         ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.timer_factory = scope['Timer']
         ui.loop.return_value = iter([None])
         ui.is_in_map.return_value = False
         ui.appear.return_value = False
@@ -49,6 +51,21 @@ class SearchUnlockTest(unittest.TestCase):
         with self.assertRaises(takeover):
             daemon(ui)
         ui.device.click.assert_not_called()
+
+    def test_kr_transition_wait_is_bounded_and_diagnostic(self):
+        daemon, ui, takeover = self.make_daemon()
+        with self.assertRaises(takeover):
+            daemon(ui)
+        ui.timer_factory.assert_any_call(15, count=10)
+        ui.device.image_save.assert_called_once_with('./log/kr_os_search_unavailable.png')
+
+    def test_other_servers_keep_original_deadline(self):
+        daemon, ui, takeover = self.make_daemon()
+        ui.config.SERVER = 'jp'
+        with self.assertRaises(takeover):
+            daemon(ui)
+        ui.timer_factory.assert_any_call(5, count=10)
+        ui.device.image_save.assert_not_called()
 
 
 if __name__ == '__main__':

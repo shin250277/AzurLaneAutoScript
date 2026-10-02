@@ -513,7 +513,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
         logger.hr('OS auto search', level=2)
         self.on_auto_search_battle_count_reset()
         unlock_checked = False
-        unlock_check_timer = Timer(5, count=10).start()
+        # KR can show the previous zone's rewards after returning from EMP
+        # recovery. Allow a bounded transition window, not an unlock bypass.
+        unlock_check_timer = Timer(15 if self.config.SERVER == 'kr' else 5, count=10).start()
         self.ash_popup_canceled = False
 
         success = True
@@ -549,6 +551,8 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
             # A reward can arrive on the first frame after the deadline.
             # Handle known controls before deciding that search is unavailable.
             if not unlock_checked and unlock_check_timer.reached():
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_os_search_unavailable.png')
                 logger.critical('Unable to recognize auto search in current zone')
                 logger.critical('Check the current screen and OpSi auto-search unlock status')
                 raise RequestHumanTakeover
