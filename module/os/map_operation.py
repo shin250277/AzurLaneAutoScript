@@ -132,6 +132,12 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         ocr = Ocr(MAP_NAME, lang='azur_lane', letter=(206, 223, 247), threshold=96,
                   name='OCR_OS_MAP_NAME')
         name = ''.join(ocr.ocr(self.device.image).upper().split())
+        # Exact readings verified against KR west B/E map titles. Do not
+        # infer a compass region from a shared final sector letter alone.
+        west_names = {'NASH-STIIB': 'NA Ocean W Sector B',
+                      'NASH-STIIE': 'NA Ocean W Sector E'}
+        if name in west_names:
+            return west_names[name]
         suffix = name[-1] if name and name[-1] in 'ABCDEFGH' else ''
         # The azur_lane model renders 사우스웨스트 consistently as an
         # AFTATIIA-like sequence. Require that distinctive sequence instead
