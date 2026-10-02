@@ -5,7 +5,7 @@ import numpy as np
 from module.base.timer import Timer
 from module.base.utils import area_offset
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_1_RYZA
-from module.exception import CampaignEnd, GameNotRunningError, MapDetectionError
+from module.exception import CampaignEnd, GameNotRunningError, MapDetectionError, RequestHumanTakeover
 from module.handler.assets import AUTO_SEARCH_MENU_CONTINUE, GAME_TIPS, GET_MISSION
 from module.logger import logger
 from module.map.assets import MAP_PREPARATION, MAP_PREPARATION_HARD
@@ -394,6 +394,13 @@ class Camera(MapOperation):
         location = location_ensure(location)
         logger.info('Focus to: %s' % location2node(location))
 
+        # Conflicting KR OpSi edge corrections can alternate between opposite
+        # sides forever. Stop before the generic click guard restarts the game;
+        # do not guess a different map size or treat this as successful focus.
+        guard_cycle = (getattr(self.config, 'SERVER', None) == 'kr'
+                       and str(getattr(self.config, 'Scheduler_Command', '')).startswith('Opsi'))
+        camera_history = []
+
         while 1:
             vector = np.array(location) - self.camera
             swipe = tuple(np.min([np.abs(vector), swipe_limit], axis=0) * np.sign(vector))
@@ -401,6 +408,18 @@ class Camera(MapOperation):
 
             if not has_swiped:
                 break
+
+            if guard_cycle:
+                camera_history.append(tuple(self.camera))
+                camera_history = camera_history[-6:]
+                if (len(camera_history) == 6
+                        and camera_history[0] != camera_history[1]
+                        and camera_history[::2] == [camera_history[0]] * 3
+                        and camera_history[1::2] == [camera_history[1]] * 3):
+                    logger.critical(f'KR OpSi camera correction cycle: target={location}, '
+                                    f'shape={self.map.shape}, positions={camera_history}')
+                    self.device.image_save('./log/kr_os_camera_cycle.png')
+                    raise RequestHumanTakeover('KR OpSi camera geometry needs inspection')
 
     def full_scan(self, queue=None, must_scan=None, battle_count=0, mystery_count=0, siren_count=0, carrier_count=0,
                   mode='normal'):
