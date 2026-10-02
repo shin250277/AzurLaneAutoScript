@@ -566,6 +566,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
                 # tactical map. Close it without leaving auto-search.
                 continue
             if self.combat_appear():
+                # Entry can go straight into combat before a map option is seen.
+                # A completed battle must not trip the initial recognition timer.
+                unlock_checked = True
                 self.on_auto_search_battle_count_add()
                 if strategic and self.config.task_switched():
                     self.interrupt_auto_search()

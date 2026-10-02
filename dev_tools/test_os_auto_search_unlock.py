@@ -22,6 +22,7 @@ class SearchUnlockTest(unittest.TestCase):
                      AUTO_SEARCH_OS_MAP_OPTION_OFF='off',
                      AUTO_SEARCH_OS_MAP_OPTION_OFF_DISABLED='disabled',
                      AUTO_SEARCH_OS_MAP_OPTION_ON='on')
+        scope['KR_OS_MISSION_COMPLETE'] = 'mission'
         exec(compile(tree, str(path), 'exec'), scope)
         ui = Mock()
         ui.config.SERVER = 'kr'
@@ -30,7 +31,19 @@ class SearchUnlockTest(unittest.TestCase):
         ui.is_in_map.return_value = False
         ui.appear.return_value = False
         ui.handle_os_auto_search_map_option.return_value = False
+        ui.handle_retirement.return_value = False
+        ui.appear_then_click.return_value = False
         return scope[method.name], ui, Takeover
+
+    def test_combat_before_deadline_confirms_search_after_long_battle(self):
+        daemon, ui, _ = self.make_daemon()
+        ui.loop.return_value = iter([None, None])
+        ui.timer_factory.return_value.reached.side_effect = [False, True]
+        ui.combat_appear.side_effect = [True, False]
+        ui.auto_search_combat.return_value = True
+        ui.handle_map_event.return_value = False
+        self.assertEqual(daemon(ui), 1)
+        ui.device.image_save.assert_not_called()
 
     def test_reward_arriving_at_timeout_is_handled_first(self):
         daemon, ui, _ = self.make_daemon()

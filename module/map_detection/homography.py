@@ -202,6 +202,7 @@ class Homography:
             cv2.bitwise_and(image_edge, image_trans, dst=image_edge)
             cv2.bitwise_and(image_edge, self.ui_mask_homo_stroke, dst=image_edge)
             self.detect_edges(image_edge, hough_th=self.config.HOMO_EDGE_HOUGHLINES_THRESHOLD)
+            self._recover_kr_os_vertical_edge(image_edge)
 
         # Log
         time_cost = round(time.time() - start_time, 3)
@@ -213,6 +214,30 @@ class Homography:
             '/' if self.left_edge else ' ', '_' if self.upper_edge else ' ', '\\' if self.right_edge else ' ',
             point2str(*self.homo_loca, length=3))
                     )
+
+    def _recover_kr_os_vertical_edge(self, image):
+        """Recover a partially occluded OpSi edge without relaxing other maps.
+
+        KR failure frames from both corners lose the vertical boundary at 300
+        Hough votes. Keep the original result unless 240 votes produces one
+        grid-aligned vertical line and leaves the horizontal boundary unchanged.
+        """
+        if (getattr(self.config, 'SERVER', None) != 'kr'
+                or not self.config.Scheduler_Command.startswith('Opsi')
+                or self.config.HOMO_EDGE_HOUGHLINES_THRESHOLD != 300
+                or self.left_edge or self.right_edge
+                or not (self.lower_edge or self.upper_edge)):
+            return
+        original = (self.left_edge, self.right_edge, self.lower_edge,
+                    self.upper_edge, self._map_edge_count)
+        self.detect_edges(image, hough_th=240)
+        if (self._map_edge_count[0] == 1
+                and bool(self.left_edge) != bool(self.right_edge)
+                and (self.lower_edge, self.upper_edge) == original[2:4]):
+            logger.info('KR OpSi: recovered partially occluded vertical map edge')
+        else:
+            (self.left_edge, self.right_edge, self.lower_edge,
+             self.upper_edge, self._map_edge_count) = original
 
     def search_tile_center(self, image, threshold_good=0.9, threshold=0.8, encourage=1.0):
         """
