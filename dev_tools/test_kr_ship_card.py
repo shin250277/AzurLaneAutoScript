@@ -7,6 +7,18 @@ import unittest
 
 
 class ShipCardTest(unittest.TestCase):
+    def test_contextual_card_click_stays_outside_dialogue(self):
+        for path, name in [('module/combat/combat.py', 'KR_SHIP_CARD'),
+                           ('module/ui/ui.py', 'KR_UI_SHIP_CARD')]:
+            with self.subTest(handler=name):
+                tree = ast.parse(Path(path).read_text(encoding='utf-8'))
+                value = next(n.value for n in tree.body if isinstance(n, ast.Assign)
+                             and any(isinstance(t, ast.Name) and t.id == name
+                                     for t in n.targets))
+                target = ast.literal_eval(next(k.value for k in value.keywords
+                                               if k.arg == 'button'))
+                self.assertEqual(target, (980, 650, 1030, 680))
+
     def setUp(self):
         path = Path('module/combat/combat.py')
         tree = ast.parse(path.read_text(encoding='utf-8'))

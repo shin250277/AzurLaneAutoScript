@@ -310,7 +310,7 @@ KR_AUTOMATION_NOTICE = Button(
 
 KR_UI_SHIP_CARD = Button(
     area=(40, 360, 85, 410), color=(120, 124, 132),
-    button=(550, 500, 730, 660),
+    button=(980, 650, 1030, 680),
     file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png', name='KR_UI_SHIP_CARD')
 
 
