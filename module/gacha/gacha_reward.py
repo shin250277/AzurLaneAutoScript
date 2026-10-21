@@ -30,7 +30,9 @@ KR_GACHA_SUBMIT_CONFIRM = Button(
     button=(699, 451, 875, 512), name='KR_GACHA_SUBMIT_CONFIRM')
 KR_GACHA_NEW_SHIP = Button(
     area=(40, 360, 85, 410), color=(120, 124, 132),
-    button=(550, 500, 730, 660),
+    # The dialogue panel consumes taps in the former central target. Use the
+    # blank strip beside it, away from comment/lock/share/stats controls.
+    button=(980, 650, 1030, 680),
     file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png',
     name='KR_GACHA_NEW_SHIP')
 OCR_BUILD_CUBE_COUNT = Digit(BUILD_CUBE_COUNT, letter=(255, 247, 247), threshold=64)
@@ -62,7 +64,10 @@ class RewardGacha(GachaUI, Retirement):
     def ui_additional(self, get_ship=True):
         if self.config.SERVER == 'kr' and self.appear(
                 KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
-            self.device.click(KR_GACHA_NEW_SHIP)
+            if self.appear(KR_GACHA_NEW_SHIP, offset=(3, 3), interval=1, similarity=0.85):
+                self.device.click(KR_GACHA_NEW_SHIP)
+            # Consume the card even during cooldown; generic handlers must not
+            # bypass the click interval or click the dialogue again.
             return True
         return super().ui_additional(get_ship=get_ship)
 
@@ -263,7 +268,8 @@ class RewardGacha(GachaUI, Retirement):
             self.gacha_guard_shop()
             if self.config.SERVER == 'kr' and self.appear(
                     KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
-                self.device.click(KR_GACHA_NEW_SHIP)
+                if self.appear(KR_GACHA_NEW_SHIP, offset=(3, 3), interval=1, similarity=0.85):
+                    self.device.click(KR_GACHA_NEW_SHIP)
                 empty_timer.reset()
                 continue
             # The empty-slot image can also match a fading acquisition screen.
@@ -351,7 +357,8 @@ class RewardGacha(GachaUI, Retirement):
             # Its left-side comment icon is stable and absent from build pools.
             if self.config.SERVER == 'kr' and self.appear(
                     KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
-                self.device.click(KR_GACHA_NEW_SHIP)
+                if self.appear(KR_GACHA_NEW_SHIP, offset=(3, 3), interval=1, similarity=0.85):
+                    self.device.click(KR_GACHA_NEW_SHIP)
                 continue
             if not submitted and self.config.SERVER == 'kr' and self.image_color_count(
                     KR_GACHA_SUBMIT_CONFIRM,

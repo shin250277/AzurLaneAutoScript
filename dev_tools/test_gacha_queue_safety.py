@@ -77,6 +77,35 @@ class GachaQueueSafetyTest(unittest.TestCase):
         self.ui.device.click.assert_called_once_with('KR_GACHA_NEW_SHIP')
         self.ui.gacha_side_navbar_ensure.assert_called_once_with(bottom=3)
 
+    def test_acquisition_click_is_throttled(self):
+        self.ui.appear.return_value = True
+        self.ui.gacha_guard_shop.side_effect = [None, RuntimeError('end observation')]
+        with self.assertRaises(RuntimeError):
+            self.flush(self.ui)
+        self.ui.appear.assert_any_call('KR_GACHA_NEW_SHIP', offset=(3, 3),
+                                       interval=1, similarity=0.85)
+
+    def test_acquisition_target_is_outside_dialogue(self):
+        path = Path(__file__).resolve().parents[1] / 'module/gacha/gacha_reward.py'
+        tree = ast.parse(path.read_text(encoding='utf-8'))
+        assignment = next(n for n in tree.body if isinstance(n, ast.Assign)
+                          and any(isinstance(t, ast.Name) and t.id == 'KR_GACHA_NEW_SHIP'
+                                  for t in n.targets))
+        target = ast.literal_eval(next(k.value for k in assignment.value.keywords
+                                       if k.arg == 'button'))
+        # 2026-10-21 acquisition dialogue extends through x=943, y=694.
+        # Keep the target right of it and left of the stats button at x=1058.
+        self.assertGreater(target[0], 946)
+        self.assertLess(target[2], 1055)
+
+    def test_acquisition_cooldown_does_not_fall_through(self):
+        self.ui.appear.side_effect = lambda button, **kw: not kw.get('interval')
+        self.ui.gacha_guard_shop.side_effect = [None, RuntimeError('end observation')]
+        with self.assertRaises(RuntimeError):
+            self.flush(self.ui)
+        self.ui.device.click.assert_not_called()
+        self.ui.appear_then_click.assert_not_called()
+
 
 if __name__ == '__main__':
     unittest.main()
