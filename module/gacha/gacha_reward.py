@@ -234,7 +234,7 @@ class RewardGacha(GachaUI, Retirement):
 
         return target_pool
 
-    def gacha_flush_queue(self, skip_first_screenshot=True):
+    def gacha_flush_queue(self, skip_first_screenshot=True, collect_only=False):
         """
         Flush build order queue to ensure empty before submission.
 
@@ -281,22 +281,32 @@ class RewardGacha(GachaUI, Retirement):
                 continue
             empty_timer.reset()
 
+            if collect_only:
+                # The ordinary queue handler may confirm quick-finish or
+                # retirement. A collect-only run must fail closed instead.
+                if (self.retirement_appear()
+                        or self.appear(POPUP_CONFIRM, offset=(20, 20))
+                        or (self.config.SERVER == 'kr' and self.appear(
+                            KR_GACHA_FINISH_CONFIRM, offset=(3, 3), similarity=0.75))):
+                    raise RequestHumanTakeover(
+                        'Collect-only construction needs confirmation; stop without spending or retiring')
+
             if self.appear_then_click(BUILD_FINISH_ORDERS, interval=3):
                 confirm_timer.reset()
                 continue
 
-            if self.handle_retirement():
+            if not collect_only and self.handle_retirement():
                 confirm_timer.reset()
                 continue
 
-            if self.handle_popup_confirm('FINISH_ORDERS'):
+            if not collect_only and self.handle_popup_confirm('FINISH_ORDERS'):
                 if confirm_mode:
                     self.device.sleep((0.5, 0.8))
                     self.device.click(BUILD_FINISH_ORDERS)  # Skip animation, safe area
                     confirm_mode = False
                 confirm_timer.reset()
                 continue
-            if self.config.SERVER == 'kr' and self.appear_then_click(
+            if not collect_only and self.config.SERVER == 'kr' and self.appear_then_click(
                     KR_GACHA_FINISH_CONFIRM, offset=(3, 3),
                     interval=3, similarity=0.75):
                 confirm_timer.reset()
@@ -397,7 +407,15 @@ class RewardGacha(GachaUI, Retirement):
         # builds to ensure starting fresh
         # Upon exit, expected to be in
         # main Build page
-        self.gacha_flush_queue()
+        if self.config.Gacha_Amount == 0:
+            self.gacha_flush_queue(collect_only=True)
+        else:
+            self.gacha_flush_queue()
+
+        # Collect completed builds without entering any new-order path.
+        if self.config.Gacha_Amount == 0:
+            logger.info('Collect-only construction completed; no new orders')
+            return True
 
         # OCR Gold and Cubes
         self.build_coin_count = OCR_BUILD_COIN_COUNT.ocr(self.device.image)

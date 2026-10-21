@@ -36,6 +36,25 @@ class GachaQueueSafetyTest(unittest.TestCase):
             self.guard(self.ui)
         self.ui.device.click.assert_not_called()
 
+    def test_collect_only_refuses_quick_finish_confirmation(self):
+        self.ui.ui_page_appear.return_value = False
+        self.ui.retirement_appear.return_value = False
+        self.ui.appear.side_effect = lambda button, **kwargs: button == 'KR_GACHA_FINISH_CONFIRM'
+        with self.assertRaises(RuntimeError):
+            self.flush(self.ui, collect_only=True)
+        self.ui.appear_then_click.assert_not_called()
+        self.ui.handle_popup_confirm.assert_not_called()
+        self.ui.handle_retirement.assert_not_called()
+        self.ui.device.click.assert_not_called()
+
+    def test_collect_only_refuses_retirement(self):
+        self.ui.ui_page_appear.return_value = False
+        self.ui.retirement_appear.return_value = True
+        with self.assertRaises(RuntimeError):
+            self.flush(self.ui, collect_only=True)
+        self.ui.handle_retirement.assert_not_called()
+        self.ui.appear_then_click.assert_not_called()
+
     def test_non_shop_continues_without_input(self):
         self.ui.ui_page_appear.return_value = False
         self.guard(self.ui)

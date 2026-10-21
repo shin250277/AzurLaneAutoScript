@@ -17,4 +17,6 @@ class KrMapPreparationOffsetTest(unittest.TestCase):
         self.assertFalse(button.match(shifted, offset=(20, 20)))
         self.assertTrue(button.match(shifted, offset=(80, 20)))
         self.assertEqual(button.button[0], MAP_PREPARATION.raw_button['kr'][0] + 56)
+        close = button.crop((170, -325, 200, -295))
+        self.assertEqual(close.button, (1076, 160, 1106, 190))
         self.assertFalse(button.match(np.zeros_like(frame), offset=(80, 20)))

@@ -2078,6 +2078,7 @@
     "Amount": {
       "name": "Amount",
       "help": "",
+      "0": "0 (collect only)",
       "1": "1",
       "2": "2",
       "3": "3",

@@ -1063,6 +1063,14 @@ class UI(InfoHandler):
             # Follow the matching dialog's horizontal displacement.
             self.device.click(kr_prep.move((45, -335), name='KR_PREPARATION_CLOSE'))
             return True
+        if self.config.SERVER == 'kr' and self.appear(
+                MAP_PREPARATION, offset=(80, 20), interval=3):
+            # The legacy KR shortcut dialog also expands for additional
+            # rewards (11-4). Follow its matched displacement and use only
+            # the close icon, never the shortcut/paid currency controls.
+            self.device.click(MAP_PREPARATION.crop(
+                (170, -325, 200, -295), name='KR_LEGACY_PREPARATION_CLOSE'))
+            return True
         if self.appear(MAP_PREPARATION, offset=(30, 30), interval=3) \
                 or self.appear(MAP_PREPARATION_HARD, offset=(30, 30), interval=3) \
                 or self.appear(FLEET_PREPARATION, offset=(20, 50), interval=3) \
