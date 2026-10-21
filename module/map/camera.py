@@ -412,6 +412,15 @@ class Camera(MapOperation):
             if guard_cycle:
                 camera_history.append(tuple(self.camera))
                 camera_history = camera_history[-6:]
+                # Keep the opposite endpoint before the sixth observation
+                # stops the loop. A single final frame cannot distinguish a
+                # false edge from an incorrect map shape. Local diagnostics
+                # only; do not add a swipe or change the protected stop.
+                if (len(camera_history) == 5
+                        and camera_history[0] != camera_history[1]
+                        and camera_history[::2] == [camera_history[0]] * 3
+                        and camera_history[1::2] == [camera_history[1]] * 2):
+                    self.device.image_save('./log/kr_os_camera_cycle_previous.png')
                 if (len(camera_history) == 6
                         and camera_history[0] != camera_history[1]
                         and camera_history[::2] == [camera_history[0]] * 3

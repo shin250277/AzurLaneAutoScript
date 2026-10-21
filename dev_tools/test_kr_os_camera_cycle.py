@@ -38,18 +38,22 @@ class CameraCycleTest(unittest.TestCase):
         with self.assertRaises(RequestHumanTakeover):
             self.run_focus([(1, 6), (18, 6)] * 8)
         self.assertEqual(self.camera.map_swipe.call_count, 6)
+        self.camera.device.image_save.assert_any_call('./log/kr_os_camera_cycle_previous.png')
+        self.camera.device.image_save.assert_any_call('./log/kr_os_camera_cycle.png')
 
     def test_other_servers_and_normal_maps_keep_existing_behavior(self):
         for server, task in [('jp', 'OpsiDaily'), ('kr', 'Main')]:
             obj = self.run_focus([(1, 6), (18, 6)] * 4, server, task)
             self.assertEqual(obj.map_swipe.call_count, 9)
+            obj.device.image_save.assert_not_called()
 
     def test_short_overshoot_may_recover(self):
         obj = self.run_focus([(1, 6), (18, 6), (1, 6), (18, 6), (12, 6)])
         self.assertEqual(obj.camera, (12, 6))
 
     def test_progress_is_not_a_cycle(self):
-        self.run_focus([(x, 6) for x in range(1, 13)])
+        obj = self.run_focus([(x, 6) for x in range(1, 13)])
+        obj.device.image_save.assert_not_called()
 
     def test_stationary_alignment_keeps_existing_protection(self):
         self.run_focus([(12, 6)] * 8)
