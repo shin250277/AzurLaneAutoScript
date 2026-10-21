@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import *
 from module.config.utils import DEFAULT_TIME, get_os_next_reset
@@ -10,6 +11,14 @@ from module.os.globe_detection import GLOBE_MAP_SHAPE
 from module.os.globe_operation import GlobeOperation
 from module.os.globe_zone import Zone, ZoneManager
 from module.os_handler.assets import *
+
+
+# Normal and hard KR Arbiter missions have different prefixes. Reuse only
+# their shared name in the existing asset; never follow the boss as a daily.
+KR_MISSION_ARBITER = Button(
+    area=(655, 186, 710, 207), color=(112, 118, 139),
+    button=(655, 186, 710, 207),
+    file='./assets/kr/os_handler/MISSION_MONTHLY_BOSS.png')
 
 
 class MissionAtCurrentZone(Exception):
@@ -120,7 +129,9 @@ class MissionHandler(GlobeOperation, ZoneManager):
         self.os_mission_enter()
 
         checkout_offset = (20, 20)
-        if self.appear(MISSION_MONTHLY_BOSS, offset=(20, 20)):
+        if (self.appear(MISSION_MONTHLY_BOSS, offset=(20, 20))
+                or (self.config.SERVER == 'kr'
+                    and self.appear(KR_MISSION_ARBITER, offset=(40, 20)))):
             # If monthly BOSS hasn't been killed, there is always a task.
             logger.info('Monthly BOSS mission found, checking missions bellow it')
             checkout_offset = (-20, 100, 20, 150)

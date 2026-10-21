@@ -21,7 +21,8 @@ def method(path, name):
     scope = dict(logger=Mock(), Timer=Mock(), OSExploreError=ExploreError,
                  OSZoneLockedError=LockedError, ActionPointLimit=type('APLimit', (Exception,), {}),
                  ZONE_LOCKED='locked', ZONE_ENTRANCE='entry', AUTO_SEARCH_REWARD='reward')
-    scope.update(MISSION_MONTHLY_BOSS='boss', MISSION_CHECKOUT='checkout')
+    scope.update(MISSION_MONTHLY_BOSS='boss', KR_MISSION_ARBITER='kr_boss',
+                 MISSION_CHECKOUT='checkout')
     exec(compile(tree, path, 'exec'), scope)
     return scope[name]
 
