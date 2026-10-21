@@ -340,6 +340,14 @@ class GlobeOperation(ActionPointHandler):
             if self.is_in_globe():
                 break
 
+            # KR zone-name fallback can race an immediate battle on entry.
+            # Only consume recognized results before retrying map navigation.
+            if self.config.SERVER == 'kr':
+                if self.handle_battle_status():
+                    continue
+                if self.handle_exp_info():
+                    continue
+
             if self.appear_then_click(MAP_GOTO_GLOBE, offset=(200, 5), interval=5):
                 # Just to initialize interval timer of MAP_GOTO_GLOBE_FOG
                 self.appear(MAP_GOTO_GLOBE_FOG, interval=5)
