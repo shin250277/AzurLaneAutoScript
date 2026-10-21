@@ -189,23 +189,35 @@ class IslandProduction(IslandRecipe, IslandDock):
             if self.handle_island_additional():
                 continue
             if self.appear_then_click(ISLAND_PRODUCTION_RECEIVE, offset=(120, 20), interval=2):
+                if self.config.SERVER == 'kr':
+                    # Do not reopen the slot while its receive animation is
+                    # still in flight. The following loop only closes popups.
+                    break
                 continue
             if self.ui_page_appear(page_island_manage, interval=2) and not self.is_enter_window_shown():
                 self.device.click(slot_button)
                 continue
             if self.is_enter_window_shown() and self.appear(ISLAND_PRODUCTION_SELECT_CHARACTER, offset=(60, 20)):
                 break
-        for _ in self.loop():
+        settled = Timer(2, count=3).start()
+        for _ in self.loop(skip_first=False, timeout=15):
             if self.handle_island_additional():
+                settled.reset()
                 continue
             if self.is_enter_window_shown() or self.appear(ISLAND_PRODUCTION_RERUN, offset=(20, 20)):
                 self.device.click(ISLAND_CLICK_SAFE_AREA)
+                settled.reset()
                 continue
             if self.match_template_color(page_island_manage.check_button) and not self.is_enter_window_shown() and not self.appear(ISLAND_PRODUCTION_SELECT_CHARACTER, offset=(60, 20)):
+                if self.config.SERVER == 'kr' and not settled.reached():
+                    continue
                 if self.config.SERVER == 'kr' and self.is_slot_finished(slot_button):
                     self.device.image_save('./log/kr_island_production_unclaimed.png')
                     raise RequestHumanTakeover('Production reward remains unclaimed after closing the popup')
                 return True
+            settled.reset()
+        self.device.image_save('./log/kr_island_production_close_timeout.png')
+        raise RequestHumanTakeover('Production popup did not settle; do not swipe or dispatch')
 
     def claim_reward_in_page(self, finished_slots=[]):
         for place_id, slot_grid in self.slot_grids.items():
@@ -285,9 +297,17 @@ class IslandProduction(IslandRecipe, IslandDock):
                 self.device.image_save('./log/kr_island_recipe_selection_unknown.png')
                 raise RequestHumanTakeover('Korean recipe selection could not be verified')
             counters = self.get_recipe_ingredient_counters()
-            if not counters or any(counter[0] < 0 or counter[1] <= 0 for counter in counters):
+            from module.island.kr_preflight import validate_recipe_counters
+            from module.island_handler.recipe import ISLAND_RECIPE_AMOUNT_OCR
+            from module.island.data import DIC_ISLAND_RECIPE
+            amount = ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image)
+            if self.get_active_recipe_id() != recipe_id or not validate_recipe_counters(
+                    DIC_ISLAND_RECIPE[recipe_id]['commission_cost'], amount, counters,
+                    require_available=False):
                 self.device.image_save('./log/kr_island_ingredient_unknown.png')
-                raise RequestHumanTakeover('Korean ingredient counters could not be verified')
+                raise RequestHumanTakeover('Korean ingredient count/cost/balance could not be verified; no spending')
+            if any(stock < required for stock, required, remaining in counters):
+                logger.info('KR recipe {}: insufficient owned ingredients; audit only, no purchase'.format(recipe_id))
             results[recipe_id] = counters
         return results
 
@@ -346,6 +366,9 @@ class IslandProduction(IslandRecipe, IslandDock):
                 break
         self.island_manage_side_navbar_ensure(upper=1, skip_first_screenshot=False)
         for _ in self.loop():
+            if self.config.SERVER == 'kr' and self.is_enter_window_shown():
+                self.device.click(ISLAND_CLICK_SAFE_AREA)
+                continue
             rows = self._get_tabs()
             count = len(rows)
             if count >= 2:

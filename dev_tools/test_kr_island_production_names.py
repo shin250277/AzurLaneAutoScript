@@ -1,7 +1,7 @@
 import unittest
 import subprocess
 import sys
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from dev_tools.test_os_task_stop_boundaries import method, TaskStopped
 
 
@@ -10,10 +10,13 @@ class IslandProductionNamesTest(unittest.TestCase):
         probe = method('module/island/production.py', 'IslandProduction', 'probe_korean_recipe_counters')
         ui = Mock()
         ui.set_recipe.return_value = True
+        ui.get_active_recipe_id.return_value = 101001
         for counters in (None, [], [(0, 0, 0)]):
             ui.get_recipe_ingredient_counters.return_value = counters
-            with self.assertRaises(TaskStopped):
-                probe(ui, {101001: 790})
+            with patch('module.island_handler.recipe.ISLAND_RECIPE_AMOUNT_OCR') as amount:
+                amount.ocr.return_value = 1
+                with self.assertRaises(TaskStopped):
+                    probe(ui, {101001: 790})
         ui.run_recipe.assert_not_called()
         ui.prepare_ingredients.assert_not_called()
 
@@ -21,10 +24,15 @@ class IslandProductionNamesTest(unittest.TestCase):
         probe = method('module/island/production.py', 'IslandProduction', 'probe_korean_recipe_counters')
         ui = Mock()
         ui.set_recipe.return_value = True
-        ui.get_recipe_ingredient_counters.return_value = [(0, 9, -9)]
-        result = probe(ui, {101001: 790, 101002: 800})
-        self.assertEqual(set(result), {101001, 101002})
-        self.assertEqual(ui.set_recipe.call_count, 2)
+        ui.get_active_recipe_id.return_value = 101001
+        from module.island.data import DIC_ISLAND_RECIPE
+        costs = DIC_ISLAND_RECIPE[101001]['commission_cost']
+        ui.get_recipe_ingredient_counters.return_value = [(100, v, 100-v) for v in costs.values()]
+        with patch('module.island_handler.recipe.ISLAND_RECIPE_AMOUNT_OCR') as amount:
+            amount.ocr.return_value = 1
+            result = probe(ui, {101001: 790})
+        self.assertEqual(set(result), {101001})
+        self.assertEqual(ui.set_recipe.call_count, 1)
         ui.run_recipe.assert_not_called()
         ui.prepare_ingredients.assert_not_called()
 
@@ -133,7 +141,8 @@ assert not empty.match(np.zeros((230, 500, 3), dtype=np.uint8))
         claim = method('module/island/production.py', 'IslandProduction', 'claim_slot_reward',
                        ISLAND_PRODUCTION_RECEIVE='receive', ISLAND_PRODUCTION_SELECT_CHARACTER='character',
                        ISLAND_PRODUCTION_RERUN='rerun', ISLAND_CLICK_SAFE_AREA='safe',
-                       page_island_manage=Mock(check_button='manage'), Button=object)
+                       page_island_manage=Mock(check_button='manage'), Button=object,
+                       Timer=Mock())
         ui = Mock()
         ui.config.SERVER = 'kr'
         ui.loop.side_effect = [range(1), range(1)]
@@ -147,6 +156,26 @@ assert not empty.match(np.zeros((230, 500, 3), dtype=np.uint8))
         with self.assertRaises(TaskStopped):
             claim(ui, 'slot')
         ui.device.image_save.assert_called_once()
+
+    def test_receive_does_not_reopen_slot_before_popup_settles(self):
+        timer = Mock()
+        timer.return_value.start.return_value.reached.side_effect = [False, True]
+        claim = method('module/island/production.py', 'IslandProduction', 'claim_slot_reward',
+                       ISLAND_PRODUCTION_RECEIVE='receive', ISLAND_PRODUCTION_SELECT_CHARACTER='character',
+                       ISLAND_PRODUCTION_RERUN='rerun', ISLAND_CLICK_SAFE_AREA='safe',
+                       page_island_manage=Mock(check_button='manage'), Button=object, Timer=timer)
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.loop.side_effect = [range(3), range(2)]
+        ui.is_slot_finished.side_effect = [True, False]
+        ui.handle_island_additional.return_value = False
+        ui.appear_then_click.return_value = True
+        ui.is_enter_window_shown.return_value = False
+        ui.appear.return_value = False
+        ui.match_template_color.return_value = True
+        self.assertTrue(claim(ui, 'slot'))
+        ui.device.click.assert_not_called()
+        ui.appear_then_click.assert_called_once()
 
     def test_unrecognized_korean_places_stop_before_swiping(self):
         check = method('module/island/production.py', 'IslandProduction', '_check_kr_production_names')

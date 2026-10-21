@@ -230,13 +230,23 @@ class IslandSeasonTask(IslandUI):
         logger.hr('scanning season tasks')
         unfinished_tasks = []
         early_stop = False
+        page_count = 0
         while 1:
+            page_count += 1
+            if self.config.SERVER == 'kr' and (
+                    page_count > 20 or not self.task_names
+                    or len(self.task_names) != len(self.season_task_grid.buttons)):
+                self.device.image_save('./log/kr_island_season_scan_invalid.png')
+                raise RequestHumanTakeover('Incomplete KR season scan; preserve production targets')
             for task_id, button in zip(self.task_names, self.season_task_grid.buttons):
                 image = self.image_crop(button.area, copy=True)
                 if TEMPLATE_ISLAND_SEASON_TASK_OBTAINED.match(image):
                     early_stop = True
                     break
                 if task_id is None:
+                    if self.config.SERVER == 'kr':
+                        self.device.image_save('./log/kr_island_season_unknown.png')
+                        raise RequestHumanTakeover('Unknown KR season task; preserve production targets')
                     logger.warning('Unable to identify season task, skip it')
                     continue
                 else:
@@ -255,10 +265,25 @@ class IslandSeasonTask(IslandUI):
         logger.info(f'Unfinished tasks: {unfinished_tasks}')
         return unfinished_tasks
 
+    def audit_korean_season(self):
+        """Exercise navigation/OCR without claiming or changing the production plan."""
+        self.ui_ensure(page_island_season)
+        self.island_season_bottom_navbar_ensure(left=3)
+        del_cached_property(self, 'season_task_grid')
+        del_cached_property(self, 'task_names')
+        unfinished = self.scan_all()
+        proposed = {}
+        for task_id in unfinished:
+            for item_id, amount in DIC_ISLAND_TASK[task_id]['target'].items():
+                proposed[item_id] = proposed.get(item_id, 0) + amount
+        logger.attr('KR season audit tasks', unfinished)
+        logger.attr('KR season audit candidate (not applied)', proposed)
+        self.device.image_save('./log/kr_island_season_audit.png')
+        raise RequestHumanTakeover('KR season scan complete; production target update remains blocked pending validation')
+
     def run(self):
         if self.config.SERVER == 'kr':
-            raise RequestHumanTakeover('Korean island season-task text OCR is not validated; '
-                                       'do not replace production targets from Chinese OCR.')
+            return self.audit_korean_season()
         self.ui_ensure(page_island_season)
         self.island_season_bottom_navbar_ensure(left=3)
         self.receive_all_reward()

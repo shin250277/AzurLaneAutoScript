@@ -35,7 +35,8 @@ class IslandCharacterRecoveryTest(unittest.TestCase):
         for title, arrow in ((False, True), (True, False), (True, True)):
             with self.subTest(title=title, arrow=arrow):
                 ui = SimpleNamespace(config=SimpleNamespace(SERVER='kr'), device=Mock(),
-                    appear=lambda b, **kw: title if b is ISLAND_DOCK_CHECK else arrow)
+                    appear=lambda b, **kw: title if b is ISLAND_DOCK_CHECK else (
+                        arrow if b is BACK_ARROW_WHITE else False))
                 self.assertEqual(UI._handle_kr_island_character_back(ui), title and arrow)
                 if title and arrow:
                     ui.device.click.assert_called_once_with(BACK_ARROW_WHITE)
@@ -46,6 +47,20 @@ class IslandCharacterRecoveryTest(unittest.TestCase):
         from module.ui.ui import UI
         self.assertFalse(UI._handle_kr_island_character_back(
             SimpleNamespace(config=SimpleNamespace(SERVER='jp'))))
+
+    def test_recipe_recovery_never_starts_production(self):
+        from module.ui.ui import UI
+        from module.island_handler.assets import ISLAND_RECIPE_CHECK
+        from module.ui_white.assets import BACK_ARROW_WHITE
+        for title, arrow in ((False, True), (True, False), (True, True)):
+            ui = SimpleNamespace(config=SimpleNamespace(SERVER='kr'), device=Mock(),
+                appear=lambda b, **kw: title if b is ISLAND_RECIPE_CHECK else (
+                    arrow if b is BACK_ARROW_WHITE else False))
+            self.assertEqual(UI._handle_kr_island_character_back(ui), title and arrow)
+            if title and arrow:
+                ui.device.click.assert_called_once_with(BACK_ARROW_WHITE)
+            else:
+                ui.device.click.assert_not_called()
 
 
 if __name__ == '__main__':

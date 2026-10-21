@@ -517,11 +517,12 @@ class UI(InfoHandler):
     def _handle_kr_island_character_back(self):
         if self.config.SERVER != 'kr':
             return False
-        from module.island_handler.assets import ISLAND_DOCK_CHECK
+        from module.island_handler.assets import ISLAND_DOCK_CHECK, ISLAND_RECIPE_CHECK
         from module.ui_white.assets import BACK_ARROW_WHITE
-        if self.appear(ISLAND_DOCK_CHECK, offset=(0, 20), similarity=0.85) and self.appear(
+        if (self.appear(ISLAND_DOCK_CHECK, offset=(0, 20), similarity=0.85)
+                or self.appear(ISLAND_RECIPE_CHECK, offset=(20, 20), similarity=0.9)) and self.appear(
                 BACK_ARROW_WHITE, offset=(20, 20), interval=2):
-            logger.info('Leave island character selection before changing tasks')
+            logger.info('Leave island character/recipe selection before changing tasks')
             self.device.click(BACK_ARROW_WHITE)
             return True
         return False
