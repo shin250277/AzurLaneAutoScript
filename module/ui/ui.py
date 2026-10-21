@@ -654,7 +654,9 @@ class UI(InfoHandler):
 
     def wait_kr_island_scene(self):
         """Observe the loading transition without clicking through its white areas."""
-        timeout = Timer(20, count=40).start()
+        # A cold island load on MuMu can exceed 20s. Keep a bounded wait,
+        # with no speculative clicks on the loading screen.
+        timeout = Timer(60, count=120).start()
         retried_source_menu = False
         while 1:
             self.device.screenshot()

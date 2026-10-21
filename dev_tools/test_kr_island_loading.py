@@ -47,6 +47,7 @@ with patch('module.ui.ui.Timer') as timer:
     UI.wait_kr_island_scene(ui)
 ui.device.screenshot.assert_called_once_with()
 ui.device.click.assert_not_called()
+timer.assert_called_once_with(60, count=120)
 ui.reset_mock()
 ui.appear.return_value = False
 with patch('module.ui.ui.Timer') as timer:
