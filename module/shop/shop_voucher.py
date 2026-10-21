@@ -1,4 +1,4 @@
-from module.base.button import ButtonGrid
+from module.base.button import Button, ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.base.timer import Timer
 from module.config.redirect_utils.shop_filter import voucher_redirect
@@ -16,6 +16,9 @@ from module.ui.scroll import Scroll
 PRICE_OCR = DigitYuv([], letter=(255, 223, 57), threshold=128, name='Price_ocr')
 VOUCHER_SHOP_SCROLL = Scroll(VOUCHER_SHOP_SCROLL_AREA, color=(255, 255, 255))
 TEMPLATE_VOUCHER_ICON = Template('./assets/shop/cost/Voucher.png')
+KR_VOUCHER_EXCHANGE = Button(
+    area=(755, 620, 826, 655), color=(0, 0, 0), button=(730, 625, 840, 650),
+    file='./assets/kr/shop/SHOP_BUY_CONFIRM_AMOUNT.png')
 
 
 class VoucherShop(ShopClerk, ShopStatus):
@@ -94,7 +97,7 @@ class VoucherShop(ShopClerk, ShopStatus):
         # Original grid is:
         # shop_grid = ButtonGrid(
         #     origin=(463, 200), delta=(156, 191), button_shape=(99, 99), grid_shape=(5, 2), name='SHOP_GRID')
-        if self.config.SERVER in ['cn', 'jp', 'tw']:
+        if self.config.SERVER in ['cn', 'jp', 'tw', 'kr']:
             shop_grid = ButtonGrid(
                 origin=(305, origin_y), delta=(189.5, delta_y), button_shape=(99, 99), grid_shape=(5, row),
                 name='SHOP_GRID')
@@ -181,6 +184,10 @@ class VoucherShop(ShopClerk, ShopStatus):
             return True
         if self.handle_popup_confirm(name='SHOP_BUY_VOUCHER', offset=(20, 50)):
             return True
+        if self.config.SERVER == 'kr':
+            # Single-item dialog uses the same label, but a different button background.
+            if self.appear_then_click(KR_VOUCHER_EXCHANGE, offset=(-20, -140, 20, -100), interval=3):
+                return True
         if self.config.SERVER in ['cn', 'jp', 'tw']:
             # A button named `Exchange` when buying item in amount of 1.
             if self.appear_then_click(SHOP_BUY_CONFIRM_AMOUNT, offset=(-20, -160, 20, -120), interval=3):
@@ -282,6 +289,10 @@ class VoucherShop(ShopClerk, ShopStatus):
 
         item = self.shop_get_item_to_buy(items)
         if item is None:
+            if self.config.SERVER == 'kr' and any(str(item.name).isdigit() for item in items):
+                logger.warning('Unrecognized KR voucher items; archive availability is unconfirmed')
+                self.device.image_save('./log/kr_voucher_unknown.png')
+                return False
             logger.info('No logger archives available for purchase')
             return False
         self.shop_buy_execute(item)
