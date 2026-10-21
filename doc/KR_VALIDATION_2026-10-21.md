@@ -96,6 +96,10 @@
 
 ## 남은 판정
 
+- 17:09:15~17:10:44 사용자 승인 범위의 본인 META 1회 공격 완료. 피해량 396506 인식 후 OneHitMode에 의해 추가 공격 없이 작업 종료, 17:10:47 메인 복귀. 지원 요청 비활성 로그 확인. 이는 공격/결과 처리 통과이며 META 격파·보상 수령 완료를 뜻하지 않는다.
+- 종료 후 실제 GUI로 OpsiAshBeacon.Enable=false를 먼저 저장하고 RequestAssist/EnsureFullyCollected를 원래 true로 복원했다. 비활성 상태를 설정 파일로 확인했으며 30분 뒤 자동 재실행하지 않는다.
+- 건조 수령만 따로 확인하려 했으나 GUI 건조 횟수 선택지는 1~10이며 0회가 없다. 설정을 바꾸거나 추가 건조를 실행하지 않았다. 코드의 target=0 경로 존재만으로 UI 실기 통과로 세지 않는다.
+
 - 16:50:23 12-4 완료, RunCount=0/Enable=false 자동 저장 및 16:50:26 메인 복귀 확인. 16:44 재입장 이후 6개 일반 전투와 2함대 보스전/함선 획득 처리를 확인했다. 최초 중단 전 소모와 재입장을 포함하므로 전체 시도를 단일 무중단 출격으로 표현하지 않는다.
 - 검증용 Main/WarArchives/OpsiDaily/OpsiObscure/Exercise/IslandFreebie/IslandCollect/IslandBusiness는 false, 일반 퇴역 모드는 old_retire 복원. 기존 정기 작업 스케줄은 유지한다. 다음 의뢰 예정 17:08:19를 기다리는 것을 새 검증으로 세지 않는다.
 - 코드 수정 7e1b96a6d 및 cce9919ac는 기존 GitHub 작업 브랜치에 푸시했다. 사용자 설정·로그·전체 계정 화면은 업로드하지 않았다.
