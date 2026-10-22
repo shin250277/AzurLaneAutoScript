@@ -368,6 +368,7 @@ Tool:
     IslandProductionTrial: []
     EventShopScan: []
     IslandInspect: []
+    IslandOrderTrial: []
     RaidInspect: []
     RaidRewardClaim: []
     RaidTrial: []

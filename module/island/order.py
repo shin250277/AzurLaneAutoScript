@@ -395,12 +395,13 @@ class IslandOrder(IslandUI):
 
     def detect_all_orders(self):
         self.regular_cooldown_orders = self.detect_orders(color=COLOR_REGULAR_COOLDOWN)
-        self.regular_orders = self.detect_orders(color=COLOR_REGULAR)
-        for order in self.regular_orders:
-            for cooldown_order in self.regular_cooldown_orders:
-                if np.linalg.norm(np.array(order.button) - np.array(cooldown_order.button)) < 10:
-                    self.regular_orders.remove(order)
-                    break
+        # Filtering while iterating the same list skips consecutive cooldowns.
+        # Keep the detection result intact and exclude every cooling-down order.
+        self.regular_orders = [
+            order for order in self.detect_orders(color=COLOR_REGULAR)
+            if not any(np.linalg.norm(np.array(order.button) - np.array(cooldown.button)) < 10
+                       for cooldown in self.regular_cooldown_orders)
+        ]
         self.urgent_orders = self.detect_orders(color=COLOR_URGENT)
         if len(self.urgent_orders) > 1:
             logger.warning(f'Multiple urgent orders detected, which is unexpected: {len(self.urgent_orders)}')

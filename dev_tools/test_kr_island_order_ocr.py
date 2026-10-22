@@ -67,7 +67,7 @@ from unittest.mock import patch
 from module.island.korean_order_ocr import KoreanOrderNameOcr
 from module.island.data import DIC_ISLAND_ITEM
 from module.base.utils import load_image
-ids = [2008, 2601, 3029, 2703, 2600]
+ids = [2008, 2601, 3029, 2703, 2600, 2603, 5005, 3011]
 frames = [load_image('assets/kr/island_item_name/%s_order.png' % i) for i in ids]
 with patch('module.ocr.windows_ocr.WindowsKoreanOcr.atomic_ocr_for_single_lines',
            side_effect=AssertionError('Observed names should not need OS fallback')):

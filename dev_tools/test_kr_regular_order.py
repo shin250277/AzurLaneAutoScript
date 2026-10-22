@@ -5,6 +5,71 @@ import unittest
 
 
 class KoreanRegularOrderTest(unittest.TestCase):
+    def test_empty_portraits_with_remaining_quota_never_reports_completion(self):
+        self.run_code('''
+from unittest.mock import Mock, patch
+from module.exception import RequestHumanTakeover
+from module.island.korean_order import run_regular_orders
+ui = Mock()
+ui.config.cross_get.return_value = None
+ui.loop.return_value = iter(range(3))
+ui.handle_island_additional.return_value = False
+ui.handle_island_order_level_up.return_value = False
+ui.regular_orders = ui.regular_cooldown_orders = ui.urgent_orders = ui.season_orders = []
+with patch('module.island.korean_order.read_quota', return_value=14):
+    try:
+        run_regular_orders(ui)
+    except RequestHumanTakeover:
+        pass
+    else:
+        raise AssertionError('Empty detection with remaining quota is not completion')
+ui.config.task_delay.assert_not_called()
+ui.device.click.assert_not_called()
+ui.config.cross_set.assert_not_called()
+''')
+
+    def test_transient_quota_overlay_recovers_without_submitting(self):
+        self.run_code('''
+from unittest.mock import Mock, patch
+from module.exception import RequestHumanTakeover
+from module.island.korean_order import read_order_quota
+ui = Mock()
+ui.loop.return_value = iter(range(3))
+ui.handle_island_additional.side_effect = [True, False, False]
+ui.handle_island_order_level_up.return_value = False
+with patch('module.island.korean_order.read_quota', side_effect=[None, None, 14]):
+    assert read_order_quota(ui) == 14
+ui.device.click.assert_not_called()
+ui.config.cross_set.assert_not_called()
+ui.handle_island_additional.side_effect = None
+ui.handle_island_additional.return_value = False
+ui.loop.return_value = iter(range(2))
+with patch('module.island.korean_order.read_quota', return_value=None):
+    try:
+        read_order_quota(ui)
+    except RequestHumanTakeover:
+        pass
+    else:
+        raise AssertionError('Persistent unreadable quota must stop')
+ui.device.click.assert_not_called()
+''')
+
+    def test_adjacent_cooldown_orders_are_all_removed(self):
+        self.run_code('''
+from unittest.mock import Mock
+from module.island.order import IslandOrder
+ui = Mock()
+first = Mock(button=(10, 100, 30, 120))
+second = Mock(button=(50, 100, 70, 120))
+ready = Mock(button=(90, 100, 110, 120))
+original = [first, second, ready]
+ui.detect_orders.side_effect = [[first, second], original, [], []]
+IslandOrder.detect_all_orders(ui)
+assert ui.regular_orders == [ready], 'Consecutive cooldown orders must not be skipped'
+assert original == [first, second, ready], 'Do not mutate detection results in place'
+ui.device.click.assert_not_called()
+''')
+
     def test_top_map_portrait_uses_center_not_header_or_panel(self):
         self.run_code('''
 from module.base.button import Button
@@ -27,6 +92,9 @@ outside = Mock(button=(900, 600, 1200, 680))
 ui.regular_orders = [outside, order]
 ui.urgent_orders = [Mock()]
 ui.season_orders = [Mock()]
+ui.loop.return_value = iter(range(3))
+ui.handle_island_additional.return_value = False
+ui.handle_island_order_level_up.return_value = False
 with patch('module.island.korean_order.submit_regular', return_value=False) as submit:
     run_regular_orders(ui)
     submit.assert_called_once_with(ui)

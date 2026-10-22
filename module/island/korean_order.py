@@ -35,6 +35,22 @@ def read_quota(ui):
     return parse_quota(ocr.ocr(ui.device.image))
 
 
+def read_order_quota(ui):
+    """Recover a transient reward overlay, never infer an unreadable quota."""
+    from module.exception import RequestHumanTakeover
+    value = read_quota(ui)
+    if value is not None:
+        return value
+    for _ in ui.loop(timeout=8, skip_first=False):
+        if ui.handle_island_additional() or ui.handle_island_order_level_up():
+            continue
+        value = read_quota(ui)
+        if value is not None:
+            return value
+    ui.device.image_save('./log/kr_regular_order_quota_unknown.png')
+    raise RequestHumanTakeover('Cannot verify KR daily order quota after bounded recovery')
+
+
 def submit_regular(ui):
     from module.base.button import Button
     from module.exception import RequestHumanTakeover
@@ -42,7 +58,7 @@ def submit_regular(ui):
     if ui.config.SERVER != 'kr' or ui.config.cross_get(PENDING_KEY, None):
         raise RequestHumanTakeover('KR order has an unresolved attempt or wrong server; do not retry')
     ui.device.screenshot()
-    before = read_quota(ui)
+    before = read_order_quota(ui)
     if before is None:
         raise RequestHumanTakeover('Cannot verify KR daily order quota')
     if before == 0:
@@ -51,7 +67,7 @@ def submit_regular(ui):
     if not requirements or not ui.is_order_satisfied(requirements):
         return False
     ui.device.screenshot()
-    if read_quota(ui) != before or ui.scan_current_order_requirements() != requirements:
+    if read_order_quota(ui) != before or ui.scan_current_order_requirements() != requirements:
         raise RequestHumanTakeover('KR order changed between observations')
     submit = Button(area=(1115, 639, 1169, 665), color=(87, 199, 255),
                     button=(1115, 639, 1169, 665), name='KR_REGULAR_ORDER_SUBMIT',
@@ -89,7 +105,18 @@ def run_regular_orders(ui):
     ui.ui_ensure(page_island_order)
     completed = 0
     for _ in range(15):
-        ui.detect_all_orders()
+        # A delayed reward animation can hide every portrait. An empty scan is
+        # not proof that the daily work is finished while quota remains.
+        for _ in ui.loop(timeout=10, skip_first=False):
+            if ui.handle_island_additional() or ui.handle_island_order_level_up():
+                continue
+            ui.detect_all_orders()
+            if (ui.regular_orders or ui.regular_cooldown_orders
+                    or ui.urgent_orders or ui.season_orders or read_quota(ui) == 0):
+                break
+        else:
+            ui.device.image_save('./log/kr_regular_order_scan_unknown.png')
+            raise RequestHumanTakeover('No KR order portraits verified; do not report empty work as complete')
         progressed = False
         for order in ui.regular_orders[:15]:
             target = safe_order_target(order)
