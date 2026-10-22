@@ -36,4 +36,3 @@ with patch.object(AzurLaneConfig, 'update', side_effect=AssertionError('No file 
         result = subprocess.run([sys.executable, '-B', '-c', code],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout.decode('utf-8', errors='replace'))
-
