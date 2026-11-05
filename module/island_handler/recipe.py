@@ -382,6 +382,10 @@ class IslandRecipe(IslandExchange, IslandShop):
             else:
                 drag_count = 0
                 ISLAND_RECIPE_DRAG_CHECK.load_color(self.device.image)
+        else:
+            if server.server == 'kr':
+                self.device.image_save('./log/kr_island_stock_unknown.png')
+                raise RequestHumanTakeover('KR recipe list bottom not confirmed; inventory scan incomplete')
         return all_stocks
 
     @cached_property

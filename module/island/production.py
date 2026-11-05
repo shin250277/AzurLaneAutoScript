@@ -6,7 +6,7 @@ from module.base.timer import Timer
 from module.base.utils import random_rectangle_vector_opted
 from module.exception import RequestHumanTakeover
 from module.island.assets import *
-from module.island.data import DIC_ISLAND_PRODUCTION_PLACE
+from module.island.data import DIC_ISLAND_PRODUCTION_PLACE, DIC_ISLAND_SLOT
 from module.island_handler.dock import IslandDock
 from module.island_handler.dock_scanner import CharacterScanner
 from module.island_handler.recipe import IslandProductionRestart, IslandRecipe
@@ -336,7 +336,7 @@ class IslandProduction(IslandRecipe, IslandDock):
         del_cached_property(super(), 'all_recipe_stocks')
 
     def audit_korean_recipes(self):
-        """Inspect one empty slot per facility; never displace a working slot."""
+        """Inspect each distinct recipe group; never displace a working slot."""
         inspected = set()
         for _ in range(40):
             self.ensure_top_page()
@@ -346,18 +346,26 @@ class IslandProduction(IslandRecipe, IslandDock):
                 if not grids:
                     raise RequestHumanTakeover('No verified KR facilities; audit incomplete')
                 for place_id, grid in grids.items():
-                    if place_id in inspected:
-                        continue
-                    inspected.add(place_id)
+                    groups = {}
                     for slot_id, button in zip(DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], grid.buttons):
-                        if self.is_slot_empty(button):
-                            self.dispatch_slot(slot_id, button, audit_only=True)
-                            logger.attr('KR facility recipe audit complete', place_id)
-                            probed = True
+                        slot = DIC_ISLAND_SLOT[slot_id]
+                        key = (place_id, tuple(slot['formula']), tuple(slot['activity_formula']))
+                        groups.setdefault(key, []).append((slot_id, button))
+                    for key, slots in groups.items():
+                        if key in inspected:
+                            continue
+                        inspected.add(key)
+                        for slot_id, button in slots:
+                            if self.is_slot_empty(button):
+                                self.dispatch_slot(slot_id, button, audit_only=True)
+                                logger.attr('KR facility recipe audit complete', (place_id, slot_id))
+                                probed = True
+                                break
+                        if probed:
                             break
+                        logger.attr('KR recipe group audit unavailable (no empty slot)', key)
                     if probed:
                         break  # Return changed the page; obtain fresh grids.
-                    logger.attr('KR facility audit unavailable (no empty slot)', place_id)
                 if probed:
                     break
                 if not self.next_page():

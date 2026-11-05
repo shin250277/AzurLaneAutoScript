@@ -49,7 +49,7 @@
 | `Gacha` | DailyMission | Scheduler, Gacha | 실기 | 10/21 소형1회 제출/함선수령,10/22 0회 수령전용 통과. 유료 쾌속 금지 |
 | `Freebies` | DailyMission | Scheduler, BattlePass, DataKey, Mail, SupplyPack | 부분 실기 | 정상 종료. 패스/키/우편/무료패키지별 신규 수령 증거 구분 필요 |
 | `Minigame` | DailyMission | Scheduler | 실기 | 10/21 무료 코인10회/보상/종료. 모든 게임 유형은 아님 |
-| `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 금화 선물 구매; 친밀도0/3 상호작용 조건부족 |
+| `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
 | `OpsiGeneral` | Opsi | OpsiGeneral | 공통설정 | 기존 비유료 자원 상한/함대/잠수함/체력 보호 유지. 옵션별 증거 대조 필요 |
 | `OpsiAshBeacon` | Opsi | Scheduler, OpsiAshBeacon | 부분 실기 | 10/21 본인META 1회 공격/피해/종료. 격파 보상 미확인 |
 | `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 실기 | 10/22 지원3회/보상/잔여0/메인복귀 |
