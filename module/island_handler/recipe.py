@@ -60,6 +60,10 @@ if server.server == 'kr':
     from module.island_handler.korean_ocr import KoreanIslandNameOcr
     RECIPE_PRODUCT_NAME_OCR = KoreanIslandNameOcr([], name='product_name_ocr_kr')
 RECIPE_PRODUCT_STOCK_OCR = Digit([], lang='cnocr', letter=(80, 80, 80), threshold=160, name='product_stock_ocr')
+if server.server == 'kr':
+    from module.island_handler.korean_stock import KoreanRecipeStockDigit
+    RECIPE_PRODUCT_STOCK_OCR = KoreanRecipeStockDigit(
+        [], lang='cnocr', letter=(80, 80, 80), threshold=160, name='product_stock_ocr')
 ISLAND_RECIPE_AMOUNT_OCR = Digit(ISLAND_RECIPE_AMOUNT, letter=(50, 50, 57), name='recipe_amount_ocr')
 
 
@@ -113,8 +117,12 @@ class IslandReversedDigitCounter(Ocr):
         total = int(match.group(1))
         if match.group(4) is not None:
             current = int(match.group(4))
+            components = (current, 0)
         else:
             current = int(match.group(2)) + int(match.group(3))
+            components = (int(match.group(2)), int(match.group(3)))
+        if hasattr(self, 'observed_components'):
+            self.observed_components.append(components)
         return total, current, total - current
 
 
@@ -353,7 +361,16 @@ class IslandRecipe(IslandExchange, IslandShop):
         drag_count = 0
         ISLAND_RECIPE_DRAG_CHECK.load_color(self.device.image)
         for _ in self.loop(timeout=30):
-            new_stocks = dict(zip(self.recipe_ids, self.get_recipe_product_stocks()))
+            recipe_ids = self.recipe_ids
+            stocks = self.get_recipe_product_stocks()
+            if server.server == 'kr':
+                from module.island.kr_preflight import verified_recipe_stocks
+                new_stocks = verified_recipe_stocks(recipe_ids, stocks, all_stocks)
+                if new_stocks is None:
+                    self.device.image_save('./log/kr_island_stock_unknown.png')
+                    raise RequestHumanTakeover('KR recipe stock evidence incomplete or conflicting; no spending')
+            else:
+                new_stocks = dict(zip(recipe_ids, stocks))
             all_stocks.update(new_stocks)
             self.next_recipe_page()
             drag_count += 1
@@ -579,6 +596,7 @@ class IslandRecipe(IslandExchange, IslandShop):
             return None
 
     def get_recipe_ingredient_counters(self):
+        self.recipe_ingredient_components = None
         active_recipe_id = self.get_active_recipe_id()
         ingredient_grids = self.get_recipe_ingredient_grids(active_recipe_id)
         if ingredient_grids is None:
@@ -587,7 +605,9 @@ class IslandRecipe(IslandExchange, IslandShop):
         counter_grids = ingredient_grids.crop((-10, 66, 92, 84), name='counter_grids')
         for _ in self.loop(timeout=3):
             counter_images = [self.image_crop(button.area, copy=True) for button in counter_grids.buttons]
+            RECIPE_INGREDIENT_COUNTER_OCR.observed_components = []
             counters = RECIPE_INGREDIENT_COUNTER_OCR.ocr(counter_images, direct_ocr=True)
+            self.recipe_ingredient_components = list(RECIPE_INGREDIENT_COUNTER_OCR.observed_components)
             if (0, 0, 0) not in counters:
                 break
         return counters

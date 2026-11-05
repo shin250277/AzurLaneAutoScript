@@ -43,10 +43,11 @@ class IslandProductionNamesTest(unittest.TestCase):
         ui.config.SERVER = 'kr'
         ui.slot_grids = {101: Mock(buttons=['slot'])}
         ui.is_slot_empty.return_value = True
-        ui.dispatch_slot.side_effect = TaskStopped('Read-only recipe probe')
+        ui.audit_korean_recipes.side_effect = TaskStopped('Read-only recipe probe')
         with self.assertRaises(TaskStopped):
             dispatch(ui)
-        ui.dispatch_slot.assert_called_once_with(9001, 'slot')
+        ui.audit_korean_recipes.assert_called_once_with()
+        ui.dispatch_slot.assert_not_called()
         ui.dispatch_place.assert_not_called()
 
     def test_empty_korean_menu_does_not_choose_staff_or_start(self):

@@ -43,14 +43,25 @@ class KoreanIslandNameOcr(Ocr):
             gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
             gray = cv2.GaussianBlur(gray, (5, 5), 0)
             scores = {}
+            spans = {}
             for name, template in self.templates:
                 if gray.shape[0] >= template.shape[0] and gray.shape[1] >= template.shape[1]:
-                    score = cv2.minMaxLoc(cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED))[1]
+                    _, score, _, point = cv2.minMaxLoc(cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED))
                     if np.isfinite(score):
-                        scores[name] = max(score, scores.get(name, 0))
+                        if score > scores.get(name, 0):
+                            scores[name] = score
+                            spans[name] = (point[0], point[0] + template.shape[1])
             # Multiple observed scroll renderings of the same name are not
             # competing identities; ambiguity is between different products.
-            candidates = sorted(((score, name) for name, score in scores.items()), reverse=True)
+            # A one-character template can match a visually similar syllable
+            # inside a complete word (게 versus 개 in 조개). Only suppress the
+            # short hit when a strict longer match spatially contains it.
+            candidates = sorted(((score, name) for name, score in scores.items()
+                                 if not any(name != other and other_score > 0.94
+                                            and spans[other][0] <= spans[name][0] + 2
+                                            and spans[other][1] >= spans[name][1] - 2
+                                            and spans[other][1] - spans[other][0] > spans[name][1] - spans[name][0] + 6
+                                            for other, other_score in scores.items())), reverse=True)
             if candidates and candidates[0][0] > 0.94 and (len(candidates) == 1 or candidates[0][0] - candidates[1][0] > 0.10):
                 values.append(candidates[0][1])
             else:

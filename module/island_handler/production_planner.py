@@ -109,6 +109,9 @@ class IslandProductionPlanner(DaemonBase):
         )
         calculator.print_solved_production_plan()
         if export:
+            if not calculator.lp_success:
+                raise RequestHumanTakeover(
+                    'Production optimization failed; preserve existing buffers, hard floors and menus')
             inventory_levels_yaml_text = calculator.daily_buffer_items_to_yaml(use_item_name=use_item_name_in_export)
             idle_accumulating_items_yaml_text = calculator.idle_accumulating_items_to_yaml(use_item_name=use_item_name_in_export)
             hard_floor_items_yaml_text = calculator.hard_floor_items_to_yaml(use_item_name=use_item_name_in_export)

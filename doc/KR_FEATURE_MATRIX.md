@@ -36,7 +36,7 @@
 | `Tactical` | Reward | Scheduler, Tactical, ControlExpOverflow, AddNewStudent | 부분 실기 | 10/21 16:44 기존 필터 교재 사용/2칸 재시작. 새 학생/경험치 경계는 미확인 |
 | `Research` | Reward | Scheduler, Research | 실기 | 10/21~22 수령·대기열 보충. 연구 종류별 지출 경계 별도 |
 | `Dorm` | Reward | Scheduler, Dorm, BuyFurniture | 부분 실기 | 10/21 보급/18:37 수집 통과. 가구 구매는 미확인 |
-| `Meowfficer` | Reward | Scheduler, Meowfficer, MeowfficerTrain | 조건·대상 필요 | 구매계획0 분기만 확인. 실제 구매/훈련/강화 소비 대상 미확정 |
+| `Meowfficer` | Reward | Scheduler, Meowfficer, MeowfficerTrain | 부분 실기·육성 대상 필요 | 11/6 기존 구매계획 1회 처리/bought=1/15/추가계획0/작업 종료. 훈련 비활성 유지; 훈련·강화 대상 미확정 |
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
 | `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 10/21 대상 없음과 필터 복원. 실제 재료 사용 각성 미검증 |
@@ -97,6 +97,9 @@
 `module/**/assets.py`의 Button/Template 선언 1,797개를 AST로 읽어 KR 파일 참조를 확인했다. 1,797개 모두 KR 키가 있고 참조 파일 누락은 0개다. 하지만 KR 경로는 264개이고 1,533개는 외국 서버/공통 경로를 사용한다. KR 경로 중 2개는 외국 서버 파일과 바이트가 같다. 따라서 ‘한국 서버 실측 이미지를 전부 갖췄다’는 판정은 할 수 없다. 공통 아이콘 재사용 자체는 오류가 아니며 실제 화면 일치 검사가 필요하다. 이 수치는 생성 assets.py 선언 범위이며 인라인 버튼/OCR/동적 경로 전체 개수는 아니다.
 
 ### 이번 코드 대조
+
+- 후속 [이미지 호환 보고서](KR_IMAGE_COMPATIBILITY.md): 1,797개 디코딩/좌표 검사와 EMP·S승리 관찰 화면 재생을 분리해 기록. 빈 화면 템플릿 오인식 수정, 월말 날짜 보호 오프라인 검사 추가. 월말 실기 완료는 아님.
+- 생산 계획 최적화 실패 시 기존 설정을 빈 결과로 덮어쓰지 않도록 export 전에 중단. 읽기 전용 실패 분석은 유지한다.
 
 - `IslandOrderTrial`의 메뉴/실행 함수는 있으나 원본 task.yaml 항목이 빠진 것을 수정했다. 75개 목록 일치·실행 함수 존재·문서 누락 방지 검사 통과.
 - 섬 주문의 cooldown 목록을 순회 중 삭제하여 연속 두 번째 대기 주문이 남던 결함을 실패 테스트로 재현하고 필터 방식으로 수정했다. 실기 발동은 별도 확인한다.

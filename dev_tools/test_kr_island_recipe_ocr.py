@@ -16,9 +16,27 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+header = np.array(Image.open('assets/kr/island_item_name/2000_header.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([header], direct_ocr=True) == ['밀']
+    backend.assert_not_called()
 ids = [2000, 2001, 2008, 2009]
 frames = [np.array(Image.open('assets/kr/island_item_name/%s.png' % i)) for i in ids]
 assert ocr.ocr(frames, direct_ocr=True) == [DIC_ISLAND_ITEM[i]['name']['kr'] for i in ids]
+egg = np.array(Image.open('assets/kr/island_item_name/2601_recipe.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([egg], direct_ocr=True) == ['달걀']
+    backend.assert_not_called()
+fish = [np.array(Image.open('assets/kr/island_item_name/%s_recipe.png' % i))
+        for i in [5001, 5002, 5003, 5004]]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr(fish, direct_ocr=True) == ['조개', '메기', '잉어', '붕어']
+    backend.assert_not_called()
+lower = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_lower.png' % i))
+         for i in [5005, 5006, 5007, 5008]]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr(lower, direct_ocr=True) == ['민물 새우', '가재', '농어', '게']
+    backend.assert_not_called()
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     backend.return_value.atomic_ocr_for_single_lines.return_value = [[]]
     assert ocr.ocr([np.zeros((23,146,3),dtype=np.uint8)], direct_ocr=True) == ['']

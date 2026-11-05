@@ -235,7 +235,7 @@ class IslandProduction(IslandRecipe, IslandDock):
             if not self.next_page():
                 break
 
-    def dispatch_slot(self, slot_id, slot_button, worker='manjuu'):
+    def dispatch_slot(self, slot_id, slot_button, worker='manjuu', audit_only=False):
         if slot_id in DIC_ISLAND_PRODUCTION_PLACE[102]['slot']:
             del_cached_property(super(), 'recipe_id_sequence')
             del_cached_property(super(), 'all_recipe_stocks')
@@ -265,6 +265,12 @@ class IslandProduction(IslandRecipe, IslandDock):
             stocks = self.scan_all_recipe_stocks()
             logger.attr('KR recipe probe', stocks)
             logger.attr('KR ingredient probe', self.probe_korean_recipe_counters(stocks))
+            if audit_only:
+                self.ui_back(check_button=page_island_manage.check_button)
+                self.ensure_island_production_page()
+                for key in ('production_grid', 'production_names', 'slot_grids'):
+                    del_cached_property(self, key)
+                return False  # No recipe start, ingredient purchase or exchange.
             if getattr(self, 'kr_potato_trial', False):
                 from module.island.potato_trial import run_trial
                 run_trial(self)
@@ -303,7 +309,8 @@ class IslandProduction(IslandRecipe, IslandDock):
             amount = ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image)
             if self.get_active_recipe_id() != recipe_id or not validate_recipe_counters(
                     DIC_ISLAND_RECIPE[recipe_id]['commission_cost'], amount, counters,
-                    require_available=False):
+                    require_available=False,
+                    components=getattr(self, 'recipe_ingredient_components', None)):
                 self.device.image_save('./log/kr_island_ingredient_unknown.png')
                 raise RequestHumanTakeover('Korean ingredient count/cost/balance could not be verified; no spending')
             if any(stock < required for stock, required, remaining in counters):
@@ -328,16 +335,43 @@ class IslandProduction(IslandRecipe, IslandDock):
         del_cached_property(super(), 'recipe_id_sequence')
         del_cached_property(super(), 'all_recipe_stocks')
 
+    def audit_korean_recipes(self):
+        """Inspect one empty slot per facility; never displace a working slot."""
+        inspected = set()
+        for _ in range(40):
+            self.ensure_top_page()
+            probed = False
+            for _ in range(20):
+                grids = self.slot_grids
+                if not grids:
+                    raise RequestHumanTakeover('No verified KR facilities; audit incomplete')
+                for place_id, grid in grids.items():
+                    if place_id in inspected:
+                        continue
+                    inspected.add(place_id)
+                    for slot_id, button in zip(DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], grid.buttons):
+                        if self.is_slot_empty(button):
+                            self.dispatch_slot(slot_id, button, audit_only=True)
+                            logger.attr('KR facility recipe audit complete', place_id)
+                            probed = True
+                            break
+                    if probed:
+                        break  # Return changed the page; obtain fresh grids.
+                    logger.attr('KR facility audit unavailable (no empty slot)', place_id)
+                if probed:
+                    break
+                if not self.next_page():
+                    raise RequestHumanTakeover(
+                        'KR facility recipe audit finished; no new production or purchases')
+            if not probed:
+                raise RequestHumanTakeover('KR facility audit page limit; no new production')
+        raise RequestHumanTakeover('KR facility audit limit; no new production')
+
     def dispatch_all(self):
         if self.config.SERVER == 'kr':
-            if self.slot_grids:
-                self.ensure_top_page()
-                if 101 in self.slot_grids:
-                    for slot_id, button in zip(DIC_ISLAND_PRODUCTION_PLACE[101]['slot'], self.slot_grids[101].buttons):
-                        if self.is_slot_empty(button):
-                            self.dispatch_slot(slot_id, button)
-            raise RequestHumanTakeover('Korean production recipe text OCR is not validated; '
-                                       'finished rewards were checked, but new production is not started.')
+            if not self.slot_grids:
+                raise RequestHumanTakeover('No verified KR facilities; no production')
+            return self.audit_korean_recipes()
         logger.hr("Dispatch Production", level=2)
         self.ensure_top_page()
         self.failed_buy_items = set()
