@@ -42,7 +42,8 @@ class KoreanIslandNameOcr(Ocr):
             template = cv2.GaussianBlur(gray, (5, 5), 0)[
                 max(int(y.min())-1, 0):min(int(y.max())+2, gray.shape[0]),
                 max(int(x.min())-2, 0):min(int(x.max())+3, gray.shape[1])]
-            templates.append((self.name_dictionary[int(path.stem.split('_')[0])]['name']['kr'], template))
+            templates.append((self.name_dictionary[int(path.stem.split('_')[0])]['name']['kr'],
+                              template, path.stem.endswith('_selected')))
         return templates
 
     def ocr(self, image, direct_ocr=False):
@@ -56,9 +57,16 @@ class KoreanIslandNameOcr(Ocr):
             scores = {}
             spans = {}
             errors = {}
-            for name, template in self.templates:
+            for name, template, exact_only in self.templates:
                 if gray.shape[0] >= template.shape[0] and gray.shape[1] >= template.shape[1]:
                     _, score, _, point = cv2.minMaxLoc(cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED))
+                    observed = gray[point[1]:point[1] + template.shape[0],
+                                    point[0]:point[0] + template.shape[1]]
+                    error = float(np.abs(observed.astype(np.float32) - template).mean())
+                    # Selected-card renderings of similar Hangul must not
+                    # change fallback candidates on unrelated renderings.
+                    if exact_only and not (score > 0.995 and error < 1.0):
+                        continue
                     if np.isfinite(score):
                         if score > scores.get(name, 0):
                             scores[name] = score
@@ -89,6 +97,7 @@ class KoreanIslandNameOcr(Ocr):
             recognized = WindowsKoreanOcr().atomic_ocr_for_single_lines(
                 [self.prepare_fallback(frames[i]) for i in unresolved])
             contrast_retry = []
+            ambiguous_retry = []
             known_names = {entry['name'].get('kr') for entry in self.name_dictionary.values()}
             for index, result in zip(unresolved, recognized):
                 value = ''.join(result)
@@ -97,9 +106,8 @@ class KoreanIslandNameOcr(Ocr):
                 # do not loosen the template ambiguity margin or guess Hangul.
                 clean = value.strip(' \t\r\n『』「」')
                 candidates = fallback_candidates[index]
-                strong_candidate = bool(candidates and candidates[0][0] > 0.94
-                                        and (len(candidates) == 1 or candidates[1][0] < 0.94))
-                if value in known_names and strong_candidate and value != candidates[0][1]:
+                if (value in known_names and candidates and candidates[0][0] > 0.94
+                        and value != candidates[0][1]):
                     # Two individually valid product names disagree: neither
                     # source is sufficient to authorize selecting a recipe.
                     values[index] = ''
@@ -109,6 +117,10 @@ class KoreanIslandNameOcr(Ocr):
                         and clean == candidates[0][1]):
                     value = clean
                 values[index] = value
+                if (value not in known_names and len(candidates) > 1
+                        and candidates[0][0] > 0.94 and candidates[1][0] >= 0.94
+                        and candidates[0][0] > candidates[1][0]):
+                    ambiguous_retry.append(index)
                 # Retry unknown OCR text once, but never replace another valid
                 # product name. The second reading must exactly confirm the
                 # independently strong image candidate.
@@ -126,6 +138,23 @@ class KoreanIslandNameOcr(Ocr):
                 for index, result in zip(contrast_retry, confirmed):
                     name = fallback_candidates[index][0][1]
                     if ''.join(result) == name:
+                        values[index] = name
+            if ambiguous_retry:
+                # Similar Hangul may have two high image scores. Do not
+                # choose by that tiny margin alone: both different ink
+                # thresholds must read the exact leading candidate, while
+                # a different valid original OCR name is never overwritten.
+                retry_frames = []
+                for index in ambiguous_retry:
+                    frame = frames[index]
+                    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+                    retry_frames.extend(self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                                        for level in (90, 130))
+                reads = WindowsKoreanOcr().atomic_ocr_for_single_lines(retry_frames)
+                for i, index in enumerate(ambiguous_retry):
+                    name = fallback_candidates[index][0][1]
+                    if (len(reads) == 2 * len(ambiguous_retry)
+                            and ''.join(reads[2*i]) == name and ''.join(reads[2*i+1]) == name):
                         values[index] = name
         logger.attr(self.name or 'KR_ISLAND_NAMES', values)
         return values[0] if len(self.buttons) == 1 else values

@@ -16,6 +16,26 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+mining_top = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_top.png' % i)) for i in [2700,2701]]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr(mining_top, direct_ocr=True) == ['석탄', '구리 광석']
+    backend.assert_not_called()
+ambiguous_tuna = np.array(Image.open('dev_tools/fixtures/kr_tuna_ambiguous_name.png'))
+for reads, expected in [([['참치'], ['참치']], '참치'),
+                        ([['참치'], ['삼치']], '미인식'),
+                        ([[], ['참치']], '미인식'),
+                        ([['삼치'], ['삼치']], '미인식')]:
+    with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+        backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['미인식']], reads]
+        assert ocr.ocr([ambiguous_tuna], direct_ocr=True) == [expected]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.return_value = [['삼치']]
+    assert ocr.ocr([ambiguous_tuna], direct_ocr=True) == ['']
+    assert backend.return_value.atomic_ocr_for_single_lines.call_count == 1
+selected_tuna = np.array(Image.open('assets/kr/island_item_name/5103_recipe_selected.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([selected_tuna], direct_ocr=True) == ['참치']
+    backend.assert_not_called()
 mackerel = np.array(Image.open('dev_tools/fixtures/kr_mackerel_name.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['삼지']], [['삼치']]]
