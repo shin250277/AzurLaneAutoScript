@@ -16,6 +16,18 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+mackerel = np.array(Image.open('dev_tools/fixtures/kr_mackerel_name.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['삼지']], [['삼치']]]
+    assert ocr.ocr([mackerel], direct_ocr=True) == ['삼치']
+    assert backend.return_value.atomic_ocr_for_single_lines.call_count == 2
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['삼지']], [['참치']]]
+    assert ocr.ocr([mackerel], direct_ocr=True) == ['삼지']
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.return_value = [['참치']]
+    assert ocr.ocr([mackerel], direct_ocr=True) == ['']
+    assert backend.return_value.atomic_ocr_for_single_lines.call_count == 1
 salmon = np.array(Image.open('assets/kr/island_item_name/5104_recipe_top.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     assert ocr.ocr([salmon], direct_ocr=True) == ['연어']

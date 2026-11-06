@@ -4,7 +4,7 @@
 
 현재 전수 **목록화**만 완료했으며 전수 **실기 검증**은 미완료다. ‘실기’도 기재된 해역·옵션·날짜 범위만 뜻한다. 공통 실행 엔진을 쓰는 복제 슬롯이나 이벤트 미개방은 통과로 자동 승격하지 않는다.
 
-근거: [10/21 기록](KR_VALIDATION_2026-10-21.md), [10/22 기록](KR_VALIDATION_2026-10-22.md), [10/2 기록](KR_VALIDATION_2026-10-02.md). 과거 문서의 범위를 현재 완료로 확대하지 않는다. 원시 계정 로그·설정·화면은 첨부하지 않는다.
+근거: [11/6 재개 기록](KR_VALIDATION_2026-11-06.md), [10/21 기록](KR_VALIDATION_2026-10-21.md), [10/22 기록](KR_VALIDATION_2026-10-22.md), [10/2 기록](KR_VALIDATION_2026-10-02.md). 과거 문서의 범위를 현재 완료로 확대하지 않는다. 원시 계정 로그·설정·화면은 첨부하지 않는다.
 
 ## 전체 메뉴와 세부 설정 그룹
 
@@ -12,7 +12,7 @@
 |---|---|---|---|---|
 | `Alas` | Alas | Emulator, EmulatorInfo, Error, Optimization, DropRecord | 부분 실기 | 로그인·예약·오류 중단 확인. 통신/최적화/알림/통계 옵션 전 조합은 미확인 |
 | `General` | Alas | Retirement, OneClickRetire, Enhance, OldRetire | 부분 실기 | 기존 기준 일괄퇴역 10/21 통과. 강화·돌파 보존·각 희귀도 경계 별도 확인 필요 |
-| `Restart` | Alas | Scheduler | 실기 | 10/21 15:06 로그인 성공. 장애별 복구는 별도 분기 |
+| `Restart` | Alas | Scheduler | 실기 | 11/6 점검 후 로그인/08:39 정상 종료 재확인. 장애별 복구는 별도 분기 |
 | `Main` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 10/21 12-4 1회 보스/보상/종료. 모든 해역 통과 의미 아님 |
 | `Main2` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 오프라인·공통경로 | 10/22 합성 설정으로 Main/Main2/Main3 해역·횟수·스케줄러 바인딩 및 쓰기 경로 격리 통과. 별도 슬롯 실기 완료는 아님 |
 | `Main3` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 오프라인·공통경로 | 10/22 합성 설정으로 Main/Main2/Main3 해역·횟수·스케줄러 바인딩 및 쓰기 경로 격리 통과. 별도 슬롯 실기 완료는 아님 |
@@ -32,10 +32,10 @@
 | `EventSp` | EventDaily | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `RaidDaily` | EventDaily | Scheduler, RaidDaily, Campaign, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `CoalitionSp` | EventDaily | Scheduler, Campaign, Coalition, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
-| `Commission` | Reward | Scheduler, Commission | 실기 | 10/21~22 수령·재출항. 신규 의뢰 이름/기름 의뢰 보호는 별도 분기 |
+| `Commission` | Reward | Scheduler, Commission | 실기 | 11/6 08:40 수령·재출항/4칸/정상 종료 재확인. 신규 의뢰 이름/기름 의뢰 보호는 별도 분기 |
 | `Tactical` | Reward | Scheduler, Tactical, ControlExpOverflow, AddNewStudent | 부분 실기 | 10/21 16:44 기존 필터 교재 사용/2칸 재시작. 새 학생/경험치 경계는 미확인 |
 | `Research` | Reward | Scheduler, Research | 실기 | 10/21~22 수령·대기열 보충. 연구 종류별 지출 경계 별도 |
-| `Dorm` | Reward | Scheduler, Dorm, BuyFurniture | 부분 실기 | 10/21 보급/18:37 수집 통과. 가구 구매는 미확인 |
+| `Dorm` | Reward | Scheduler, Dorm, BuyFurniture | 부분 실기 | 10/21 보급/수집 통과. 11/6 작업 종료했으나 수집 info_bar 시간초과 경고 있어 수집 재확인 필요. 가구 구매 미확인 |
 | `Meowfficer` | Reward | Scheduler, Meowfficer, MeowfficerTrain | 부분 실기·육성 대상 필요 | 11/6 기존 구매계획 1회 처리/bought=1/15/추가계획0/작업 종료. 훈련 비활성 유지; 훈련·강화 대상 미확정 |
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
@@ -44,7 +44,7 @@
 | `Hard` | DailyMission | Scheduler, Hard | 실기 | 10/22 11-4 3회 잔여0/정상종료 |
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
 | `ShopFrequent` | DailyMission | Scheduler, GeneralShop | 부분 실기 | 기존 비유료 필터 실행. 미구매 품목/보호 재고 경계 확인 필요 |
-| `ShopOnce` | DailyMission | Scheduler, GuildShop, MedalShop2, MeritShop, CoreShop | 부분 실기 | 길드 코인 구매 확인. 훈장/공훈/코어 상점별 거래 증거 대조 필요 |
+| `ShopOnce` | DailyMission | Scheduler, GuildShop, MedalShop2, MeritShop, CoreShop | 부분 실기 | 11/6 길드·훈장 거래 및 정상 종료. 공훈/코어 필터 순회는 실제 구매 통과와 구분 |
 | `Shipyard` | DailyMission | Scheduler, ShipyardDr, Shipyard | 조건·승인필요 | 신규 개발 대상 선택 금지 유지. 기존 대상 무료/할인 강화 분기 증거 대조 필요 |
 | `Gacha` | DailyMission | Scheduler, Gacha | 실기 | 10/21 소형1회 제출/함선수령,10/22 0회 수령전용 통과. 유료 쾌속 금지 |
 | `Freebies` | DailyMission | Scheduler, BattlePass, DataKey, Mail, SupplyPack | 부분 실기 | 정상 종료. 패스/키/우편/무료패키지별 신규 수령 증거 구분 필요 |

@@ -89,6 +89,7 @@ class KoreanIslandNameOcr(Ocr):
             recognized = WindowsKoreanOcr().atomic_ocr_for_single_lines(
                 [self.prepare_fallback(frames[i]) for i in unresolved])
             contrast_retry = []
+            known_names = {entry['name'].get('kr') for entry in self.name_dictionary.values()}
             for index, result in zip(unresolved, recognized):
                 value = ''.join(result)
                 # Scroll header decoration can be read as a trailing quote.
@@ -96,12 +97,22 @@ class KoreanIslandNameOcr(Ocr):
                 # do not loosen the template ambiguity margin or guess Hangul.
                 clean = value.strip(' \t\r\n『』「」')
                 candidates = fallback_candidates[index]
+                strong_candidate = bool(candidates and candidates[0][0] > 0.94
+                                        and (len(candidates) == 1 or candidates[1][0] < 0.94))
+                if value in known_names and strong_candidate and value != candidates[0][1]:
+                    # Two individually valid product names disagree: neither
+                    # source is sufficient to authorize selecting a recipe.
+                    values[index] = ''
+                    continue
                 if (clean != value and candidates and candidates[0][0] > 0.94
                         and (len(candidates) == 1 or candidates[1][0] < 0.94)
                         and clean == candidates[0][1]):
                     value = clean
                 values[index] = value
-                if (not value and candidates and candidates[0][0] > 0.94
+                # Retry unknown OCR text once, but never replace another valid
+                # product name. The second reading must exactly confirm the
+                # independently strong image candidate.
+                if (value not in known_names and candidates and candidates[0][0] > 0.94
                         and (len(candidates) == 1 or candidates[1][0] < 0.94)):
                     contrast_retry.append(index)
             if contrast_retry:

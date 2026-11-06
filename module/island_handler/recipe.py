@@ -285,7 +285,8 @@ class IslandRecipe(IslandExchange, IslandShop):
     def recipe_grid(self):
         for _ in self.loop(timeout=2):
             grid = self.get_recipe_grid()
-            if len(grid.buttons) >= 3 or len(grid.buttons) == 1 and self.working_slot_id in [9031, 9032, 9033, 9034]:
+            if (len(grid.buttons) >= 3 or getattr(grid, 'kr_scrollable', False)
+                    or len(grid.buttons) == 1 and self.working_slot_id in [9031, 9032, 9033, 9034]):
                 return grid
         return grid
 
@@ -304,10 +305,18 @@ class IslandRecipe(IslandExchange, IslandShop):
             logger.warning('Unable to find enough recipe anchors, assume recipes are at top')
             origin_y = 114
 
+        raw_count = count
+        if server.server == 'kr' and count > 1 and origin_y + RECIPE_PRODUCT_NAME_AREA[1] < 110:
+            # The fixed translucent header overprints a scrolled first name.
+            # Read/select only unobscured rows; a later scroll exposes the
+            # skipped product normally. Apply the same grid to names/stocks.
+            origin_y += delta_y
+            count -= 1
         recipe_grid = ButtonGrid(
             origin=(181, origin_y), delta=(0, delta_y), button_shape=RECIPE_SIZE,
             grid_shape=(1, count), name='RECIPE_GRID'
         )
+        recipe_grid.kr_scrollable = server.server == 'kr' and raw_count >= 3
         return recipe_grid
 
     @cached_property
@@ -331,7 +340,7 @@ class IslandRecipe(IslandExchange, IslandShop):
         return stocks
 
     def next_recipe_page(self):
-        if len(self.recipe_grid.buttons) < 3:
+        if len(self.recipe_grid.buttons) < 3 and not getattr(self.recipe_grid, 'kr_scrollable', False):
             logger.info('Less than 3 recipes in current page, no need to swipe to next page')
             return
         else:
@@ -342,7 +351,7 @@ class IslandRecipe(IslandExchange, IslandShop):
             self.device.screenshot()
 
     def prev_recipe_page(self):
-        if len(self.recipe_grid.buttons) < 3:
+        if len(self.recipe_grid.buttons) < 3 and not getattr(self.recipe_grid, 'kr_scrollable', False):
             logger.info('Less than 3 recipes in current page, no need to swipe to previous page')
             return
         else:

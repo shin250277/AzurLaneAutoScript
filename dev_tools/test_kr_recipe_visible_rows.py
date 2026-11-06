@@ -1,0 +1,54 @@
+"""Header-occluded recipe rows must not become guessed product identities."""
+from types import SimpleNamespace
+import unittest
+from unittest.mock import Mock, patch
+import numpy as np
+import module.config.server as server
+from module.island_handler.recipe import IslandRecipe, RECIPE_DETECT_AREA, RECIPE_DELTA
+
+
+class VisibleRecipeRowsTest(unittest.TestCase):
+    def grid(self, origin, count, region='kr'):
+        rows = np.array([(0, origin - RECIPE_DETECT_AREA[1] + i * RECIPE_DELTA[1])
+                         for i in range(count)])
+        ui = SimpleNamespace(_get_recipe_buttons=lambda: rows)
+        with patch.object(server, 'server', region):
+            return IslandRecipe.get_recipe_grid(ui)
+
+    def test_occluded_row_removed_with_same_name_stock_click_indices(self):
+        grid = self.grid(61, 4)
+        self.assertEqual(len(grid.buttons), 3)
+        self.assertEqual(grid.origin[1], 61 + RECIPE_DELTA[1])
+        self.assertTrue(grid.kr_scrollable)
+        self.assertEqual(grid.crop((0, 23, 10, 46)).buttons[0].area[1],
+                         grid.buttons[0].area[1] + 23)
+
+    def test_two_visible_rows_still_scroll_when_raw_page_had_three(self):
+        grid = self.grid(61, 3)
+        self.assertEqual(len(grid.buttons), 2)
+        self.assertTrue(grid.kr_scrollable)
+
+    def test_full_top_page_and_foreign_layout_unchanged(self):
+        for origin, count, region in [(114, 4, 'kr'), (61, 4, 'jp'), (114, 2, 'kr')]:
+            grid = self.grid(origin, count, region)
+            self.assertEqual(len(grid.buttons), count)
+            self.assertEqual(grid.origin[1], origin)
+
+    def test_known_single_recipe_ranch_not_removed(self):
+        grid = self.grid(114, 1)
+        self.assertEqual(len(grid.buttons), 1)
+        self.assertEqual(grid.origin[1], 114)
+        self.assertFalse(grid.kr_scrollable)
+
+    def test_scroll_does_not_mistake_filtered_two_rows_for_list_end(self):
+        for action in [IslandRecipe.next_recipe_page, IslandRecipe.prev_recipe_page]:
+            ui = SimpleNamespace(recipe_grid=self.grid(61, 3), device=Mock())
+            action(ui)
+            ui.device.drag.assert_called_once()
+            ui.device.screenshot.assert_called_once()
+
+    def test_non_scrolling_single_recipe_does_not_drag(self):
+        for action in [IslandRecipe.next_recipe_page, IslandRecipe.prev_recipe_page]:
+            ui = SimpleNamespace(recipe_grid=self.grid(114, 1), device=Mock())
+            action(ui)
+            ui.device.drag.assert_not_called()

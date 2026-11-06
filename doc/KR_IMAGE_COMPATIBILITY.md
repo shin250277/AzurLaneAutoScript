@@ -19,6 +19,8 @@
 
 ## 재실행
 
+2026-11-06 점검 종료 후 동일 정적 감사를 재실행했다. 선언1,797개/KR 경로264개/파일·디코딩·좌표 오류0개로 재확인했다. 새 섬 이름 조각과 OCR은 이 생성 선언 목록 밖이므로 별도 [11/6 기록](KR_VALIDATION_2026-11-06.md)의 이미지 재생/실기 판정을 따른다. 장식에 가려진 이름의 실기 실패가 실제로 남아 있어 이 정적 결과를 전체 이미지 실측 호환으로 확대하지 않는다.
+
 - `toolkit/python.exe -B dev_tools/kr_asset_inventory.py`
 - `toolkit/python.exe -B -m unittest dev_tools.test_kr_asset_inventory dev_tools.test_button_blank_observation dev_tools.test_kr_stored_victory dev_tools.test_kr_emp_debuff dev_tools.test_os_cross_month_window`
 
