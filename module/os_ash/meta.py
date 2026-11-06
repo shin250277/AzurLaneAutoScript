@@ -3,6 +3,7 @@ from enum import Enum
 
 import module.config.server as server
 from module.base.timer import Timer
+from module.base.button import Button
 from module.combat.combat import BATTLE_PREPARATION
 from module.logger import logger
 from module.meta_reward.meta_reward import MetaReward
@@ -13,6 +14,11 @@ from module.os_handler.map_event import MapEventHandler
 from module.ui.assets import BACK_ARROW
 from module.ui.page import page_reward
 from module.ui.ui import UI
+
+
+KR_META_COMPLETE_HEADER = Button(
+    area=(58, 62, 282, 120), color=(), button=(58, 62, 282, 120),
+    file='./assets/kr/os_ash/BATTLE_STATUS.png', name='KR_META_COMPLETE_HEADER')
 
 
 class MetaState(Enum):
@@ -52,6 +58,18 @@ class MetaDigitCounter(DigitCounter):
 
 
 class Meta(UI, MapEventHandler):
+    def ui_additional(self, get_ship=True):
+        # A scheduler restart can land on the META result outside AshCombat.
+        # Require both the result title and its confirm button, not a generic
+        # amber confirmation on an unrelated page. Never start a battle here.
+        if (server.server == 'kr'
+                and self.appear(KR_META_COMPLETE_HEADER, offset=(5, 5))
+                and self.match_template_color(BATTLE_STATUS, offset=(120, 20), interval=3, threshold=10)):
+            logger.info('Recover KR META result before page navigation')
+            self.device.click(BATTLE_STATUS)
+            return True
+        return super().ui_additional(get_ship=get_ship)
+
 
     def digit_ocr_point_and_check(self, button: Button, check_number: int):
         point_ocr = MetaDigitCounter(button, letter=(235, 235, 235), threshold=160, name='POINT_OCR')

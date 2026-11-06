@@ -62,4 +62,5 @@ class RecipeStockEvidenceTest(unittest.TestCase):
         ui.recipe_ids = [101]
         ui.get_recipe_product_stocks.return_value = [0]
         self.assertEqual(scan(ui), {101: 0})
-        ui.device.image_save.assert_not_called()
+        self.assertEqual(ui.device.image_save.call_count, 2)
+        ui.device.image_save.assert_called_with('./log/kr_island_stock_previous.png')

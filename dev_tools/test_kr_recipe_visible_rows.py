@@ -8,6 +8,18 @@ from module.island_handler.recipe import IslandRecipe, RECIPE_DETECT_AREA, RECIP
 
 
 class VisibleRecipeRowsTest(unittest.TestCase):
+    def test_single_ranch_off_grid_background_hit(self):
+        def grid(ys, slot=9031, region='kr'):
+            ui = SimpleNamespace(working_slot_id=slot,
+                                 _get_recipe_buttons=lambda: np.array([(0, y) for y in ys]))
+            with patch.object(server, 'server', region):
+                return IslandRecipe.get_recipe_grid(ui)
+        self.assertEqual(len(grid([59, 464]).buttons), 1)
+        self.assertEqual(len(grid([59, 208]).buttons), 2)
+        self.assertEqual(len(grid([90, 464]).buttons), 2)
+        self.assertEqual(len(grid([59, 464], slot=None).buttons), 2)
+        self.assertEqual(len(grid([59, 464], region='jp').buttons), 2)
+
     def grid(self, origin, count, region='kr'):
         rows = np.array([(0, origin - RECIPE_DETECT_AREA[1] + i * RECIPE_DELTA[1])
                          for i in range(count)])

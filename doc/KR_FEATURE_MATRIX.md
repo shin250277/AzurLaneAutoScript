@@ -40,8 +40,8 @@
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
 | `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 11/6 대상 없음/필터 복원/정상 종료 재확인. 실제 재료 사용 각성 미검증 |
-| `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 10/21 빠른 완료/보상. Supply Line Disruption 빠른완료 미해금; 수동전투 미검증 |
-| `Hard` | DailyMission | Scheduler, Hard | 실기 | 10/22 11-4 3회 잔여0/정상종료 |
+| `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 11/6 현재 개방 빠른 완료/보상/09:37 정상 종료. 미해금 유형 및 수동전투 미검증 |
+| `Hard` | DailyMission | Scheduler, Hard | 실기 | 11/6 11-4 3회 잔여0/09:43 정상종료 재확인 |
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
 | `ShopFrequent` | DailyMission | Scheduler, GeneralShop | 부분 실기 | 기존 비유료 필터 실행. 미구매 품목/보호 재고 경계 확인 필요 |
 | `ShopOnce` | DailyMission | Scheduler, GuildShop, MedalShop2, MeritShop, CoreShop | 부분 실기 | 11/6 길드·훈장 거래 및 정상 종료. 공훈/코어 필터 순회는 실제 구매 통과와 구분 |
@@ -52,7 +52,7 @@
 | `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
 | `OpsiGeneral` | Opsi | OpsiGeneral | 공통설정 | 기존 비유료 자원 상한/함대/잠수함/체력 보호 유지. 옵션별 증거 대조 필요 |
 | `OpsiAshBeacon` | Opsi | Scheduler, OpsiAshBeacon | 부분 실기 | 10/21 본인META 1회 공격/피해/종료. 격파 보상 미확인 |
-| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 실기 | 10/22 지원3회/보상/잔여0/메인복귀 |
+| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 실기 | 11/6 지원3회/보상/09:51 정상종료. 결과 화면 재개 복구 누락 수정 후 동일 조건 복구 통과. 기존 일괄퇴역/장비 보관 후 전투 복귀 확인 |
 | `OpsiExplore` | Opsi | Scheduler, OpsiExplore, OpsiFleet | 부분 실기 | 10/2 다수 해역 개척 통과. 전체 개척 완료 아님 |
 | `OpsiShop` | Opsi | Scheduler, OpsiShop | 실기 | 10/21 기존 비유료 물품15종 구매/정상종료 |
 | `OpsiVoucher` | Opsi | Scheduler, OpsiVoucher | 부분 실기 | 11/6 교환권 상점 순회/보유 기록 사용/정상 종료/다음 월 예약. 빈 품목 시간초과 경고가 있어 품목별 구매 통과로 확대하지 않음 |

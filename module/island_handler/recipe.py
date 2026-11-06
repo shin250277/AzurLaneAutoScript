@@ -294,6 +294,21 @@ class IslandRecipe(IslandExchange, IslandShop):
         rows = self._get_recipe_buttons()
         count = len(rows)
         delta_y = RECIPE_DELTA[1]
+        slot = DIC_ISLAND_SLOT.get(getattr(self, 'working_slot_id', None), {})
+        if (server.server == 'kr' and slot.get('place') == 102
+                and len(slot.get('formula', []) + slot.get('activity_formula', [])) == 1
+                and count > 1):
+            # The empty ranch panel can resemble the weak recipe anchor.
+            # Only discard off-grid hits when the known single recipe has
+            # its normal top anchor; never infer an unobserved first row.
+            ys = sorted(rows[:, 1])
+            top = 114 - RECIPE_DETECT_AREA[1]
+            if abs(ys[0] - top) <= 3 and all(
+                    abs((y - ys[0]) / delta_y - round((y - ys[0]) / delta_y)) * delta_y > 5
+                    for y in ys[1:]):
+                logger.info('Ignore off-grid empty-panel anchors for single KR ranch recipe')
+                rows = rows[:1]
+                count = 1
         if count > 4:
             logger.warning(f'Found {count} recipe anchors, which is more than expected, fixing count to 4')
             count = 4
@@ -378,6 +393,9 @@ class IslandRecipe(IslandExchange, IslandShop):
                 if new_stocks is None:
                     self.device.image_save('./log/kr_island_stock_unknown.png')
                     raise RequestHumanTakeover('KR recipe stock evidence incomplete or conflicting; no spending')
+                # Keep the preceding accepted page locally so an overlap
+                # mismatch has both observations, not only the second one.
+                self.device.image_save('./log/kr_island_stock_previous.png')
             else:
                 new_stocks = dict(zip(recipe_ids, stocks))
             all_stocks.update(new_stocks)
