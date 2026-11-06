@@ -39,7 +39,7 @@
 | `Meowfficer` | Reward | Scheduler, Meowfficer, MeowfficerTrain | 부분 실기·육성 대상 필요 | 11/6 기존 구매계획 1회 처리/bought=1/15/추가계획0/작업 종료. 훈련 비활성 유지; 훈련·강화 대상 미확정 |
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
-| `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 10/21 대상 없음과 필터 복원. 실제 재료 사용 각성 미검증 |
+| `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 11/6 대상 없음/필터 복원/정상 종료 재확인. 실제 재료 사용 각성 미검증 |
 | `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 10/21 빠른 완료/보상. Supply Line Disruption 빠른완료 미해금; 수동전투 미검증 |
 | `Hard` | DailyMission | Scheduler, Hard | 실기 | 10/22 11-4 3회 잔여0/정상종료 |
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
@@ -48,14 +48,14 @@
 | `Shipyard` | DailyMission | Scheduler, ShipyardDr, Shipyard | 조건·승인필요 | 신규 개발 대상 선택 금지 유지. 기존 대상 무료/할인 강화 분기 증거 대조 필요 |
 | `Gacha` | DailyMission | Scheduler, Gacha | 실기 | 10/21 소형1회 제출/함선수령,10/22 0회 수령전용 통과. 유료 쾌속 금지 |
 | `Freebies` | DailyMission | Scheduler, BattlePass, DataKey, Mail, SupplyPack | 부분 실기 | 정상 종료. 패스/키/우편/무료패키지별 신규 수령 증거 구분 필요 |
-| `Minigame` | DailyMission | Scheduler | 실기 | 10/21 무료 코인10회/보상/종료. 모든 게임 유형은 아님 |
+| `Minigame` | DailyMission | Scheduler | 실기 | 11/6 무료 코인10회/보상/정상 종료 재확인. 모든 게임 유형은 아님 |
 | `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
 | `OpsiGeneral` | Opsi | OpsiGeneral | 공통설정 | 기존 비유료 자원 상한/함대/잠수함/체력 보호 유지. 옵션별 증거 대조 필요 |
 | `OpsiAshBeacon` | Opsi | Scheduler, OpsiAshBeacon | 부분 실기 | 10/21 본인META 1회 공격/피해/종료. 격파 보상 미확인 |
 | `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 실기 | 10/22 지원3회/보상/잔여0/메인복귀 |
 | `OpsiExplore` | Opsi | Scheduler, OpsiExplore, OpsiFleet | 부분 실기 | 10/2 다수 해역 개척 통과. 전체 개척 완료 아님 |
 | `OpsiShop` | Opsi | Scheduler, OpsiShop | 실기 | 10/21 기존 비유료 물품15종 구매/정상종료 |
-| `OpsiVoucher` | Opsi | Scheduler, OpsiVoucher | 미확인 | 기록 장치 구매와 일반 교환권 상점 전체 검증을 구분; 종류별 재고/필터 증거 필요 |
+| `OpsiVoucher` | Opsi | Scheduler, OpsiVoucher | 부분 실기 | 11/6 교환권 상점 순회/보유 기록 사용/정상 종료/다음 월 예약. 빈 품목 시간초과 경고가 있어 품목별 구매 통과로 확대하지 않음 |
 | `OpsiDaily` | Opsi | Scheduler, OpsiDaily, OpsiFleet | 실기 | 10/21 16:37 남은임무 없음/정상종료. 과거 카리브 좌표순환 재현은 별도 |
 | `OpsiObscure` | Opsi | Scheduler, OpsiObscure, OpsiFleet | 조건부족 | 10/21 좌표없음 종료. 현재 좌표 전투 미검증; 일괄좌표사용 연계 범위 확인 |
 | `OpsiAbyssal` | Opsi | Scheduler, OpsiAbyssal, OpsiFleetFilter | 조건부족 | 현재 대상/전투력 확인 필요. 기존 함대·체력 보호 유지 |

@@ -17,7 +17,10 @@ class KoreanIslandNameOcr(Ocr):
     name_dictionary = DIC_ISLAND_ITEM
 
     def prepare_fallback(self, frame):
-        return frame
+        # Windows OCR can miss Hangul touching the right/bottom crop edge.
+        # Keep all observed pixels and add context, rather than altering text.
+        padding = ((20, 20), (20, 20)) + ((0, 0),) * (frame.ndim - 2)
+        return np.pad(frame, padding, mode='constant', constant_values=255)
 
     @cached_property
     def templates(self):

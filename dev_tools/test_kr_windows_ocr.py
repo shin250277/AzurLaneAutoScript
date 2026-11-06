@@ -5,6 +5,19 @@ import numpy as np
 
 
 class WindowsOcrTest(unittest.TestCase):
+    def test_name_fallback_adds_whitespace_without_changing_observation(self):
+        from module.island_handler.korean_ocr import KoreanIslandNameOcr
+        ocr = KoreanIslandNameOcr([])
+        for shape in ((23, 146), (23, 146, 3)):
+            frame = np.full(shape, 71, dtype=np.uint8)
+            original = frame.copy()
+            result = ocr.prepare_fallback(frame)
+            self.assertEqual(result.shape[:2], (63, 186))
+            np.testing.assert_array_equal(result[20:-20, 20:-20], original)
+            self.assertTrue(np.all(result[:20] == 255))
+            self.assertTrue(np.all(result[:, -20:] == 255))
+            np.testing.assert_array_equal(frame, original)
+
     def test_invalid_responses_are_not_silently_truncated(self):
         from module.ocr.windows_ocr import WindowsKoreanOcr
         for response in (None, [], ['one', 'two'], [None], 'text'):

@@ -20,6 +20,16 @@ header = np.array(Image.open('assets/kr/island_item_name/2000_header.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     assert ocr.ocr([header], direct_ocr=True) == ['밀']
     backend.assert_not_called()
+bottom_fish = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_bottom.png' % i))
+               for i in [5105, 5106, 5107, 5108]]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr(bottom_fish, direct_ocr=True) == ['참돔', '감성돔', '황다랑어', '해삼']
+    backend.assert_not_called()
+up_fish = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_up.png' % i))
+           for i in [5103, 5104, 5105, 5106]]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr(up_fish, direct_ocr=True) == ['참치', '연어', '참돔', '감성돔']
+    backend.assert_not_called()
 ids = [2000, 2001, 2008, 2009]
 frames = [np.array(Image.open('assets/kr/island_item_name/%s.png' % i)) for i in ids]
 assert ocr.ocr(frames, direct_ocr=True) == [DIC_ISLAND_ITEM[i]['name']['kr'] for i in ids]
