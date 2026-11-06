@@ -302,12 +302,19 @@ class IslandProduction(IslandRecipe, IslandDock):
             if not self.set_recipe(recipe_id):
                 self.device.image_save('./log/kr_island_recipe_selection_unknown.png')
                 raise RequestHumanTakeover('Korean recipe selection could not be verified')
-            counters = self.get_recipe_ingredient_counters()
             from module.island.kr_preflight import validate_recipe_counters
             from module.island_handler.recipe import ISLAND_RECIPE_AMOUNT_OCR
             from module.island.data import DIC_ISLAND_RECIPE
+            from numbers import Integral
             amount = ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image)
-            if self.get_active_recipe_id() != recipe_id or not validate_recipe_counters(
+            active = self.get_active_recipe_id()
+            if (DIC_ISLAND_RECIPE[recipe_id]['commission_cost'] == {} and active == recipe_id
+                    and isinstance(amount, Integral) and not isinstance(amount, bool) and amount > 0):
+                logger.info('KR recipe {}: no declared ingredients; selection-only audit, no start'.format(recipe_id))
+                results[recipe_id] = None  # Not a verified ingredient counter or permission to start.
+                continue
+            counters = self.get_recipe_ingredient_counters()
+            if active != recipe_id or not validate_recipe_counters(
                     DIC_ISLAND_RECIPE[recipe_id]['commission_cost'], amount, counters,
                     require_available=False,
                     components=getattr(self, 'recipe_ingredient_components', None)):

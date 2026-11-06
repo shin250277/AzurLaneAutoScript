@@ -5,6 +5,16 @@ import numpy as np
 
 
 class WindowsOcrTest(unittest.TestCase):
+    def test_pixel_exact_requires_unique_observation_not_correlation_alone(self):
+        from module.island_handler.korean_ocr import KoreanIslandNameOcr
+        check = KoreanIslandNameOcr.pixel_exact_match
+        candidates = [(1.0, 'a'), (0.93, 'b')]
+        self.assertTrue(check(candidates, {'a': 0.1, 'b': 8}))
+        self.assertFalse(check(candidates, {'a': 2, 'b': 8}))
+        self.assertFalse(check(candidates, {'a': 0.1, 'b': 0.2}))
+        self.assertFalse(check([(0.99, 'a')], {'a': 0.1}))
+        self.assertFalse(check([], {}))
+
     def test_name_fallback_adds_whitespace_without_changing_observation(self):
         from module.island_handler.korean_ocr import KoreanIslandNameOcr
         ocr = KoreanIslandNameOcr([])

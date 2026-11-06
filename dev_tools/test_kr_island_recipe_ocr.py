@@ -16,6 +16,10 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+salmon = np.array(Image.open('assets/kr/island_item_name/5104_recipe_top.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([salmon], direct_ocr=True) == ['연어']
+    backend.assert_not_called()
 header = np.array(Image.open('assets/kr/island_item_name/2000_header.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     assert ocr.ocr([header], direct_ocr=True) == ['밀']
@@ -27,10 +31,36 @@ with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     backend.assert_not_called()
 up_fish = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_up.png' % i))
            for i in [5103, 5104, 5105, 5106]]
-with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+with patch.object(ocr, 'pixel_exact_match', return_value=False), patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.return_value = [['참치』']]
     assert ocr.ocr(up_fish, direct_ocr=True) == ['참치', '연어', '참돔', '감성돔']
-    backend.assert_not_called()
+    backend.assert_called_once()
+with patch.object(ocr, 'pixel_exact_match', return_value=False), patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.return_value = [['삼치』']]
+    assert ocr.ocr(up_fish[:1], direct_ocr=True) == ['삼치』']
+with patch.object(ocr, 'pixel_exact_match', return_value=False), patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.return_value = [['참똲』']]
+    assert ocr.ocr(up_fish[:1], direct_ocr=True) == ['참똲』']
 ids = [2000, 2001, 2008, 2009]
+mining = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_bottom.png' % i))
+          for i in [2702, 2703, 2704, 2705]]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr(mining, direct_ocr=True) == ['알루미늄 광석', '철광석', '황광석', '은광석']
+    backend.assert_not_called()
+middle_fish = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_middle.png' % i))
+               for i in [5101, 5102]]
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.return_value = [['삼치']]
+    assert ocr.ocr(middle_fish, direct_ocr=True) == ['오징어', '삼치']
+from pathlib import Path
+observed_ids = {int(p.stem.split('_')[0]) for p in Path(ocr.template_folder).glob('*.png')}
+assert set(range(5001, 5009)) | set(range(5101, 5109)) <= observed_ids
+with patch.object(ocr, 'pixel_exact_match', return_value=False), patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[[]], [['삼치']]]
+    assert ocr.ocr(middle_fish[1:], direct_ocr=True) == ['삼치']
+with patch.object(ocr, 'pixel_exact_match', return_value=False), patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[[]], [['참치']]]
+    assert ocr.ocr(middle_fish[1:], direct_ocr=True) == ['']
 frames = [np.array(Image.open('assets/kr/island_item_name/%s.png' % i)) for i in ids]
 assert ocr.ocr(frames, direct_ocr=True) == [DIC_ISLAND_ITEM[i]['name']['kr'] for i in ids]
 egg = np.array(Image.open('assets/kr/island_item_name/2601_recipe.png'))

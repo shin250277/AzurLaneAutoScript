@@ -6,6 +6,31 @@ from dev_tools.test_os_task_stop_boundaries import method, TaskStopped
 
 
 class IslandProductionNamesTest(unittest.TestCase):
+    def test_no_ingredient_recipe_is_selection_only_not_spending_permission(self):
+        probe = method('module/island/production.py', 'IslandProduction', 'probe_korean_recipe_counters')
+        ui = Mock()
+        ui.set_recipe.return_value = True
+        ui.get_active_recipe_id.return_value = 401001
+        with patch('module.island_handler.recipe.ISLAND_RECIPE_AMOUNT_OCR') as amount:
+            amount.ocr.return_value = 1
+            self.assertEqual(probe(ui, {401001: 5}), {401001: None})
+        ui.get_recipe_ingredient_counters.assert_not_called()
+        ui.run_recipe.assert_not_called()
+        ui.prepare_ingredients.assert_not_called()
+
+    def test_no_ingredient_recipe_still_requires_selected_identity_and_amount(self):
+        probe = method('module/island/production.py', 'IslandProduction', 'probe_korean_recipe_counters')
+        for active, count in [(401002, 1), (401001, 0), (401001, True)]:
+            ui = Mock()
+            ui.set_recipe.return_value = True
+            ui.get_active_recipe_id.return_value = active
+            ui.get_recipe_ingredient_counters.return_value = []
+            with patch('module.island_handler.recipe.ISLAND_RECIPE_AMOUNT_OCR') as amount:
+                amount.ocr.return_value = count
+                with self.assertRaises(TaskStopped):
+                    probe(ui, {401001: 5})
+            ui.run_recipe.assert_not_called()
+
     def test_recipe_probe_rejects_missing_or_invalid_counters(self):
         probe = method('module/island/production.py', 'IslandProduction', 'probe_korean_recipe_counters')
         ui = Mock()
