@@ -61,10 +61,39 @@ def inventory():
     return rows
 
 
+def manual_inventory():
+    """Also inspect literal KR Buttons outside generated assets.py modules."""
+    rows = []
+    for path in sorted((ROOT / 'module').rglob('*.py')):
+        if path.name == 'assets.py':
+            continue
+        tree = ast.parse(path.read_text(encoding='utf-8-sig'))
+        for call in ast.walk(tree):
+            if not isinstance(call, ast.Call) or not isinstance(call.func, ast.Name):
+                continue
+            if call.func.id not in ('Button', 'Template'):
+                continue
+            fields = {}
+            for kw in call.keywords:
+                try:
+                    fields[kw.arg] = regional(ast.literal_eval(kw.value))
+                except (ValueError, TypeError):
+                    continue
+            filename = fields.get('file')
+            if not isinstance(filename, str) or '/kr/' not in filename:
+                continue
+            identity = path.relative_to(ROOT).as_posix() + ':' + str(call.lineno)
+            rows.append(inspect_asset(identity, call.func.id, fields))
+    return rows
+
+
 if __name__ == '__main__':
     rows = inventory()
+    manual = manual_inventory()
     print(json.dumps(dict(total=len(rows),
                          kr_paths=sum(r['source'] == 'kr-path' for r in rows),
                          errors=[r for r in rows if r['errors']],
+                         manual_kr_total=len(manual),
+                         manual_kr_errors=[r for r in manual if r['errors']],
                          limitation='Static integrity only, not observed KR matching'),
                      ensure_ascii=False, indent=2))

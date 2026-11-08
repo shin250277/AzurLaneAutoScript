@@ -40,7 +40,7 @@
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
 | `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 11/6 대상 없음/필터 복원/정상 종료 재확인. 실제 재료 사용 각성 미검증 |
-| `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 11/6 현재 개방 빠른 완료/보상/09:37 정상 종료. 미해금 유형 및 수동전투 미검증 |
+| `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 11/8 잘린 KR 버튼의 이중 크롭/목록 오탐 수정 후 빠른 완료·보상·23:42 정상 종료. 미해금 유형 및 수동전투 미검증 |
 | `Hard` | DailyMission | Scheduler, Hard | 실기 | 11/6 11-4 3회 잔여0/09:43 정상종료 재확인 |
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
 | `ShopFrequent` | DailyMission | Scheduler, GeneralShop | 부분 실기 | 기존 비유료 필터 실행. 미구매 품목/보호 재고 경계 확인 필요 |

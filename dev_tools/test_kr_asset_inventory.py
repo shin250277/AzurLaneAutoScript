@@ -1,10 +1,22 @@
 """Static image integrity is not evidence of matching a live KR screen."""
 import unittest
 
-from dev_tools.kr_asset_inventory import inspect_asset, inventory
+from dev_tools.kr_asset_inventory import inspect_asset, inventory, manual_inventory
 
 
 class AssetInventoryTest(unittest.TestCase):
+    def test_manual_kr_buttons_are_included_and_within_image(self):
+        rows = manual_inventory()
+        self.assertGreaterEqual(len(rows), 60)
+        self.assertTrue(any(r['id'].startswith('module/daily/daily.py:') for r in rows))
+        self.assertFalse([(r['id'], r['errors']) for r in rows if r['errors']])
+
+    def test_cropped_fixture_cannot_be_loaded_at_screen_coordinates(self):
+        row = inspect_asset('cropped', 'Button', {
+            'file': 'dev_tools/fixtures/kr_daily_list_selector_negative.png',
+            'area': (825, 295, 975, 351)})
+        self.assertIn('area exceeds image', row['errors'])
+
     def test_missing_file_is_not_compatible(self):
         row = inspect_asset('missing', 'Button', {'file': './assets/missing.png',
                                                 'area': (0, 0, 10, 10)})
