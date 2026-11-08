@@ -41,7 +41,7 @@
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
 | `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 11/6 대상 없음/필터 복원/정상 종료 재확인. 실제 재료 사용 각성 미검증 |
 | `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 11/8 잘린 KR 버튼의 이중 크롭/목록 오탐 수정 후 빠른 완료·보상·23:42 정상 종료. 미해금 유형 및 수동전투 미검증 |
-| `Hard` | DailyMission | Scheduler, Hard | 실기 | 11/6 11-4 3회 잔여0/09:43 정상종료 재확인 |
+| `Hard` | DailyMission | Scheduler, Hard | 실기 | 11/8 11-4 3회 잔여0/23:48 정상종료 재확인 |
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
 | `ShopFrequent` | DailyMission | Scheduler, GeneralShop | 부분 실기 | 기존 비유료 필터 실행. 미구매 품목/보호 재고 경계 확인 필요 |
 | `ShopOnce` | DailyMission | Scheduler, GuildShop, MedalShop2, MeritShop, CoreShop | 부분 실기 | 11/6 길드·훈장 거래 및 정상 종료. 공훈/코어 필터 순회는 실제 구매 통과와 구분 |
@@ -52,7 +52,7 @@
 | `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
 | `OpsiGeneral` | Opsi | OpsiGeneral | 공통설정 | 기존 비유료 자원 상한/함대/잠수함/체력 보호 유지. 옵션별 증거 대조 필요 |
 | `OpsiAshBeacon` | Opsi | Scheduler, OpsiAshBeacon | 부분 실기 | 10/21 본인META 1회 공격/피해/종료. 격파 보상 미확인 |
-| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 실기 | 11/6 지원3회/보상/09:51 정상종료. 결과 화면 재개 복구 누락 수정 후 동일 조건 복구 통과. 기존 일괄퇴역/장비 보관 후 전투 복귀 확인 |
+| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 실기 | 11/8 지원3회/보상/잔여0,23:53:15 정상종료·메인 복귀. 11/6 결과 화면 재개 복구 누락 수정 후 동일 조건 복구 통과. 기존 일괄퇴역/장비 보관 후 전투 복귀 확인 |
 | `OpsiExplore` | Opsi | Scheduler, OpsiExplore, OpsiFleet | 부분 실기 | 10/2 다수 해역 개척 통과. 전체 개척 완료 아님 |
 | `OpsiShop` | Opsi | Scheduler, OpsiShop | 실기 | 10/21 기존 비유료 물품15종 구매/정상종료 |
 | `OpsiVoucher` | Opsi | Scheduler, OpsiVoucher | 부분 실기 | 11/6 교환권 상점 순회/보유 기록 사용/정상 종료/다음 월 예약. 빈 품목 시간초과 경고가 있어 품목별 구매 통과로 확대하지 않음 |
@@ -65,7 +65,7 @@
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·구현남음 | 11/8 농장8종·목장4품목군·양식장16종·광산6종·벌목장 이름/재고/선택/가능한 재료 읽기 및 복귀 통과. 과수원 하단 레몬 보완 재검증 중. 신규생산/구매/다중재료 미검증 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·구현남음 | 11/8 농장8종·목장4품목군·양식장16종·광산6종·벌목장 이름/재고/선택/가능한 재료 읽기 및 복귀 통과. 과수원 감·아키즈키 배 인식 통과. 레몬/사과 배경 및 마지막 황광석 보완은 오프라인 통과·동일 실기 미확인, 과수원 전체 미완료. 임시 활성false. 신규생산·시즌 연계 구현/실기 남음 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 조건분기 | 10/21 이미수령 확인. 공유false 유지; 신규 수령 미확인 |
 | `IslandCollect` | Island | Scheduler | 조건분기 | 10/21 추가수집없음 확인. 새수집 미확인 |
