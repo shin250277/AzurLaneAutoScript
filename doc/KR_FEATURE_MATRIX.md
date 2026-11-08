@@ -73,7 +73,7 @@
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 조건분기 | 10/21 이미수령 확인. 공유false 유지; 신규 수령 미확인 |
 | `IslandCollect` | Island | Scheduler | 조건분기 | 10/21 추가수집없음 확인. 새수집 미확인 |
-| `IslandSeasonTask` | Island | Scheduler, IslandSeasonTask | 부분 실기·연계 재검증 | 10/22 14임무/8품목 읽기 감사 통과.11/9 현재 KR 시즌의 전체 목록을 두 번 검증해 목표만 반영하는 전용 연결 구현/전체611검사 통과. 보호 재고·식당 설정 export 및 구매/교환 없음. 새 연결의 실제 목표 적용은 아직 미확인, 임시 활성false 유지 |
+| `IslandSeasonTask` | Island | Scheduler, IslandSeasonTask | 현재 시즌 목표 연계 실기 | 11/9 08:14 전체 목록 두 스캔의 미완료11과제/8품목 일치→TaskTarget 반영→정상 종료/메인 복귀 통과, 임시false 복원. 이름 누락·행 건너뛰기·스크롤 횟수 오판정 수정. 보호 재고·식당 export/구매/교환 없음. 보상수령 및11/19 점검 후 신규 시즌은 별도 미검증 |
 | `IslandBusiness` | Island | Scheduler, IslandRestaurant | 실기 | 10/21 기존 메뉴/등급/보유음식으로 5곳 운영. 10/2 정산/휴가/메인복귀 |
 | `Daemon` | Tool | Daemon | 미확인 | 사용자 수동 플레이 보조. 전투/보상 핸들러 단위 검증과 별도 |
 | `OpsiDaemon` | Tool | OpsiDaemon | 미확인 | 대형작전 수동 플레이 보조. 일반 자동 작업과 별도 |

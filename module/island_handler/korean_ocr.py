@@ -110,6 +110,7 @@ class KoreanIslandNameOcr(Ocr):
         values = []
         unresolved = []
         fallback_candidates = {}
+        shape_candidates = {}
         for index, frame in enumerate(frames):
             gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
             raw_gray = gray
@@ -117,6 +118,7 @@ class KoreanIslandNameOcr(Ocr):
             scores = {}
             spans = {}
             errors = {}
+            shapes = {}
             for name, template, exact_only in self.templates:
                 if gray.shape[0] >= template.shape[0] and gray.shape[1] >= template.shape[1]:
                     _, score, _, point = cv2.minMaxLoc(cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED))
@@ -125,6 +127,8 @@ class KoreanIslandNameOcr(Ocr):
                     observed = gray[point[1]:point[1] + template.shape[0],
                                     point[0]:point[0] + template.shape[1]]
                     error = float(np.abs(observed.astype(np.float32) - template).mean())
+                    if exact_only and np.isfinite(score):
+                        shapes[name] = max(shapes.get(name, 0), score)
                     # Selected-card renderings of similar Hangul must not
                     # change fallback candidates on unrelated renderings.
                     if exact_only and not (score > 0.995 and error < 1.0):
@@ -155,6 +159,7 @@ class KoreanIslandNameOcr(Ocr):
                 values.append('')
                 unresolved.append(index)
                 fallback_candidates[index] = candidates
+                shape_candidates[index] = sorted(((v, n) for n, v in shapes.items()), reverse=True)
         if unresolved:
             recognized = WindowsKoreanOcr().atomic_ocr_for_single_lines(
                 [self.prepare_fallback(frames[i]) for i in unresolved])
@@ -188,6 +193,21 @@ class KoreanIslandNameOcr(Ocr):
                         values[index] = masked
                         logger.info('KR whole-label mask consensus: %s' % masked)
                         continue
+                    shapes = shape_candidates[index]
+                    if (shapes and shapes[0][0] > .97 and (not candidates or candidates[0][0] <= .94)
+                            and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10)):
+                        # A background-dependent exact reference is not itself
+                        # authority. Require whole-label geometry above and
+                        # three independent contrast OCR readings to agree.
+                        name = shapes[0][1]
+                        reads = WindowsKoreanOcr().atomic_ocr_for_single_lines([
+                            self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                            for level in (130, 150, 170)])
+                        if (len(reads) == 3 and all(
+                                ''.join(''.join(read).split()) == ''.join(name.split()) for read in reads)):
+                            values[index] = name
+                            logger.info('KR whole-label shape and triple OCR consensus: %s' % name)
+                            continue
                 if (value not in known_names and len(candidates) > 1
                         and candidates[0][0] > 0.94 and candidates[1][0] >= 0.94
                         and candidates[0][0] > candidates[1][0]):

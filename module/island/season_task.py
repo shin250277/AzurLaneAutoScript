@@ -250,6 +250,7 @@ class IslandSeasonTask(IslandUI):
         unfinished_tasks = []
         early_stop = False
         page_count = 0
+        verified_pages = set()
         while 1:
             page_count += 1
             if self.config.SERVER == 'kr' and (
@@ -275,13 +276,25 @@ class IslandSeasonTask(IslandUI):
                 else:
                     if task_id not in unfinished_tasks:
                         unfinished_tasks.append(task_id)
+            if self.config.SERVER == 'kr' and all(task is not None for task in self.task_names):
+                # A newly identified page proves progress, unlike repeating
+                # the same swipe. Remove only this scroll's history, leaving
+                # unrelated input guards and the 20-page scan bound intact.
+                new_tasks = set(self.task_names) - verified_pages
+                if new_tasks:
+                    self.device.click_record_remove(ISLAND_SEASON_TASK_SCROLL.name)
+                    verified_pages.update(self.task_names)
             if early_stop:
                 logger.info(f'Detect obtained task, early stop scanning')
                 break
             if ISLAND_SEASON_TASK_SCROLL.at_bottom(main=self):
                 break
             else:
-                ISLAND_SEASON_TASK_SCROLL.next_page(main=self, skip_first_screenshot=False)
+                # KR reward anchors expose only fully visible rows. The
+                # default 0.8-page jump can skip a row between observations.
+                ISLAND_SEASON_TASK_SCROLL.next_page(
+                    main=self, page=0.4 if self.config.SERVER == 'kr' else 0.8,
+                    skip_first_screenshot=False)
                 del_cached_property(self, 'season_task_grid')
                 del_cached_property(self, 'task_names')
                 continue

@@ -114,7 +114,7 @@ DIC_ISLAND_ITEM = {
     3023: {'name': {'cn': '玉米杯', 'en': 'Corn Cup', 'jp': 'コーンカップ', 'tw': '玉米杯', 'kr': '옥수수 컵'}, 'pt_num': 7, 'manage_influence': 180, 'order_price': 45},
     3024: {'name': {'cn': '香橙派', 'en': 'Orange Pie', 'jp': 'オレンジパイ', 'tw': '香橙派', 'kr': '오렌지 파이'}, 'pt_num': 35, 'manage_influence': 185, 'order_price': 375},
     3025: {'name': {'cn': '芒果糯米饭', 'en': 'Sticky Rice with Mango', 'jp': 'マンゴーともち米の蒸し飯', 'tw': '芒果糯米飯', 'kr': '망고 찹쌀밥'}, 'pt_num': 60, 'manage_influence': 160, 'order_price': 510},
-    3026: {'name': {'cn': '香蕉可丽饼', 'en': 'Banana Crêpe', 'jp': 'バナナクレープ', 'tw': '香蕉可麗餅', 'kr': '바나나 크레페'}, 'pt_num': 30, 'manage_influence': 170, 'order_price': 230},
+    3026: {'name': {'cn': '香蕉可丽饼', 'en': 'Banana Crêpe', 'jp': 'バナナクレープ', 'tw': '香蕉可麗餅', 'kr': '바나나 크레이프'}, 'pt_num': 30, 'manage_influence': 170, 'order_price': 230},
     3028: {'name': {'cn': '草莓夏洛特', 'en': 'Strawberry Charlotte', 'jp': 'いちごシャルロット', 'tw': '草莓夏洛特', 'kr': '딸기 샬럿'}, 'pt_num': 200, 'manage_influence': 190, 'order_price': 1350},
     3029: {'name': {'cn': '炭烤肉串', 'en': 'Coal-Roasted Skewer', 'jp': '炭火串焼き', 'tw': '炭烤肉串', 'kr': '숯불고기 꼬치'}, 'pt_num': 40, 'manage_influence': 210, 'order_price': 390},
     3030: {'name': {'cn': '禽肉土豆拼盘', 'en': "Chicken and Potato Hors d'Oeuvre", 'jp': '鶏肉とポテトの盛り合わせ', 'tw': '禽肉馬鈴薯拼盤', 'kr': '닭고기 감자 플래터'}, 'pt_num': 36, 'manage_influence': 230, 'order_price': 370},
