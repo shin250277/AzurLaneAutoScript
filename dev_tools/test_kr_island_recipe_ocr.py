@@ -16,6 +16,10 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+pear = np.array(Image.open('assets/kr/island_item_name/4005_recipe_top.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([pear], direct_ocr=True) == ['아키즈키 배']
+    backend.assert_not_called()
 apple = np.array(Image.open('assets/kr/island_item_name/2016_recipe_up_selected.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     assert ocr.ocr([apple], direct_ocr=True) == ['사과']
