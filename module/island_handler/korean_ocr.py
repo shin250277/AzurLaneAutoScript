@@ -194,6 +194,14 @@ class KoreanIslandNameOcr(Ocr):
                         logger.info('KR whole-label mask consensus: %s' % masked)
                         continue
                     shapes = shape_candidates[index]
+                    if (shapes and shapes[0][0] > .96 and (not candidates or candidates[0][0] <= .94)
+                            and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10)):
+                        from module.island_handler.korean_name_mask import long_label_coverage_agrees
+                        name = shapes[0][1]
+                        if long_label_coverage_agrees(gray, self.mask_references, name):
+                            values[index] = name
+                            logger.info('KR long-label grayscale and ink coverage agree: %s' % name)
+                            continue
                     if (shapes and shapes[0][0] > .97 and (not candidates or candidates[0][0] <= .94)
                             and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10)):
                         # A background-dependent exact reference is not itself
