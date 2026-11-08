@@ -2,6 +2,44 @@
 from numbers import Integral
 
 
+def owned_batch_limit(cost, counters, requested, production_limit, protected):
+    """Finite batches from verified one-batch counters; never buy/exchange.
+
+    Caller supplies the sum of hard floors, restaurant reservations, task
+    reservations and any additional protected buffer for each ingredient.
+    This is quantity validation, not permission to click the start button.
+    """
+    if any(isinstance(v, bool) or not isinstance(v, Integral) or v <= 0
+           for v in (requested, production_limit)):
+        return 0
+    if any(isinstance(v, bool) or not isinstance(v, Integral) or v < 0
+           for v in protected.values()):
+        return 0
+    limit = min(requested, production_limit)
+    if not cost:
+        return limit if counters == [] else 0
+    if not validate_recipe_counters(cost, 1, counters):
+        return 0
+    for (item, unit), (stock, required, remaining) in zip(cost.items(), counters):
+        limit = min(limit, max(stock - protected.get(item, 0), 0) // unit)
+    return limit
+
+
+def owned_start_verified(cost, counters, amount, protected):
+    """Recheck the final displayed amount and balances immediately before start."""
+    if isinstance(amount, bool) or not isinstance(amount, Integral) or amount <= 0:
+        return False
+    if any(isinstance(v, bool) or not isinstance(v, Integral) or v < 0
+           for v in protected.values()):
+        return False
+    if not cost:
+        return counters == []
+    if not validate_recipe_counters(cost, amount, counters):
+        return False
+    return all(counter[2] >= protected.get(item, 0)
+               for item, counter in zip(cost, counters))
+
+
 def verified_recipe_stocks(recipe_ids, stocks, previous):
     """Reject incomplete, duplicate or conflicting observations before planning."""
     if not recipe_ids or stocks is None or len(recipe_ids) != len(stocks):

@@ -702,6 +702,29 @@ class IslandRecipe(IslandExchange, IslandShop):
             return False
 
     def prepare_ingredients(self, recipe_id, batch_count=float('inf'), mode=None):
+        if self.config.SERVER == 'kr':
+            # Never enter the foreign-server purchasing/exchange branches.
+            # The selected recipe and a one-batch display must agree first.
+            from module.island.kr_preflight import owned_batch_limit
+            if (self.get_active_recipe_id() != recipe_id
+                    or ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image) != 1):
+                return False, 0
+            floors, reserves, buffers = self.production_floor_items
+            tasks = self.get_task_target_items()
+            cost = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
+            protected = {}
+            for item in cost:
+                values = (floors.get(item, 0), reserves.get(item, 0), buffers.get(item, 0),
+                          tasks.get(item, {}).get('total_need_count', 0))
+                from numbers import Integral
+                if any(isinstance(v, bool) or not isinstance(v, Integral) or v < 0 for v in values):
+                    return False, 0
+                protected[item] = sum(values)
+            count = owned_batch_limit(cost, self.get_recipe_ingredient_counters(),
+                                      batch_count, DIC_ISLAND_RECIPE[recipe_id]['production_limit'],
+                                      protected)
+            self.kr_owned_protected = protected
+            return count == batch_count and count > 0, count
         # use this before setting recipe batch count to read out current ingredient need per batch,
         # since ranch recipes may have boosted ingredient requirement for higher batch production.
         counters = self.get_recipe_ingredient_counters()
@@ -895,6 +918,25 @@ class IslandRecipe(IslandExchange, IslandShop):
         remain_time = self.get_recipe_remain_time()
         logger.attr('Recipe_remain_time', remain_time)
         if remain_time is not None:
+            if self.config.SERVER == 'kr':
+                from module.island.kr_preflight import owned_start_verified
+                from module.exception import RequestHumanTakeover
+                # Do not use the repeating foreign-server start-click loop.
+                self.device.screenshot()
+                protected = getattr(self, 'kr_owned_protected', None)
+                if (protected is None or self.get_active_recipe_id() != recipe_id
+                        or ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image) != real_count
+                        or remain_time.total_seconds() <= 0
+                        or not owned_start_verified(
+                            DIC_ISLAND_RECIPE[recipe_id]['commission_cost'],
+                            self.get_recipe_ingredient_counters(), real_count, protected)):
+                    raise RequestHumanTakeover('KR final production evidence changed; no start')
+                self.device.click(ISLAND_RECIPE_TIME_ANCHOR)
+                for _ in self.loop(timeout=15):
+                    if self.match_template_color(page_island_manage.check_button, offset=(0, 20)):
+                        logger.info(f'KR owned recipe {recipe_id} started once, amount {real_count}')
+                        return remain_time, real_count
+                raise RequestHumanTakeover('KR production start outcome uncertain; no repeated start click')
             for _ in self.loop():
                 if self.appear_then_click(ISLAND_RECIPE_TIME_ANCHOR, offset=(100, 20), interval=2):
                     continue

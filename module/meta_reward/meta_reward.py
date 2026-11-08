@@ -1,4 +1,5 @@
 from module.base.timer import Timer
+from module.base.button import Button
 from module.combat.combat import Combat
 from module.logger import logger
 from module.meta_reward.assets import *
@@ -6,8 +7,29 @@ from module.os_ash.assets import DOSSIER_LIST
 from module.ui.page import page_meta
 from module.ui.ui import UI
 
+KR_CRYSTAL_LABEL = Button(
+    area=(1145, 400, 1270, 438), color=(92, 83, 74),
+    button=(980, 650, 1030, 680),
+    file='./assets/kr/meta_reward/KR_CRYSTAL_CARD.png', name='KR_CRYSTAL_LABEL')
+KR_CRYSTAL_COMMENT = Button(
+    area=(42, 465, 83, 510), color=(114, 113, 115),
+    button=(980, 650, 1030, 680),
+    file='./assets/kr/meta_reward/KR_CRYSTAL_CARD.png', name='KR_CRYSTAL_COMMENT')
+
 
 class BeaconReward(Combat, UI):
+    def handle_kr_crystal_card(self):
+        # Crystal conversion has a different card layout from a new ship.
+        # Require both the Korean reward label and the contextual card icon.
+        if self.config.SERVER != 'kr':
+            return False
+        if not self.match_template_color(KR_CRYSTAL_LABEL, offset=(3, 3)):
+            return False
+        if not self.match_template_color(KR_CRYSTAL_COMMENT, offset=(3, 3)):
+            return False
+        self.device.click(KR_CRYSTAL_LABEL)
+        return True
+
     def meta_reward_notice_appear(self):
         """
         Returns:
@@ -59,6 +81,10 @@ class BeaconReward(Combat, UI):
                 confirm_timer.reset()
                 continue
             if self.handle_get_items():
+                received = True
+                confirm_timer.reset()
+                continue
+            if self.handle_kr_crystal_card():
                 received = True
                 confirm_timer.reset()
                 continue

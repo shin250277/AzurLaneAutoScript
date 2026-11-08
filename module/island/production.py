@@ -3,6 +3,7 @@ from datetime import datetime
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property, has_cached_property
 from module.base.timer import Timer
+from module.base.template import Template
 from module.base.utils import random_rectangle_vector_opted
 from module.exception import RequestHumanTakeover
 from module.island.assets import *
@@ -25,6 +26,7 @@ SLOT_SIZE = (86, 86)
 SLOT_DELTA = (95 - 1/3, 0)
 TICK_AREA = (30, 35, 52, 51)
 CHARACTER_SELECT_TITLE_AREA = (515, 144, 765, 202)
+TEMPLATE_KR_PRODUCTION_CAFE_VARIANT = Template(file='./assets/kr/island/KR_PRODUCTION_CAFE_VARIANT.png')
 
 
 class IslandProduction(IslandRecipe, IslandDock):
@@ -93,6 +95,8 @@ class IslandProduction(IslandRecipe, IslandDock):
             TEMPLATE_ISLAND_PRODUCTION_CAFE: 901,
         }
         name_grid = self.production_grid.crop(NAME_AREA, name='PRODUCTION_NAME_GRID')
+        if self.config.SERVER == 'kr':
+            template_to_codename[TEMPLATE_KR_PRODUCTION_CAFE_VARIANT] = 901
         name_images = [self.image_crop(button.area, copy=True) for button in name_grid.buttons]
         codenames = []
         for image in name_images:
