@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from module.base.button import ButtonGrid
+from module.base.button import Button, ButtonGrid
 from module.base.decorator import cached_property, del_cached_property, has_cached_property
 from module.base.timer import Timer
 from module.base.template import Template
@@ -27,6 +27,10 @@ SLOT_DELTA = (95 - 1/3, 0)
 TICK_AREA = (30, 35, 52, 51)
 CHARACTER_SELECT_TITLE_AREA = (515, 144, 765, 202)
 TEMPLATE_KR_PRODUCTION_CAFE_VARIANT = Template(file='./assets/kr/island/KR_PRODUCTION_CAFE_VARIANT.png')
+KR_PRODUCTION_SELECT_CHARACTER = Button(
+    area=(612, 328, 695, 351), color=(220, 220, 220),
+    button=(620, 326, 690, 351),
+    file='./assets/kr/island/KR_PRODUCTION_SELECT_CHARACTER.png', name='KR_PRODUCTION_SELECT_CHARACTER')
 
 
 class IslandProduction(IslandRecipe, IslandDock):
@@ -239,18 +243,26 @@ class IslandProduction(IslandRecipe, IslandDock):
             if not self.next_page():
                 break
 
+    def handle_production_character_entry(self):
+        if self.config.SERVER == 'kr':
+            return (self.is_enter_window_shown() and self.appear_then_click(
+                KR_PRODUCTION_SELECT_CHARACTER, offset=(20, 20), interval=1))
+        return self.appear_then_click(ISLAND_PRODUCTION_SELECT_CHARACTER, offset=(60, 20), interval=1)
+
     def dispatch_slot(self, slot_id, slot_button, worker='manjuu', audit_only=False):
         if slot_id in DIC_ISLAND_PRODUCTION_PLACE[102]['slot']:
             del_cached_property(super(), 'recipe_id_sequence')
             del_cached_property(super(), 'all_recipe_stocks')
-        for _ in self.loop():
+        for _ in self.loop(timeout=15 if self.config.SERVER == 'kr' else None):
             if self.is_in_island_dock():
                 break
-            if self.appear_then_click(ISLAND_PRODUCTION_SELECT_CHARACTER, offset=(60, 20), interval=1):
+            if self.handle_production_character_entry():
                 continue
             if self.match_template_color(page_island_manage.check_button, interval=1) and not self.is_enter_window_shown():
                 self.device.click(slot_button)
                 continue
+        if not self.is_in_island_dock():
+            raise RequestHumanTakeover('Production character entry not confirmed; no repeated restart')
         if worker != 'manjuu':
             character = self.island_dock_find_character(worker)
             if not character or character.status != 'free':

@@ -853,6 +853,22 @@ class IslandRecipe(IslandExchange, IslandShop):
         return success, real_count
 
     def set_recipe_batch_count(self, batch_count=float('inf')):
+        if self.config.SERVER == 'kr':
+            from numbers import Integral
+            if isinstance(batch_count, bool) or not isinstance(batch_count, Integral) or batch_count <= 0:
+                return False
+            # Do not jump to MAX or issue a blind multi-click sequence on KR.
+            for _ in self.loop(skip_first=False, timeout=30):
+                if not self.is_in_recipe_menu():
+                    return False
+                current = ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image)
+                if isinstance(current, bool) or not isinstance(current, Integral) or current <= 0:
+                    return False
+                if current == batch_count:
+                    return True
+                button = ISLAND_RECIPE_AMOUNT_PLUS if current < batch_count else ISLAND_RECIPE_AMOUNT_MINUS
+                self.appear_then_click(button, offset=(20, 20), interval=0.3)
+            return False
         for _ in self.loop():
             if self.appear_then_click(ISLAND_RECIPE_AMOUNT_MAX, offset=(20, 20)):
                 self.device.screenshot()
@@ -899,6 +915,9 @@ class IslandRecipe(IslandExchange, IslandShop):
             return None
         if not self.set_recipe(recipe_id):
             logger.warning(f'Failed to set recipe to {recipe_id}, cannot run recipe')
+            return None
+        if self.config.SERVER == 'kr' and not self.set_recipe_batch_count(1):
+            logger.warning('KR one-batch baseline could not be verified; no ingredient planning or start')
             return None
         success, real_count = self.prepare_ingredients(
             recipe_id,

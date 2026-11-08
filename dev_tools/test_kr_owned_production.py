@@ -40,6 +40,11 @@ class OwnedProductionTest(unittest.TestCase):
         with self.assertRaisesRegex(RequestHumanTakeover, 'evidence changed'):
             scope['run_recipe'](ui, 42, 2)
         ui.device.click.assert_not_called()
+        ui.prepare_ingredients = Mock(return_value=(True, 2))
+        ui.set_recipe_batch_count = Mock(return_value=False)
+        self.assertIsNone(scope['run_recipe'](ui, 42, 2))
+        ui.prepare_ingredients.assert_not_called()
+        ui.device.click.assert_not_called()
 
     def test_final_amount_and_remaining_balance_rechecked(self):
         self.assertTrue(owned_start_verified({1: 3}, [(30, 6, 24)], 2, {1: 24}))
