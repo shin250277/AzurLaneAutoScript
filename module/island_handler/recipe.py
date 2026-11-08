@@ -353,7 +353,10 @@ class IslandRecipe(IslandExchange, IslandShop):
         return corrected_ids
 
     def get_recipe_product_stocks(self):
-        stock_grid = self.recipe_grid.crop(RECIPE_PRODUCT_STOCK_AREA, name='RECIPE_PRODUCT_STOCK_GRID')
+        # KR scroll rounding can remove the bottom context of repeated digits
+        # (observed 1311 -> 131). Preserve the original top/left prefix geometry.
+        stock_area = (212, 92, 275, 114) if server.server == 'kr' else RECIPE_PRODUCT_STOCK_AREA
+        stock_grid = self.recipe_grid.crop(stock_area, name='RECIPE_PRODUCT_STOCK_GRID')
         stock_images = [self.image_crop(button.area, copy=True) for button in stock_grid.buttons]
         stocks = RECIPE_PRODUCT_STOCK_OCR.ocr(stock_images, direct_ocr=True)
         return stocks
