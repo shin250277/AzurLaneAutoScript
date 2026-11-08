@@ -35,7 +35,7 @@
 | `Commission` | Reward | Scheduler, Commission | 실기 | 11/6 08:40 수령·재출항/4칸/정상 종료 재확인. 신규 의뢰 이름/기름 의뢰 보호는 별도 분기 |
 | `Tactical` | Reward | Scheduler, Tactical, ControlExpOverflow, AddNewStudent | 부분 실기 | 10/21 16:44 기존 필터 교재 사용/2칸 재시작. 새 학생/경험치 경계는 미확인 |
 | `Research` | Reward | Scheduler, Research | 실기 | 10/21~22 수령·대기열 보충. 연구 종류별 지출 경계 별도 |
-| `Dorm` | Reward | Scheduler, Dorm, BuyFurniture | 부분 실기 | 10/21 보급/수집 통과. 11/6 작업 종료했으나 수집 info_bar 시간초과 경고 있어 수집 재확인 필요. 가구 구매 미확인 |
+| `Dorm` | Reward | Scheduler, Dorm, BuyFurniture | 부분 실기 | 11/8 보유음식 보급/빠른 수집/21:58 정상 종료 재확인, 11/6 수집 시간초과 경고 미재발. 가구 구매 미확인 |
 | `Meowfficer` | Reward | Scheduler, Meowfficer, MeowfficerTrain | 부분 실기·육성 대상 필요 | 11/6 기존 구매계획 1회 처리/bought=1/15/추가계획0/작업 종료. 훈련 비활성 유지; 훈련·강화 대상 미확정 |
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |

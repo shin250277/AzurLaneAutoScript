@@ -116,6 +116,9 @@ class IslandProductionPlanner(DaemonBase):
             idle_accumulating_items_yaml_text = calculator.idle_accumulating_items_to_yaml(use_item_name=use_item_name_in_export)
             hard_floor_items_yaml_text = calculator.hard_floor_items_to_yaml(use_item_name=use_item_name_in_export)
             restaurant_menu_yaml_texts = calculator.restaurant_menus_to_yaml()
+            if any(slot not in restaurant_menu_yaml_texts for slot in self.RESTAURANT_MENU_CONFIG):
+                raise RequestHumanTakeover(
+                    'Incomplete restaurant plan; preserve existing buffers, hard floors and menus')
             with self.config.multi_set():
                 self.config.cross_set("IslandProductionPlanner.Storage.Storage.IslandTechnologyStatus", technology_status)
                 self.config.cross_set("IslandProduction.IslandProduction.DailyBufferItems", inventory_levels_yaml_text)
