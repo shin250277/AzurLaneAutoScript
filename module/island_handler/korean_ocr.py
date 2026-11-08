@@ -12,6 +12,11 @@ from module.ocr.ocr import Ocr
 from module.ocr.windows_ocr import WindowsKoreanOcr
 
 
+def confirmed_contrast_name(candidate, reads, known_names):
+    return (len(reads) == 3 and reads.count(candidate) >= 2
+            and not any(value in known_names and value != candidate for value in reads))
+
+
 class KoreanIslandNameOcr(Ocr):
     template_folder = 'assets/kr/island_item_name'
     name_dictionary = DIC_ISLAND_ITEM
@@ -141,20 +146,21 @@ class KoreanIslandNameOcr(Ocr):
                         values[index] = name
             if ambiguous_retry:
                 # Similar Hangul may have two high image scores. Do not
-                # choose by that tiny margin alone: both different ink
-                # thresholds must read the exact leading candidate, while
-                # a different valid original OCR name is never overwritten.
+                # choose by that tiny margin alone: two of three ink levels
+                # must read the exact candidate and no valid competing name
+                # may be outvoted. Original valid-name conflicts stop above.
                 retry_frames = []
                 for index in ambiguous_retry:
                     frame = frames[index]
                     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
                     retry_frames.extend(self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
-                                        for level in (90, 130))
+                                        for level in (90, 110, 130))
                 reads = WindowsKoreanOcr().atomic_ocr_for_single_lines(retry_frames)
                 for i, index in enumerate(ambiguous_retry):
                     name = fallback_candidates[index][0][1]
-                    if (len(reads) == 2 * len(ambiguous_retry)
-                            and ''.join(reads[2*i]) == name and ''.join(reads[2*i+1]) == name):
+                    if (len(reads) == 3 * len(ambiguous_retry)
+                            and confirmed_contrast_name(name, [''.join(value) for value in reads[3*i:3*i+3]],
+                                                        known_names)):
                         values[index] = name
         logger.attr(self.name or 'KR_ISLAND_NAMES', values)
         return values[0] if len(self.buttons) == 1 else values

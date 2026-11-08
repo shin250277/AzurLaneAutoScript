@@ -13,10 +13,15 @@ if __name__ == '__main__':
     parser.add_argument('--tuna-replay', action='store_true', help='Public decorated tuna OCR crop')
     parser.add_argument('--tuna-selected', action='store_true', help='Observed selected tuna at y159')
     parser.add_argument('--tuna-ambiguous', action='store_true', help='Public ambiguous tuna crop at y201')
+    parser.add_argument('--tuna-dot', action='store_true', help='Observed tuna with threshold-dependent background dot')
     args = parser.parse_args()
     with Image.open(args.frame) as source:
         if source.size != (1280, 720):
             raise ValueError('Unexpected frame size')
+        if args.tuna_dot:
+            source.convert('RGB').crop((304, 456, 450, 479)).save(
+                'dev_tools/fixtures/kr_tuna_dot_name.png')
+            raise SystemExit(0)
         if args.mackerel_replay:
             source.convert('RGB').crop((304, 266, 450, 289)).save(
                 'dev_tools/fixtures/kr_mackerel_name.png')
