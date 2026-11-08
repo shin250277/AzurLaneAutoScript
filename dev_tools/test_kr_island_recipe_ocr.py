@@ -16,6 +16,14 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+apple = np.array(Image.open('assets/kr/island_item_name/2016_recipe_up_selected.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([apple], direct_ocr=True) == ['사과']
+    backend.assert_not_called()
+lemon_background = np.array(Image.open('dev_tools/fixtures/kr_lemon_name_background.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([lemon_background], direct_ocr=True) == ['레몬']
+    backend.assert_not_called()
 persimmon = np.array(Image.open('assets/kr/island_item_name/4007_recipe_top_selected.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     assert ocr.ocr([persimmon], direct_ocr=True) == ['감']
