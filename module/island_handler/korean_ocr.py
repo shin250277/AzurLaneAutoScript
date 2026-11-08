@@ -17,6 +17,27 @@ def confirmed_contrast_name(candidate, reads, known_names):
             and not any(value in known_names and value != candidate for value in reads))
 
 
+def photometric_agreement(template, observed):
+    """Allow small uniform lighting changes, never shape/scale correction.
+
+    Reviewed translucent-card pairs retain >.999 correlation but differ by
+    7-9 gray levels. Fit only one gain/offset, with strict residual limits.
+    Callers must also require whole-label extent and an unambiguous identity.
+    """
+    x, y = template.astype(np.float64), observed.astype(np.float64)
+    if x.shape != y.shape or not x.size or not np.isfinite(x).all() or not np.isfinite(y).all():
+        return False
+    centered = x - x.mean()
+    variance = (centered * centered).mean()
+    if variance < 100:
+        return False
+    gain = (centered * (y-y.mean())).mean() / variance
+    offset = y.mean() - gain*x.mean()
+    error = np.abs(y - (gain*x + offset))
+    return bool(.9 <= gain <= 1.1 and abs(offset) <= 10
+                and error.mean() < 1 and np.percentile(error, 99) < 3)
+
+
 class KoreanIslandNameOcr(Ocr):
     template_folder = 'assets/kr/island_item_name'
     name_dictionary = DIC_ISLAND_ITEM
@@ -111,6 +132,7 @@ class KoreanIslandNameOcr(Ocr):
         unresolved = []
         fallback_candidates = {}
         shape_candidates = {}
+        lighting_candidates = {}
         for index, frame in enumerate(frames):
             gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
             raw_gray = gray
@@ -119,6 +141,7 @@ class KoreanIslandNameOcr(Ocr):
             spans = {}
             errors = {}
             shapes = {}
+            lighting = set()
             for name, template, exact_only in self.templates:
                 if gray.shape[0] >= template.shape[0] and gray.shape[1] >= template.shape[1]:
                     _, score, _, point = cv2.minMaxLoc(cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED))
@@ -129,6 +152,8 @@ class KoreanIslandNameOcr(Ocr):
                     error = float(np.abs(observed.astype(np.float32) - template).mean())
                     if exact_only and np.isfinite(score):
                         shapes[name] = max(shapes.get(name, 0), score)
+                        if score > .999 and photometric_agreement(template, observed):
+                            lighting.add(name)
                     # Selected-card renderings of similar Hangul must not
                     # change fallback candidates on unrelated renderings.
                     if exact_only and not (score > 0.995 and error < 1.0):
@@ -160,6 +185,7 @@ class KoreanIslandNameOcr(Ocr):
                 unresolved.append(index)
                 fallback_candidates[index] = candidates
                 shape_candidates[index] = sorted(((v, n) for n, v in shapes.items()), reverse=True)
+                lighting_candidates[index] = lighting
         if unresolved:
             recognized = WindowsKoreanOcr().atomic_ocr_for_single_lines(
                 [self.prepare_fallback(frames[i]) for i in unresolved])
@@ -185,6 +211,14 @@ class KoreanIslandNameOcr(Ocr):
                     value = clean
                 values[index] = value
                 if value not in known_names:
+                    shapes = shape_candidates[index]
+                    if (shapes and shapes[0][1] in lighting_candidates[index]
+                            and len(lighting_candidates[index]) == 1
+                            and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10)
+                            and (not candidates or candidates[0][0] <= .94)):
+                        values[index] = shapes[0][1]
+                        logger.info('KR whole-label bounded lighting agreement: %s' % shapes[0][1])
+                        continue
                     from module.island_handler.korean_name_mask import mask_consensus
                     frame = frames[index]
                     gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
