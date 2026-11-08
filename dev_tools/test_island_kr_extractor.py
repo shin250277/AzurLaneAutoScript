@@ -8,14 +8,14 @@ from dev_tools.test_os_task_stop_boundaries import method, TaskStopped
 
 
 class IslandKrExtractorTest(unittest.TestCase):
-    def test_unvalidated_korean_season_targets_only_enter_read_only_audit(self):
+    def test_korean_season_targets_only_enter_verified_sync(self):
         for file, cls in [('season_task', 'IslandSeasonTask')]:
             ui = Mock()
             ui.config.SERVER = 'kr'
             run = method('module/island/{}.py'.format(file), cls, 'run',
                          page_island_order='order', page_island_season='season')
             run(ui)
-            ui.audit_korean_season.assert_called_once_with()
+            ui.sync_korean_season.assert_called_once_with()
             ui.ui_ensure.assert_not_called()
             ui.receive_all_reward.assert_not_called()
             ui.config.cross_set.assert_not_called()

@@ -16,7 +16,9 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
-for filename, expected in [('2010_recipe_selected', '아마'), ('2011_recipe_middle', '딸기'),
+for filename, expected in [('2704_recipe_scroll_selected', '황광석'),
+                           ('2605_recipe_background_selected', '양모'),
+                           ('2010_recipe_selected', '아마'), ('2011_recipe_middle', '딸기'),
                            ('2012_recipe_middle', '목화'), ('2014_recipe_bottom', '찻잎')]:
     frame = np.array(Image.open('assets/kr/island_item_name/' + filename + '.png'))
     with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
@@ -49,6 +51,10 @@ with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
 lemon_background = np.array(Image.open('dev_tools/fixtures/kr_lemon_name_background.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     assert ocr.ocr([lemon_background], direct_ocr=True) == ['레몬']
+    backend.assert_not_called()
+persimmon_variant = np.array(Image.open('assets/kr/island_item_name/4007_recipe_background_selected.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([persimmon_variant], direct_ocr=True) == ['감']
     backend.assert_not_called()
 persimmon = np.array(Image.open('assets/kr/island_item_name/4007_recipe_top_selected.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:

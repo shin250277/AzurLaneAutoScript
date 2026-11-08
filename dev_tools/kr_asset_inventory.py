@@ -87,13 +87,35 @@ def manual_inventory():
     return rows
 
 
+def dynamic_name_inventory():
+    """Name templates loaded by glob are not literal Button/Template calls."""
+    from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_TASK
+    rows = []
+    for folder, dictionary in (('island_item_name', DIC_ISLAND_ITEM),
+                               ('island_task_name', DIC_ISLAND_TASK)):
+        for path in sorted((ROOT / 'assets' / 'kr' / folder).glob('*.png')):
+            filename = path.relative_to(ROOT).as_posix()
+            row = inspect_asset(filename, 'dynamic-name', {'file': filename})
+            try:
+                code = int(path.stem.split('_')[0])
+            except ValueError:
+                code = None
+            if not dictionary.get(code, {}).get('name', {}).get('kr'):
+                row['errors'].append('missing Korean name identity')
+            rows.append(row)
+    return rows
+
+
 if __name__ == '__main__':
     rows = inventory()
     manual = manual_inventory()
+    dynamic = dynamic_name_inventory()
     print(json.dumps(dict(total=len(rows),
                          kr_paths=sum(r['source'] == 'kr-path' for r in rows),
                          errors=[r for r in rows if r['errors']],
                          manual_kr_total=len(manual),
                          manual_kr_errors=[r for r in manual if r['errors']],
+                         dynamic_name_total=len(dynamic),
+                         dynamic_name_errors=[r for r in dynamic if r['errors']],
                          limitation='Static integrity only, not observed KR matching'),
                      ensure_ascii=False, indent=2))

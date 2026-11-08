@@ -6,7 +6,8 @@ import module.config.server as server
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.island.assets import *
-from module.island.data import DIC_ISLAND_TASK
+from module.island.data import DIC_ISLAND_TASK, DIC_ISLAND_ITEM
+from module.island.kr_preflight import verified_season_targets
 from module.island.ui import IslandUI
 from module.island.utils import item_mapping_to_yaml, load_item_mapping, normalize_item_keys
 from module.logger import logger
@@ -28,6 +29,24 @@ ISLAND_SEASON_TASK_SCROLL = Scroll(
     color=(128, 128, 128),
     name="ISLAND_SEASON_TASK_SCROLL"
 )
+
+
+def current_season_task_ids():
+    from datetime import datetime, timezone
+    from module.island.data import DIC_ISLAND_SEASON
+    from module.config.utils import server_timezone, server_time_offset
+    now = (datetime.now() - server_time_offset()).replace(tzinfo=timezone(server_timezone()))
+    result = set()
+    for season in DIC_ISLAND_SEASON.values():
+        start = season.get('start_time', {}).get(server.server)
+        end = season.get('end_time', {}).get(server.server)
+        if not start or not end:
+            continue
+        start = datetime.fromisoformat(start).replace(tzinfo=timezone(server_timezone()))
+        end = datetime.fromisoformat(end).replace(tzinfo=timezone(server_timezone()))
+        if start <= now < end:
+            result.update(season['task_list'])
+    return result
 
 class IslandSeasonTask(IslandUI):
     @cached_property
@@ -241,6 +260,10 @@ class IslandSeasonTask(IslandUI):
             for task_id, button in zip(self.task_names, self.season_task_grid.buttons):
                 image = self.image_crop(button.area, copy=True)
                 if TEMPLATE_ISLAND_SEASON_TASK_OBTAINED.match(image):
+                    if self.config.SERVER == 'kr':
+                        # Do not assume every later card is also obtained.
+                        # Goal updates require reaching the actual list end.
+                        continue
                     early_stop = True
                     break
                 if task_id is None:
@@ -265,13 +288,21 @@ class IslandSeasonTask(IslandUI):
         logger.info(f'Unfinished tasks: {unfinished_tasks}')
         return unfinished_tasks
 
-    def audit_korean_season(self):
+    def audit_korean_season(self, return_verified=False):
         """Exercise navigation/OCR without claiming or changing the production plan."""
+        active = current_season_task_ids() if return_verified else None
+        if return_verified and not active:
+            raise RequestHumanTakeover('No verified active KR season; preserve production targets')
         self.ui_ensure(page_island_season)
         self.island_season_bottom_navbar_ensure(left=3)
         del_cached_property(self, 'season_task_grid')
         del_cached_property(self, 'task_names')
         unfinished = self.scan_all()
+        verified = None
+        if return_verified:
+            verified = verified_season_targets(unfinished, active, DIC_ISLAND_TASK, DIC_ISLAND_ITEM)
+            if active != current_season_task_ids() or verified is None:
+                raise RequestHumanTakeover('KR season evidence changed or invalid; preserve production targets')
         proposed = {}
         for task_id in unfinished:
             for item_id, amount in DIC_ISLAND_TASK[task_id]['target'].items():
@@ -279,11 +310,29 @@ class IslandSeasonTask(IslandUI):
         logger.attr('KR season audit tasks', unfinished)
         logger.attr('KR season audit candidate (not applied)', proposed)
         self.device.image_save('./log/kr_island_season_audit.png')
+        if return_verified:
+            if verified != proposed:
+                raise RequestHumanTakeover('KR season evidence changed or invalid; preserve production targets')
+            return verified
         raise RequestHumanTakeover('KR season scan complete; production target update remains blocked pending validation')
+
+    def sync_korean_season(self):
+        """Update only verified goals, never export planner settings or buy items."""
+        active = current_season_task_ids()
+        first = self.audit_korean_season(return_verified=True)
+        second = self.audit_korean_season(return_verified=True)
+        if not active or active != current_season_task_ids() or first != second:
+            raise RequestHumanTakeover('KR season scans disagree; preserve production targets')
+        yaml_text = self.config.cross_get('IslandSeasonTask.IslandSeasonTask.TaskTarget', '{}')
+        old = normalize_item_keys(load_item_mapping(yaml_text, config_name='TaskTarget'))
+        if second != old:
+            self.config.cross_set('IslandSeasonTask.IslandSeasonTask.TaskTarget',
+                                  item_mapping_to_yaml(second, use_item_name=True))
+        self.config.task_delay(server_update=True)
 
     def run(self):
         if self.config.SERVER == 'kr':
-            return self.audit_korean_season()
+            return self.sync_korean_season()
         self.ui_ensure(page_island_season)
         self.island_season_bottom_navbar_ensure(left=3)
         self.receive_all_reward()

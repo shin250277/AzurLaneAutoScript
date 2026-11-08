@@ -45,13 +45,13 @@ class PreflightTest(unittest.TestCase):
         ui.receive_all_reward.assert_not_called()
         ui.device.click.assert_not_called()
 
-    def test_season_audit_never_overwrites_targets_or_collects(self):
+    def test_season_run_enters_verified_sync_not_foreign_export(self):
         run = method('module/island/season_task.py', 'run', page_island_season='season')
         ui = SimpleNamespace(config=Mock(SERVER='kr'), ui_ensure=Mock(),
                              island_season_bottom_navbar_ensure=Mock(),
-                             audit_korean_season=Mock(), receive_all_reward=Mock())
+                             sync_korean_season=Mock(), receive_all_reward=Mock())
         run(ui)
-        ui.audit_korean_season.assert_called_once_with()
+        ui.sync_korean_season.assert_called_once_with()
         ui.receive_all_reward.assert_not_called()
         ui.config.cross_set.assert_not_called()
 

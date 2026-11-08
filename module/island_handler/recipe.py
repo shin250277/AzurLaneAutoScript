@@ -209,6 +209,10 @@ def get_optional_recipe_entry_weight(entry):
     )
 
 
+class KoreanRecipeNameUnknown(RequestHumanTakeover):
+    """Read-only name recognition failed; never authorize a production start."""
+
+
 def recipe_product_name_to_recipe_id(name, slotcode=None):
     if server.server == 'jp':
         # While we have 果樹園二重奏 and 朝光活力コンビ, the problem of カニ as 力二 is worse,
@@ -349,7 +353,7 @@ class IslandRecipe(IslandExchange, IslandShop):
         corrected_ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]
         if server.server == 'kr' and (not corrected_ids or None in corrected_ids):
             self.device.image_save('./log/kr_island_recipe_unknown.png')
-            raise RequestHumanTakeover('Korean recipe names are not all uniquely recognized; no production started')
+            raise KoreanRecipeNameUnknown('Korean recipe names are not all uniquely recognized; no production started')
         return corrected_ids
 
     def get_recipe_product_stocks(self):

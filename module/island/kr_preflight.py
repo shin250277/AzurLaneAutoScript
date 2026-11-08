@@ -2,6 +2,30 @@
 from numbers import Integral
 
 
+def verified_season_targets(task_ids, active_ids, tasks, items):
+    """Validate a completed scan; None means preserve the existing plan.
+
+    Caller must establish scan completeness and an unchanged active KR season.
+    An empty verified scan may clear completed goals, never an unknown season.
+    """
+    if not active_ids or not isinstance(task_ids, (list, tuple)):
+        return None
+    if any(isinstance(v, bool) or not isinstance(v, Integral) or v not in active_ids
+           for v in task_ids) or len(set(task_ids)) != len(task_ids):
+        return None
+    result = {}
+    for task_id in task_ids:
+        target = tasks.get(task_id, {}).get('target')
+        if not isinstance(target, dict):
+            return None
+        for item, amount in target.items():
+            if (isinstance(item, bool) or not isinstance(item, Integral) or item not in items
+                    or isinstance(amount, bool) or not isinstance(amount, Integral) or amount <= 0):
+                return None
+            result[item] = result.get(item, 0) + amount
+    return result
+
+
 def owned_batch_limit(cost, counters, requested, production_limit, protected):
     """Finite batches from verified one-batch counters; never buy/exchange.
 

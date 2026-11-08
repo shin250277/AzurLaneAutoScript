@@ -58,11 +58,35 @@ class KoreanIslandNameOcr(Ocr):
         return frames
 
     @staticmethod
+    def complete_label_span(gray, left, right):
+        """Reject substring hits when independent glyphs extend beyond them.
+
+        Horizontal card rules are not glyphs. No rescaling or inferred names;
+        uncertain backgrounds may reject a match and use the OCR fallback.
+        """
+        for level in (110, 130, 150):
+            _, _, stats, _ = cv2.connectedComponentsWithStats((gray < level).astype(np.uint8), 8)
+            boxes = [s for s in stats[1:] if s[3] >= 8 and s[2] >= 2]
+            # Existing low-threshold templates can omit faint edge strokes
+            # (observed copper label: five pixels). Never allow a full extra
+            # Hangul syllable beyond the matched extent.
+            if boxes and (min(s[0] for s in boxes) < left - 6
+                          or max(s[0] + s[2] for s in boxes) > right + 6):
+                return False
+        return True
+
+    @staticmethod
     def pixel_exact_match(candidates, errors):
         """Require near-identical observed pixels, not just shape correlation."""
         return bool(candidates and candidates[0][0] > 0.995
                     and errors[candidates[0][1]] < 1.0
                     and all(errors[name] > 5.0 for _, name in candidates[1:]))
+
+    @cached_property
+    def mask_references(self):
+        return [(self.name_dictionary[int(path.stem.split('_')[0])]['name']['kr'],
+                 cv2.cvtColor(load_image(str(path)), cv2.COLOR_RGB2GRAY))
+                for path in Path(self.template_folder).glob('*.png')]
 
     @cached_property
     def templates(self):
@@ -88,6 +112,7 @@ class KoreanIslandNameOcr(Ocr):
         fallback_candidates = {}
         for index, frame in enumerate(frames):
             gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+            raw_gray = gray
             gray = cv2.GaussianBlur(gray, (5, 5), 0)
             scores = {}
             spans = {}
@@ -95,6 +120,8 @@ class KoreanIslandNameOcr(Ocr):
             for name, template, exact_only in self.templates:
                 if gray.shape[0] >= template.shape[0] and gray.shape[1] >= template.shape[1]:
                     _, score, _, point = cv2.minMaxLoc(cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED))
+                    if not self.complete_label_span(raw_gray, point[0], point[0] + template.shape[1]):
+                        continue
                     observed = gray[point[1]:point[1] + template.shape[0],
                                     point[0]:point[0] + template.shape[1]]
                     error = float(np.abs(observed.astype(np.float32) - template).mean())
@@ -152,6 +179,15 @@ class KoreanIslandNameOcr(Ocr):
                         and clean == candidates[0][1]):
                     value = clean
                 values[index] = value
+                if value not in known_names:
+                    from module.island_handler.korean_name_mask import mask_consensus
+                    frame = frames[index]
+                    gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+                    masked = mask_consensus(gray, self.mask_references)
+                    if masked:
+                        values[index] = masked
+                        logger.info('KR whole-label mask consensus: %s' % masked)
+                        continue
                 if (value not in known_names and len(candidates) > 1
                         and candidates[0][0] > 0.94 and candidates[1][0] >= 0.94
                         and candidates[0][0] > candidates[1][0]):

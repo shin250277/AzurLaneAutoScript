@@ -10,7 +10,7 @@ from module.island.assets import *
 from module.island.data import DIC_ISLAND_PRODUCTION_PLACE, DIC_ISLAND_SLOT
 from module.island_handler.dock import IslandDock
 from module.island_handler.dock_scanner import CharacterScanner
-from module.island_handler.recipe import IslandProductionRestart, IslandRecipe
+from module.island_handler.recipe import IslandProductionRestart, IslandRecipe, KoreanRecipeNameUnknown
 from module.logger import logger
 from module.map_detection.utils import Points
 from module.ui.page import page_island, page_island_manage
@@ -363,6 +363,7 @@ class IslandProduction(IslandRecipe, IslandDock):
     def audit_korean_recipes(self):
         """Inspect each distinct recipe group; never displace a working slot."""
         inspected = set()
+        unresolved = []
         for _ in range(40):
             self.ensure_top_page()
             probed = False
@@ -382,8 +383,23 @@ class IslandProduction(IslandRecipe, IslandDock):
                         inspected.add(key)
                         for slot_id, button in slots:
                             if self.is_slot_empty(button):
-                                self.dispatch_slot(slot_id, button, audit_only=True)
-                                logger.attr('KR facility recipe audit complete', (place_id, slot_id))
+                                try:
+                                    self.dispatch_slot(slot_id, button, audit_only=True)
+                                except KoreanRecipeNameUnknown:
+                                    # Only a recognized recipe page may be left.
+                                    # Keep gathering independent read-only evidence,
+                                    # but any unresolved group blocks ALL dispatch.
+                                    if not self.is_in_recipe_menu():
+                                        raise
+                                    self.device.image_save('./log/kr_island_recipe_audit_{}_{}.png'.format(
+                                        place_id, slot_id))
+                                    self.ui_back(check_button=page_island_manage.check_button)
+                                    self.ui_ensure(page_island_manage)
+                                    del_cached_property(self, 'recipe_grid')
+                                    del_cached_property(self, 'recipe_ids')
+                                    unresolved.append((place_id, slot_id))
+                                else:
+                                    logger.attr('KR facility recipe audit complete', (place_id, slot_id))
                                 probed = True
                                 break
                         if probed:
@@ -394,6 +410,8 @@ class IslandProduction(IslandRecipe, IslandDock):
                 if probed:
                     break
                 if not self.next_page():
+                    if unresolved:
+                        raise RequestHumanTakeover('unresolved KR recipe groups {}; no production'.format(unresolved))
                     logger.info('KR facility recipe audit finished; no production started by audit')
                     return True
             if not probed:

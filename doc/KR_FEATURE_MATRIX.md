@@ -56,7 +56,7 @@
 | `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
 | `OpsiGeneral` | Opsi | OpsiGeneral | 공통설정 | 기존 비유료 자원 상한/함대/잠수함/체력 보호 유지. 옵션별 증거 대조 필요 |
 | `OpsiAshBeacon` | Opsi | Scheduler, OpsiAshBeacon | 부분 실기 | 10/21 본인META 1회 공격/피해/종료. 격파 보상 미확인 |
-| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 부분 실기·오류남음 | 11/8 지원3회/보상/잔여0,23:53:15 정상종료·메인 복귀. 11/9 지원3회 후 별도 누적 보상의 META 결정 획득 카드에서00:31:34 중단 발견. 재시작 복구와 카드 오류 해결은 별개이며 추가 탐지 수정 필요 |
+| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 부분 실기·수정 재검증 | 11/8 지원3회/보상/잔여0,23:53:15 정상종료·메인 복귀. 11/9 지원3회 후 별도 누적 보상의 META 결정 획득 카드에서00:31:34 중단 발견. 전용 문구+카드 두 앵커 보완 및 실패 화면 양성/빈 화면·한 앵커 음성 재생 통과. 동일 보상 재출현 실기는 아직 미확인 |
 | `OpsiExplore` | Opsi | Scheduler, OpsiExplore, OpsiFleet | 부분 실기 | 10/2 다수 해역 개척 통과. 전체 개척 완료 아님 |
 | `OpsiShop` | Opsi | Scheduler, OpsiShop | 실기 | 10/21 기존 비유료 물품15종 구매/정상종료 |
 | `OpsiVoucher` | Opsi | Scheduler, OpsiVoucher | 부분 실기 | 11/6 교환권 상점 순회/보유 기록 사용/정상 종료/다음 월 예약. 빈 품목 시간초과 경고가 있어 품목별 구매 통과로 확대하지 않음 |
@@ -73,7 +73,7 @@
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 조건분기 | 10/21 이미수령 확인. 공유false 유지; 신규 수령 미확인 |
 | `IslandCollect` | Island | Scheduler | 조건분기 | 10/21 추가수집없음 확인. 새수집 미확인 |
-| `IslandSeasonTask` | Island | Scheduler, IslandSeasonTask | 부분 실기·구현남음 | 10/22 14임무/8품목 읽기 감사 통과. 목표 미적용; 자동 연계 미완료 |
+| `IslandSeasonTask` | Island | Scheduler, IslandSeasonTask | 부분 실기·연계 재검증 | 10/22 14임무/8품목 읽기 감사 통과.11/9 현재 KR 시즌의 전체 목록을 두 번 검증해 목표만 반영하는 전용 연결 구현/전체611검사 통과. 보호 재고·식당 설정 export 및 구매/교환 없음. 새 연결의 실제 목표 적용은 아직 미확인, 임시 활성false 유지 |
 | `IslandBusiness` | Island | Scheduler, IslandRestaurant | 실기 | 10/21 기존 메뉴/등급/보유음식으로 5곳 운영. 10/2 정산/휴가/메인복귀 |
 | `Daemon` | Tool | Daemon | 미확인 | 사용자 수동 플레이 보조. 전투/보상 핸들러 단위 검증과 별도 |
 | `OpsiDaemon` | Tool | OpsiDaemon | 미확인 | 대형작전 수동 플레이 보조. 일반 자동 작업과 별도 |
