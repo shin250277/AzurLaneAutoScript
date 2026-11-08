@@ -65,7 +65,7 @@
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·구현남음 | 11/6 보상 수령, 농장8종·목장 빈3슬롯·양식장16종 이름/재고/재료 읽기 및 복귀 통과. 광산 하단 이름 실패 후 보완 재검증 중. 신규생산/구매/다중재료 미검증 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·구현남음 | 11/8 농장8종·목장4품목군·양식장16종·광산6종·벌목장 이름/재고/선택/가능한 재료 읽기 및 복귀 통과. 과수원 하단 레몬 보완 재검증 중. 신규생산/구매/다중재료 미검증 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 조건분기 | 10/21 이미수령 확인. 공유false 유지; 신규 수령 미확인 |
 | `IslandCollect` | Island | Scheduler | 조건분기 | 10/21 추가수집없음 확인. 새수집 미확인 |

@@ -16,6 +16,42 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+bright_sulfur = np.array(Image.open('dev_tools/fixtures/kr_sulfur_bright_name.png'))
+for votes, expected in [([[], ['황광석'], ['황광석']], '황광석'),
+                        ([['철광석'], ['황광석'], ['황광석']], '황광식'),
+                        ([['황광석']], '황광식'), ([[], [], []], '황광식')]:
+    with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+        backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['황광식']], [[]], [[], [], []], votes]
+        assert ocr.ocr([bright_sulfur], direct_ocr=True) == [expected]
+        assert backend.return_value.atomic_ocr_for_single_lines.call_count == 4
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['황광식']], [[]], [[], ['철광석'], []]]
+    assert ocr.ocr([bright_sulfur], direct_ocr=True) == ['황광식']
+    assert backend.return_value.atomic_ocr_for_single_lines.call_count == 3
+component_tuna = np.array(Image.open('dev_tools/fixtures/kr_tuna_components_name.png'))
+for votes, expected in [([[], ['참치'], ['참치']], '참치'),
+                        ([['삼치'], ['참치'], ['참치']], '참자'),
+                        ([['참치']], '참자'), ([[], [], []], '참자')]:
+    with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+        backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['참자']], [[], [], []], votes]
+        assert ocr.ocr([component_tuna], direct_ocr=True) == [expected]
+        assert backend.return_value.atomic_ocr_for_single_lines.call_count == 3
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['참자']], [[], ['삼치'], []]]
+    assert ocr.ocr([component_tuna], direct_ocr=True) == ['참자']
+    assert backend.return_value.atomic_ocr_for_single_lines.call_count == 2
+assert ocr.glyph_fallbacks(np.full((31,146,3),255,dtype=np.uint8)) == []
+decoration = np.full((31,146,3),255,dtype=np.uint8)
+decoration[20:22,10:130] = 0
+assert ocr.glyph_fallbacks(decoration) == []
+iron_up = np.array(Image.open('assets/kr/island_item_name/2703_recipe_up_selected.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([iron_up], direct_ocr=True) == ['철광석']
+    backend.assert_not_called()
+lemon = np.array(Image.open('dev_tools/fixtures/kr_lemon_name_context.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([lemon], direct_ocr=True) == ['레몬']
+    backend.assert_not_called()
 sulfur = np.array(Image.open('dev_tools/fixtures/kr_sulfur_name_context.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     backend.return_value.atomic_ocr_for_single_lines.return_value = [['황광석']]
@@ -61,7 +97,7 @@ for reads, expected in [([['참치'], ['참치'], ['참치']], '참치'),
                         ([[], [], ['참치']], '미인식'),
                         ([['삼치'], ['삼치'], ['삼치']], '미인식')]:
     with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
-        backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['미인식']], reads]
+        backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['미인식']], reads, [[], [], []]]
         assert ocr.ocr([ambiguous_tuna], direct_ocr=True) == [expected]
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     backend.return_value.atomic_ocr_for_single_lines.return_value = [['삼치']]

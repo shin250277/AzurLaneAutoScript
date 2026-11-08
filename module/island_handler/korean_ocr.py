@@ -40,6 +40,23 @@ class KoreanIslandNameOcr(Ocr):
                 max(int(x.min()) - 1, 0):min(int(x.max()) + 2, frame.shape[1])]))
         return frames
 
+    def glyph_fallbacks(self, frame):
+        """Exclude short decoration when locating text; keep original pixels."""
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+        frames = []
+        for level in (90, 110, 130):
+            _, _, stats, _ = cv2.connectedComponentsWithStats((gray < level).astype(np.uint8), 8)
+            boxes = [s for s in stats[1:] if s[3] >= 8 and s[2] >= 2]
+            if not boxes:
+                return []
+            left, top = min(s[0] for s in boxes), min(s[1] for s in boxes)
+            right = max(s[0] + s[2] for s in boxes)
+            bottom = max(s[1] + s[3] for s in boxes)
+            frames.append(self.prepare_fallback(frame[
+                max(top-1, 0):min(bottom+1, frame.shape[0]),
+                max(left-1, 0):min(right+1, frame.shape[1])]))
+        return frames
+
     @staticmethod
     def pixel_exact_match(candidates, errors):
         """Require near-identical observed pixels, not just shape correlation."""
@@ -168,10 +185,23 @@ class KoreanIslandNameOcr(Ocr):
                 confirmed = WindowsKoreanOcr().atomic_ocr_for_single_lines(localized_frames) if localized_frames else []
                 for i, index in enumerate(localized_indices):
                     name = fallback_candidates[index][0][1]
-                    if (len(confirmed) == 3 * len(localized_indices)
-                            and confirmed_contrast_name(name,
-                                [''.join(value) for value in confirmed[3*i:3*i+3]], known_names)):
+                    if len(confirmed) != 3 * len(localized_indices):
+                        continue
+                    votes = [''.join(value) for value in confirmed[3*i:3*i+3]]
+                    if confirmed_contrast_name(name, votes, known_names):
                         values[index] = name
+                    elif not any(value in known_names and value != name for value in votes):
+                        # Bright translucent cards can put complete Hangul
+                        # strokes above 130. Require independent high-level
+                        # agreement too; never repair a valid-name conflict.
+                        frame = frames[index]
+                        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+                        bright = [self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                                  for level in (150, 170, 190)]
+                        bright_reads = WindowsKoreanOcr().atomic_ocr_for_single_lines(bright)
+                        if confirmed_contrast_name(name, [''.join(value) for value in bright_reads], known_names):
+                            values[index] = name
+                            logger.info('KR recipe bright-context consensus: %s' % name)
             if ambiguous_retry:
                 # Similar Hangul may have two high image scores. Do not
                 # choose by that tiny margin alone: two of three ink levels
@@ -186,9 +216,17 @@ class KoreanIslandNameOcr(Ocr):
                 reads = WindowsKoreanOcr().atomic_ocr_for_single_lines(retry_frames)
                 for i, index in enumerate(ambiguous_retry):
                     name = fallback_candidates[index][0][1]
-                    if (len(reads) == 3 * len(ambiguous_retry)
-                            and confirmed_contrast_name(name, [''.join(value) for value in reads[3*i:3*i+3]],
-                                                        known_names)):
+                    if len(reads) != 3 * len(ambiguous_retry):
+                        continue
+                    votes = [''.join(value) for value in reads[3*i:3*i+3]]
+                    if confirmed_contrast_name(name, votes, known_names):
                         values[index] = name
+                    elif not any(value in known_names and value != name for value in votes):
+                        glyphs = self.glyph_fallbacks(frames[index])
+                        if len(glyphs) == 3:
+                            glyph_reads = WindowsKoreanOcr().atomic_ocr_for_single_lines(glyphs)
+                            if confirmed_contrast_name(name, [''.join(value) for value in glyph_reads], known_names):
+                                values[index] = name
+                                logger.info('KR recipe glyph-context consensus: %s' % name)
         logger.attr(self.name or 'KR_ISLAND_NAMES', values)
         return values[0] if len(self.buttons) == 1 else values

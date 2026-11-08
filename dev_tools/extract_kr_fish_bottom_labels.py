@@ -16,10 +16,15 @@ if __name__ == '__main__':
     parser.add_argument('--tuna-dot', action='store_true', help='Observed tuna with threshold-dependent background dot')
     parser.add_argument('--mackerel-decoration', action='store_true', help='Observed mackerel at detected y278')
     parser.add_argument('--mackerel-localized', action='store_true', help='Public failed mackerel crop at y231')
+    parser.add_argument('--tuna-components', action='store_true', help='Public tuna name including decoration at y467')
     args = parser.parse_args()
     with Image.open(args.frame) as source:
         if source.size != (1280, 720):
             raise ValueError('Unexpected frame size')
+        if args.tuna_components:
+            source.convert('RGB').crop((304, 467, 450, 498)).save(
+                'dev_tools/fixtures/kr_tuna_components_name.png')
+            raise SystemExit(0)
         if args.mackerel_localized:
             source.convert('RGB').crop((304, 231, 450, 254)).save(
                 'dev_tools/fixtures/kr_mackerel_localized_name.png')
