@@ -160,7 +160,7 @@ class IslandSeasonTask(IslandUI):
                 continue
             season_start= datetime.fromisoformat(season_start_string).replace(tzinfo=timezone(server_timezone()))
             season_end= datetime.fromisoformat(season_end_string).replace(tzinfo=timezone(server_timezone()))
-            if season_start<= server_now<= season_end:
+            if season_start <= server_now < season_end:
                 current_season_task_ids.update(season_data['task_list'])
         if not current_season_task_ids:
             logger.warning(f'No active season found or season data missing for {server.server} server.')

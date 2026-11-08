@@ -8,6 +8,10 @@
 
 ## 전체 메뉴와 세부 설정 그룹
 
+### 한국 신규 섬 시즌 일정 — 2026-11-09 갱신
+
+사용자 확인 일정은 **2026-11-19 점검 후**다. 해외11/5 개방을 KR에 적용하지 않는다. 신규 시즌 실기는 개방 조건 대기이며 현재 일반 생산의 구현/검증 미완료와 구분한다. 날짜 도달만으로 신규 시즌을 자동 활성화하지 않는다. 기존 데이터의11/19 12:00은 점검 종료 확인값이 아니므로 신규 시작 시각으로 재사용하지 않는다. 개방 후 실제 시즌/품목/과제 및 보호 재고를 확인해야 자동 연계를 검증할 수 있다.
+
 | ID | 분류 | 설정 그룹(별도 확인 범위) | 판정 | 확인한 범위 / 다음 확인 |
 |---|---|---|---|---|
 | `Alas` | Alas | Emulator, EmulatorInfo, Error, Optimization, DropRecord | 부분 실기 | 로그인·예약·오류 중단 확인. 통신/최적화/알림/통계 옵션 전 조합은 미확인 |
@@ -52,7 +56,7 @@
 | `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
 | `OpsiGeneral` | Opsi | OpsiGeneral | 공통설정 | 기존 비유료 자원 상한/함대/잠수함/체력 보호 유지. 옵션별 증거 대조 필요 |
 | `OpsiAshBeacon` | Opsi | Scheduler, OpsiAshBeacon | 부분 실기 | 10/21 본인META 1회 공격/피해/종료. 격파 보상 미확인 |
-| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 실기 | 11/8 지원3회/보상/잔여0,23:53:15 정상종료·메인 복귀. 11/6 결과 화면 재개 복구 누락 수정 후 동일 조건 복구 통과. 기존 일괄퇴역/장비 보관 후 전투 복귀 확인 |
+| `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 부분 실기·오류남음 | 11/8 지원3회/보상/잔여0,23:53:15 정상종료·메인 복귀. 11/9 지원3회 후 별도 누적 보상의 META 결정 획득 카드에서00:31:34 중단 발견. 재시작 복구와 카드 오류 해결은 별개이며 추가 탐지 수정 필요 |
 | `OpsiExplore` | Opsi | Scheduler, OpsiExplore, OpsiFleet | 부분 실기 | 10/2 다수 해역 개척 통과. 전체 개척 완료 아님 |
 | `OpsiShop` | Opsi | Scheduler, OpsiShop | 실기 | 10/21 기존 비유료 물품15종 구매/정상종료 |
 | `OpsiVoucher` | Opsi | Scheduler, OpsiVoucher | 부분 실기 | 11/6 교환권 상점 순회/보유 기록 사용/정상 종료/다음 월 예약. 빈 품목 시간초과 경고가 있어 품목별 구매 통과로 확대하지 않음 |
