@@ -290,8 +290,10 @@ class IslandProduction(IslandRecipe, IslandDock):
             if getattr(self, 'kr_potato_trial', False):
                 from module.island.potato_trial import run_trial
                 run_trial(self)
-            self.device.image_save('./log/kr_island_recipe_probe.png')
-            raise RequestHumanTakeover('Korean recipe names/stocks scanned; ingredient spending and production remain blocked')
+            if not getattr(self, 'kr_recipe_audit_complete', False):
+                raise RequestHumanTakeover('KR production requires a completed current-run recipe audit')
+            # IslandRecipe.run uses the KR owned-only ingredient and final
+            # identity/balance guards; it cannot purchase or exchange materials.
         target_time = super().run(slot_id=slot_id)
         if target_time is not None:
             target_time = target_time.replace(microsecond=0)
@@ -392,17 +394,20 @@ class IslandProduction(IslandRecipe, IslandDock):
                 if probed:
                     break
                 if not self.next_page():
-                    raise RequestHumanTakeover(
-                        'KR facility recipe audit finished; no new production or purchases')
+                    logger.info('KR facility recipe audit finished; no production started by audit')
+                    return True
             if not probed:
                 raise RequestHumanTakeover('KR facility audit page limit; no new production')
         raise RequestHumanTakeover('KR facility audit limit; no new production')
 
     def dispatch_all(self):
         if self.config.SERVER == 'kr':
+            self.kr_recipe_audit_complete = False
             if not self.slot_grids:
                 raise RequestHumanTakeover('No verified KR facilities; no production')
-            return self.audit_korean_recipes()
+            if self.audit_korean_recipes() is not True:
+                raise RequestHumanTakeover('KR recipe audit incomplete; no production')
+            self.kr_recipe_audit_complete = True
         logger.hr("Dispatch Production", level=2)
         self.ensure_top_page()
         self.failed_buy_items = set()

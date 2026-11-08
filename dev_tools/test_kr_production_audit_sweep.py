@@ -12,8 +12,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
         ui.slot_grids = {101: Mock(buttons=['a']), 201: Mock(buttons=['b'])}
         ui.is_slot_empty.return_value = True
         ui.next_page.return_value = False
-        with self.assertRaises(TaskStopped):
-            run(ui)
+        self.assertIs(run(ui), True)
         self.assertEqual(ui.dispatch_slot.call_count, 2)
         for call in ui.dispatch_slot.call_args_list:
             self.assertTrue(call[1]['audit_only'])
@@ -29,8 +28,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
         ui.slot_grids = {101: Mock(buttons=['a'])}
         ui.is_slot_empty.return_value = False
         ui.next_page.return_value = False
-        with self.assertRaises(TaskStopped):
-            run(ui)
+        self.assertIs(run(ui), True)
         ui.dispatch_slot.assert_not_called()
 
     def test_distinct_ranch_recipes_are_not_skipped_or_duplicated(self):
@@ -44,7 +42,22 @@ class ProductionAuditSweepTest(unittest.TestCase):
         ui.slot_grids = {102: Mock(buttons=['a', 'b', 'c'])}
         ui.is_slot_empty.side_effect = lambda button: button != 'b'
         ui.next_page.return_value = False
-        with self.assertRaises(TaskStopped):
-            run(ui)
+        self.assertIs(run(ui), True)
         self.assertEqual([call[0][0] for call in ui.dispatch_slot.call_args_list], [1, 3])
         self.assertTrue(all(call[1]['audit_only'] for call in ui.dispatch_slot.call_args_list))
+
+    def test_dispatch_requires_explicit_completed_audit(self):
+        run = method('module/island/production.py', 'IslandProduction', 'dispatch_all',
+                     IslandProductionRestart=RuntimeError)
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.slot_grids = {101: Mock()}
+        ui.next_page.return_value = False
+        for incomplete in (False, None, 1):
+            ui.audit_korean_recipes.return_value = incomplete
+            with self.assertRaises(TaskStopped):
+                run(ui)
+            ui.dispatch_place.assert_not_called()
+        ui.audit_korean_recipes.return_value = True
+        run(ui)
+        ui.dispatch_place.assert_called_once_with(101)
