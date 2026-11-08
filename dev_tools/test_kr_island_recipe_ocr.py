@@ -16,6 +16,36 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.recipe import recipe_product_name_to_recipe_id
 from module.island.data import DIC_ISLAND_ITEM
 ocr = KoreanIslandNameOcr([])
+sulfur = np.array(Image.open('dev_tools/fixtures/kr_sulfur_name_context.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.return_value = [['황광석']]
+    assert ocr.ocr([sulfur], direct_ocr=True) == ['황광석']
+    backend.assert_called_once()
+localized_mackerel = np.array(Image.open('dev_tools/fixtures/kr_mackerel_localized_name.png'))
+for reads, expected in [([['삼치']] * 3, '삼치'),
+                        ([['삼치'], ['참치'], ['삼치']], '삼자1'),
+                        ([['삼치']], '삼자1')]:
+    with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+        backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['삼자1']], [['삼시']], reads]
+        assert ocr.ocr([localized_mackerel], direct_ocr=True) == [expected]
+        assert backend.return_value.atomic_ocr_for_single_lines.call_count == 3
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[['삼자1']], [['참치']]]
+    assert ocr.ocr([localized_mackerel], direct_ocr=True) == ['삼자1']
+    assert backend.return_value.atomic_ocr_for_single_lines.call_count == 2
+assert ocr.localized_fallbacks(np.full((23, 146, 3), 255, dtype=np.uint8)) == []
+decorated_mackerel = np.array(Image.open('assets/kr/island_item_name/5102_recipe_decoration_selected.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([decorated_mackerel], direct_ocr=True) == ['삼치']
+    backend.assert_not_called()
+wool = np.array(Image.open('assets/kr/island_item_name/2605_recipe_selected.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([wool], direct_ocr=True) == ['양모']
+    backend.assert_not_called()
+iron_offset = np.array(Image.open('assets/kr/island_item_name/2703_recipe_offset_selected.png'))
+with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+    assert ocr.ocr([iron_offset], direct_ocr=True) == ['철광석']
+    backend.assert_not_called()
 dot_tuna = np.array(Image.open('dev_tools/fixtures/kr_tuna_dot_name.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     backend.return_value.atomic_ocr_for_single_lines.side_effect = [[[]], [['참•치'], ['참치'], ['참치']]]

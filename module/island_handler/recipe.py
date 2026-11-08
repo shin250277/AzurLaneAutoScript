@@ -339,7 +339,11 @@ class IslandRecipe(IslandExchange, IslandShop):
         return self.get_recipe_ids()
 
     def get_recipe_ids(self):
-        product_name_grid = self.recipe_grid.crop(RECIPE_PRODUCT_NAME_AREA, name='RECIPE_PRODUCT_NAME_GRID')
+        # KR Hangul/underline can touch the 23px crop after anchor rounding.
+        # Retain surrounding pixels for OCR/template context, not new click
+        # or stock coordinates. Other servers keep their original crop.
+        name_area = (123, 19, 269, 50) if server.server == 'kr' else RECIPE_PRODUCT_NAME_AREA
+        product_name_grid = self.recipe_grid.crop(name_area, name='RECIPE_PRODUCT_NAME_GRID')
         product_name_images = [self.image_crop(button.area, copy=True) for button in product_name_grid.buttons]
         product_names = RECIPE_PRODUCT_NAME_OCR.ocr(product_name_images, direct_ocr=True)
         corrected_ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]

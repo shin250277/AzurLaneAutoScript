@@ -14,10 +14,20 @@ if __name__ == '__main__':
     parser.add_argument('--tuna-selected', action='store_true', help='Observed selected tuna at y159')
     parser.add_argument('--tuna-ambiguous', action='store_true', help='Public ambiguous tuna crop at y201')
     parser.add_argument('--tuna-dot', action='store_true', help='Observed tuna with threshold-dependent background dot')
+    parser.add_argument('--mackerel-decoration', action='store_true', help='Observed mackerel at detected y278')
+    parser.add_argument('--mackerel-localized', action='store_true', help='Public failed mackerel crop at y231')
     args = parser.parse_args()
     with Image.open(args.frame) as source:
         if source.size != (1280, 720):
             raise ValueError('Unexpected frame size')
+        if args.mackerel_localized:
+            source.convert('RGB').crop((304, 231, 450, 254)).save(
+                'dev_tools/fixtures/kr_mackerel_localized_name.png')
+            raise SystemExit(0)
+        if args.mackerel_decoration:
+            source.convert('RGB').crop((304, 278, 450, 301)).save(
+                'assets/kr/island_item_name/5102_recipe_decoration_selected.png')
+            raise SystemExit(0)
         if args.tuna_dot:
             source.convert('RGB').crop((304, 456, 450, 479)).save(
                 'dev_tools/fixtures/kr_tuna_dot_name.png')

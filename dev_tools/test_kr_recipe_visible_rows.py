@@ -8,6 +8,20 @@ from module.island_handler.recipe import IslandRecipe, RECIPE_DETECT_AREA, RECIP
 
 
 class VisibleRecipeRowsTest(unittest.TestCase):
+    def test_name_context_changes_only_kr_crop_not_grid(self):
+        import module.island_handler.recipe as recipe
+        for region, expected in [('kr', (123, 19, 269, 50)), ('jp', (123, 23, 269, 46))]:
+            grid = Mock()
+            grid.crop.return_value.buttons = [SimpleNamespace(area=(304, 137, 450, 160))]
+            ui = SimpleNamespace(recipe_grid=grid, image_crop=Mock(return_value='pixels'),
+                                 working_slot_id=9401)
+            with patch.object(server, 'server', region), patch.object(recipe, 'RECIPE_PRODUCT_NAME_OCR') as ocr, \
+                    patch.object(recipe, 'recipe_product_name_to_recipe_id', return_value=2704):
+                ocr.ocr.return_value = ['황광석']
+                self.assertEqual(IslandRecipe.get_recipe_ids(ui), [2704])
+            grid.crop.assert_called_once_with(expected, name='RECIPE_PRODUCT_NAME_GRID')
+            ui.image_crop.assert_called_once_with((304, 137, 450, 160), copy=True)
+
     def test_single_ranch_off_grid_background_hit(self):
         def grid(ys, slot=9031, region='kr'):
             ui = SimpleNamespace(working_slot_id=slot,

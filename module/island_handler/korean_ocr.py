@@ -27,6 +27,19 @@ class KoreanIslandNameOcr(Ocr):
         padding = ((20, 20), (20, 20)) + ((0, 0),) * (frame.ndim - 2)
         return np.pad(frame, padding, mode='constant', constant_values=255)
 
+    def localized_fallbacks(self, frame):
+        """Locate dark text at three levels; keep original glyph pixels/colors."""
+        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+        frames = []
+        for level in (90, 110, 130):
+            y, x = np.where(gray < level)
+            if not len(x):
+                return []
+            frames.append(self.prepare_fallback(frame[
+                max(int(y.min()) - 1, 0):min(int(y.max()) + 2, frame.shape[0]),
+                max(int(x.min()) - 1, 0):min(int(x.max()) + 2, frame.shape[1])]))
+        return frames
+
     @staticmethod
     def pixel_exact_match(candidates, errors):
         """Require near-identical observed pixels, not just shape correlation."""
@@ -140,9 +153,24 @@ class KoreanIslandNameOcr(Ocr):
                     ink = np.where(gray < 110, 0, 255).astype(np.uint8)
                     contrast_frames.append(self.prepare_fallback(ink))
                 confirmed = WindowsKoreanOcr().atomic_ocr_for_single_lines(contrast_frames)
+                localized_indices = []
+                localized_frames = []
                 for index, result in zip(contrast_retry, confirmed):
                     name = fallback_candidates[index][0][1]
-                    if ''.join(result) == name:
+                    value = ''.join(result)
+                    if value == name:
+                        values[index] = name
+                    elif value not in known_names:
+                        localized = self.localized_fallbacks(frames[index])
+                        if len(localized) == 3:
+                            localized_frames.extend(localized)
+                            localized_indices.append(index)
+                confirmed = WindowsKoreanOcr().atomic_ocr_for_single_lines(localized_frames) if localized_frames else []
+                for i, index in enumerate(localized_indices):
+                    name = fallback_candidates[index][0][1]
+                    if (len(confirmed) == 3 * len(localized_indices)
+                            and confirmed_contrast_name(name,
+                                [''.join(value) for value in confirmed[3*i:3*i+3]], known_names)):
                         values[index] = name
             if ambiguous_retry:
                 # Similar Hangul may have two high image scores. Do not
