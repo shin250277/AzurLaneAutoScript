@@ -63,12 +63,12 @@ KR_GET_MISSION = Button(
 )
 
 KR_GET_MISSION_TEXT = Button(
-    # First glyph of the localized "[근해 ...] 긴급 의뢰 발생!" text.
-    # Connection-lost dialogs share the window and confirm button, but not
-    # this text stroke.
-    area=(481, 332, 486, 338),
-    color=(172, 177, 178),
-    button=(),
+    # Match the invariant phrase, not the first glyph of the variable name.
+    # Centered short names such as [적습 I] move that glyph horizontally.
+    area=(625, 333, 788, 357),
+    color=(0, 0, 0),
+    button=(625, 333, 788, 357),
+    file='./assets/kr/handler/KR_URGENT_PHRASE.png',
     name='KR_GET_MISSION_TEXT',
 )
 
@@ -227,8 +227,8 @@ class InfoHandler(ModuleBase):
         """
         if self.config.SERVER == 'kr':
             # Both dialogs share the same blue confirm button, so require a
-            # stable stroke from the localized urgent-commission message.
-            appear = self.appear(KR_GET_MISSION_TEXT, threshold=25) \
+            # full localized phrase rather than accepting an unrelated dialog.
+            appear = self.appear(KR_GET_MISSION_TEXT, offset=(100, 8), similarity=0.9) \
                 and self.appear(KR_GET_MISSION, threshold=20, interval=2)
             mission_button = KR_GET_MISSION
         else:
