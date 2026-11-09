@@ -6,6 +6,19 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 
 
 class PhotometricLabelsTest(unittest.TestCase):
+    def test_small_lighting_change_never_changes_product_identity(self):
+        from pathlib import Path
+        from module.island.data import DIC_ISLAND_ITEM
+        ocr = KoreanIslandNameOcr([])
+        with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+            backend.return_value.atomic_ocr_for_single_lines.side_effect = lambda images: [[] for _ in images]
+            for path in Path(ocr.template_folder).glob('*.png'):
+                expected = DIC_ISLAND_ITEM[int(path.stem.split('_')[0])]['name']['kr']
+                frame = np.array(Image.open(str(path)).convert('RGB'))
+                changed = np.clip(frame.astype(float)*1.04-2, 0, 255).astype(np.uint8)
+                with self.subTest(reference=path.name):
+                    self.assertIn(ocr.ocr([changed], direct_ocr=True)[0], ('', expected))
+
     def test_observed_brightness_without_new_reference(self):
         for item, name in [(3049, '수첩'), (3030, '닭고기 감자 플래터')]:
             with self.subTest(item=item):

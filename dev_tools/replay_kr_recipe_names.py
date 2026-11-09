@@ -11,6 +11,7 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 
 
 if __name__ == '__main__':
+    failures = []
     for path in sorted(Path('log').glob('kr_island_recipe_audit_*.png')):
         im = np.array(Image.open(str(path)).convert('RGB'))
         ui = SimpleNamespace(image_crop=lambda area, copy=True: crop(im, area, copy=copy))
@@ -21,5 +22,7 @@ if __name__ == '__main__':
         slot = int(path.stem.split('_')[-1])
         ids = [recipe_product_name_to_recipe_id(name, slotcode=slot) for name in names]
         if not ids or any(not identity for identity in ids) or len(set(ids)) != len(ids):
-            raise AssertionError('Unknown/ambiguous recipe in %s: %r' % (path.name, names))
+            failures.append((path.name, names))
         print(path.stem, names, ids)
+    if failures:
+        raise AssertionError('Unknown/ambiguous recipes: %r' % failures)

@@ -114,16 +114,23 @@ class KoreanIslandNameOcr(Ocr):
         templates = []
         for path in Path(self.template_folder).glob('*.png'):
             gray = cv2.cvtColor(load_image(str(path)), cv2.COLOR_RGB2GRAY)
-            y, x = np.where(gray < 110)
-            if not len(x):
-                continue
-            # Ignore the translucent card background, which changes as the
-            # list scrolls across scenery. Retain a small margin around ink.
-            template = cv2.GaussianBlur(gray, (5, 5), 0)[
-                max(int(y.min())-1, 0):min(int(y.max())+2, gray.shape[0]),
-                max(int(x.min())-2, 0):min(int(x.max())+3, gray.shape[1])]
-            templates.append((self.name_dictionary[int(path.stem.split('_')[0])]['name']['kr'],
-                              template, path.stem.endswith('_selected')))
+            exact_only = path.stem.endswith('_selected')
+            areas = set()
+            # Faint terminal strokes can be above 110 on translucent cards.
+            # Add their full extent as another exact-only reference; do not
+            # relax identity thresholds or remove the substring guard.
+            for level in ((110, 150) if exact_only else (110,)):
+                y, x = np.where(gray < level)
+                if not len(x):
+                    continue
+                area = (max(int(y.min())-1, 0), min(int(y.max())+2, gray.shape[0]),
+                        max(int(x.min())-2, 0), min(int(x.max())+3, gray.shape[1]))
+                if area in areas:
+                    continue
+                areas.add(area)
+                template = cv2.GaussianBlur(gray, (5, 5), 0)[area[0]:area[1], area[2]:area[3]]
+                templates.append((self.name_dictionary[int(path.stem.split('_')[0])]['name']['kr'],
+                                  template, exact_only))
         return templates
 
     def ocr(self, image, direct_ocr=False):

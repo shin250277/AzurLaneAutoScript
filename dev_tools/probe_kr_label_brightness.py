@@ -26,8 +26,7 @@ if __name__ == '__main__':
         if gray.shape[0] < template.shape[0] or gray.shape[1] < template.shape[1]:
             continue
         _, value, _, point = cv2.minMaxLoc(cv2.matchTemplate(gray, template, cv2.TM_CCOEFF_NORMED))
-        if not KoreanIslandNameOcr.complete_label_span(frame, point[0], point[0]+template.shape[1]):
-            continue
+        complete = KoreanIslandNameOcr.complete_label_span(frame, point[0], point[0]+template.shape[1])
         observed = gray[point[1]:point[1]+template.shape[0], point[0]:point[0]+template.shape[1]]
         delta = observed.astype(float)-template.astype(float)
         offset = np.median(delta)
@@ -36,5 +35,5 @@ if __name__ == '__main__':
         shift = y.mean()-gain*x.mean()
         residual = np.abs(y-(gain*x+shift))
         scores.append((value, name, exact, float(np.abs(delta).mean()), float(offset), float(np.abs(delta-offset).mean()),
-                       float(gain), float(shift), float(residual.mean()), float(np.percentile(residual,99))))
+                       float(gain), float(shift), float(residual.mean()), float(np.percentile(residual,99)), complete, template.shape, point))
     print(sorted(scores, reverse=True)[:8])
