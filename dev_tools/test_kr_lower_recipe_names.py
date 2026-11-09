@@ -8,7 +8,12 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 class LowerRecipeNamesTest(unittest.TestCase):
     def test_scroll_references_are_exact_only(self):
         paths = list(Path('assets/kr/island_item_name').glob('*nov9*.png'))
-        self.assertEqual(len(paths), 10)
+        # Keep the original reviewed references mandatory, while allowing
+        # additional observed renderings of the same labels.
+        expected = {'%s_lower_nov9_selected.png' % item for item in
+                    (3007, 3019, 3025, 3037, 3044, 3052, 3109, 3120, 5103)}
+        expected.add('3114_followup_nov9_selected.png')
+        self.assertTrue(expected.issubset({path.name for path in paths}))
         for path in paths:
             with self.subTest(path=path.name):
                 self.assertTrue(path.stem.endswith('_selected'))
