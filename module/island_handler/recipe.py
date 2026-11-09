@@ -364,12 +364,21 @@ class IslandRecipe(IslandExchange, IslandShop):
                 self.device.screenshot()
                 if not self.is_in_recipe_menu():
                     break
-                fresh_grid = self.get_recipe_grid().crop(name_area, name='RECIPE_PRODUCT_NAME_GRID')
+                fresh_recipe_grid = self.get_recipe_grid()
+                fresh_grid = fresh_recipe_grid.crop(name_area, name='RECIPE_PRODUCT_NAME_GRID')
                 if [tuple(button.area) for button in fresh_grid.buttons] != areas:
                     break
                 frames = [self.image_crop(button.area, copy=True) for button in fresh_grid.buttons]
                 names = RECIPE_PRODUCT_NAME_OCR.ocr(frames, direct_ocr=True)
                 ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in names]
+                if None in ids and self.working_slot_id in DIC_ISLAND_SLOT:
+                    from module.island_handler.korean_recipe_icon import resolve_recipe_icons
+                    icon_grid = fresh_recipe_grid.crop((20, 20, 115, 115), name='KR_RECIPE_ICON_GRID')
+                    icons = [self.image_crop(button.area, copy=True) for button in icon_grid.buttons]
+                    confirmed = resolve_recipe_icons(names, ids, icons, self.working_slot_id)
+                    if confirmed != ids:
+                        logger.info('KR recipe icon and visible long text agree: %s' % confirmed)
+                    ids = confirmed
                 if len(ids) != len(known) or any(a is not None and b is not None and a != b
                                                 for a, b in zip(known, ids)):
                     break
@@ -394,6 +403,35 @@ class IslandRecipe(IslandExchange, IslandShop):
         stocks = RECIPE_PRODUCT_STOCK_OCR.ocr(stock_images, direct_ocr=True)
         return stocks
 
+    def settle_korean_recipe_grid(self):
+        """Wait for three row geometries within two pixels; never add input."""
+        observations = []
+        for _ in range(6):
+            if not self.is_in_recipe_menu():
+                raise RequestHumanTakeover('KR recipe page changed while waiting for scroll')
+            grid = self.get_recipe_grid()
+            areas = [tuple(button.area) for button in grid.buttons]
+            logger.attr('KR recipe row geometry', areas)
+            observations.append(areas)
+            observations = observations[-3:]
+            stable = (len(observations) == 3 and areas
+                      and all(len(old) == len(areas) for old in observations))
+            if stable:
+                for rows in zip(*observations):
+                    if (len({(r[0], r[2]) for r in rows}) != 1
+                            or any(max(r[i] for r in rows)-min(r[i] for r in rows) > 2
+                                   for i in (1, 3))):
+                        stable = False
+                        break
+            if stable:
+                # Names and stocks must use this same settled observation.
+                self.recipe_grid = grid
+                return
+            self.device.sleep(.25)
+            self.device.screenshot()
+        self.device.image_save('./log/kr_island_recipe_unsettled.png')
+        raise RequestHumanTakeover('KR recipe rows did not settle; no reading or production')
+
     def next_recipe_page(self):
         if len(self.recipe_grid.buttons) < 3 and not getattr(self.recipe_grid, 'kr_scrollable', False):
             logger.info('Less than 3 recipes in current page, no need to swipe to next page')
@@ -405,6 +443,9 @@ class IslandRecipe(IslandExchange, IslandShop):
             del_cached_property(self, 'recipe_ids')
             self.device.screenshot()
 
+            if server.server == 'kr':
+                self.settle_korean_recipe_grid()
+
     def prev_recipe_page(self):
         if len(self.recipe_grid.buttons) < 3 and not getattr(self.recipe_grid, 'kr_scrollable', False):
             logger.info('Less than 3 recipes in current page, no need to swipe to previous page')
@@ -415,6 +456,8 @@ class IslandRecipe(IslandExchange, IslandShop):
             del_cached_property(self, 'recipe_grid')
             del_cached_property(self, 'recipe_ids')
             self.device.screenshot()
+            if server.server == 'kr':
+                self.settle_korean_recipe_grid()
 
     def scan_all_recipe_stocks(self):
         for _ in self.loop(timeout=3):
