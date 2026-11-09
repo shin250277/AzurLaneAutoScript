@@ -69,7 +69,7 @@
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장8종·목장4품목군·양식장16종·광산6종·벌목장4종·과수원9종·원예7종·전자공방4종 및 식당601 전체 감사/관리 복귀 통과(모든 렌더링 변형 통과 아님).09:50 달걀1배치/09:51 정수 필터1배치,10:29 야채 샐러드10배치/정수 필터1배치 보유 재료 생산 시작·작업 정상 종료 확인. 실제 완료·수령 남음. 생산 직전 재검사·추가 재료량·보호 재고/예약분 유지. 식당/공방 하단7개 이름과 광산 좌표 보완 후10:31 GUI 재검증 중. 수령 실패 예정시각 보존은 로딩 완료, 시작 즉시 시각 저장 보완은 오프라인 통과/다음 재로딩 대상. 현재 시즌 목표 동기화는 별도 실기 통과 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·修正 재검증 | 11/9 농장·목장·양식장·광산·벌목·과수원·원예·전자공방·식당601 감사/관리 복귀 확인(모든 렌더링 변형 통과 아님). 달걀/목장/샐러드/필터 실제 수령 및19:16 즉시 시각 삭제 저장 통과.19:29 카페12배치/필터1배치 신규 시작 즉시 저장·정상 종료,19:50 양모 시작 저장 통과. 다음 카페21:29/필터23:29/양모11/10 00:50 수령은 시간 대기.19:51 카페 이름 실패 후9변형 보완/전체718개 통과,20:01 GUI 재검증 중/반복 활성false. 보호 재고·식당 예약분 유지, 구매 없음 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |
@@ -78,10 +78,10 @@
 | `Daemon` | Tool | Daemon | 미확인 | 사용자 수동 플레이 보조. 전투/보상 핸들러 단위 검증과 별도 |
 | `OpsiDaemon` | Tool | OpsiDaemon | 미확인 | 대형작전 수동 플레이 보조. 일반 자동 작업과 별도 |
 | `EventStory` | Tool | EventStory | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
-| `IslandProductionPlanner` | Tool | IslandProductionPlanner | 오프라인 | 11/8 저장기술 계산 성공, 모의 export 필드 범위·직렬화 실패·식당 메뉴 누락 시 무변경 통과. 실제 설정 적용/게임 연계 미검증 |
+| `IslandProductionPlanner` | Tool | IslandProductionPlanner | 읽기 전용 계산 통과 | 11/9 19:24 계산 성공(생산64/구매24/교환1 제안). 실제 export/구매/교환 없음. 모의 export 필드 범위·직렬화 실패·식당 메뉴 누락 시 무변경 통과. 실제 설정 적용은 별도 승인/검증 |
 | `IslandProductionTrial` | Tool | 독립 도구 | 한정도구 | 과거 감자1회 전용 영수증 보호. 재승인 없이 영수증 초기화/반복 금지 |
-| `EventShopScan` | Tool | 독립 도구 | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
-| `IslandInspect` | Tool | 독립 도구 | 진단도구 | 읽기 화면 검사. 현재 지원 화면/복귀 증거 대조 필요 |
+| `EventShopScan` | Tool | 독립 도구 | 스캔 종료 실기·일부 미인식 | 11/9 19:53~54 8페이지/31품목/바닥 도달·정상 종료. 신규3품목/PlateUnknown은 미인식, 구매 없음. 전체 상품 판독/구매 통과와 구분 |
+| `IslandInspect` | Tool | 독립 도구 | 읽기 진단·복귀 실기 | 11/9 19:54~55 주문 요구/현재 시즌 끝까지 고유29과제 읽기·메인 복귀 통과. 일부 수령 완료 제목 미인식은 남음. 주문 제출/보상 수령/목표 변경 없음 |
 | `IslandOrderTrial` | Tool | 독립 도구 | 한정도구 | 철광석1회 전용. 일반주문 대체 아님; 원본task.yaml 누락 수정 |
 | `RaidInspect` | Tool | 독립 도구 | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `RaidRewardClaim` | Tool | 독립 도구 | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |

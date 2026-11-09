@@ -299,6 +299,14 @@ class EventShopItemGrid(ItemGrid):
 
         for i in self.items:
             i.correct_name_and_cost(save_unknown=save_unknown)
+            if server.server == 'kr' and amount and i.is_ship:
+                # Portrait decoration enters the generic amount crop. Two
+                # independently bounded right-side crops must agree; do not
+                # apply this to oil/coins or infer quantity from item price.
+                quantities = self.amount_ocr.ocr(
+                    [i.crop((left, 50, 63, 63)) for left in (44, 46)], direct_ocr=True)
+                if len(quantities) == 2 and quantities[0] == quantities[1] and quantities[0] > 0:
+                    i.amount = quantities[0]
             if self.kr_names is not None:
                 name_from_label = self.kr_names.match(i.crop((-44, 72, 108, 100)))
                 if name_from_label is not None:
