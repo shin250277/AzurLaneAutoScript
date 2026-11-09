@@ -13,13 +13,13 @@ from module.base.utils import crop
 from module.island_handler.recipe import IslandRecipe
 
 
-def replay(path):
+def replay(path, slot_id=None):
     frame, buttons = grid(path)
     device = Mock()
     ui = SimpleNamespace(
         recipe_grid=buttons, get_recipe_grid=lambda: buttons,
         image_crop=lambda area, copy=True: crop(frame, area, copy=copy),
-        working_slot_id=int(path.stem.rsplit('_', 1)[1]),
+        working_slot_id=int(path.stem.rsplit('_', 1)[1]) if slot_id is None else slot_id,
         device=device, is_in_recipe_menu=lambda: True)
     result = IslandRecipe.get_recipe_ids(ui)
     device.click.assert_not_called()
