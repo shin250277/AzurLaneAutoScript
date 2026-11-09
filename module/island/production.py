@@ -231,7 +231,12 @@ class IslandProduction(IslandRecipe, IslandDock):
         for place_id, slot_grid in self.slot_grids.items():
             for slot_id, slot_button in zip(DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], slot_grid.buttons):
                 if self.is_slot_finished(slot_button) or self.slot_finish_time.get(slot_id, datetime.max) <= datetime.now():
-                    self.claim_slot_reward(slot_button)
+                    claimed = self.claim_slot_reward(slot_button)
+                    if self.config.SERVER == 'kr' and claimed is not True:
+                        # A due estimate is not proof that the reward was received.
+                        # Preserve the pending timestamp and do not dispatch over it.
+                        raise RequestHumanTakeover('KR production reward was not confirmed; '
+                                                   'retain pending finish time and stop')
                     if slot_id in self.slot_finish_time:
                         del self.slot_finish_time[slot_id]
 

@@ -69,7 +69,7 @@
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장8종·목장4품목군·양식장16종·광산6종·벌목장4종·과수원9종·원예7종·전자공방4종 이름/재고/선택/가능한 재료 읽기 및 복귀 통과. 배경·스크롤 변형은 계속 보완 중.09:18 현재 실행 감사 성공 그룹만 허가하고 미확인 그룹을 차단한 채 독립 생산 단계 진입 확인. 생산 직전 재검사·보유 재료 전용·보호 재고/예약분 유지. 신규 생산 시작·완료·수령 실기 남음. 임시true는 종료 후false 복원 대상. 현재 시즌 목표 동기화는 별도 실기 통과 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장8종·목장4품목군·양식장16종·광산6종·벌목장4종·과수원9종·원예7종·전자공방4종 이름/재고/선택/가능한 재료 읽기 및 복귀 통과.09:50 달걀1배치/09:51 정수 필터1배치 보유 재료 생산 시작·작업 정상 종료·메인 복귀 확인. 실제 완료·수령 남음(각10:50/13:51 예정). 생산 직전 재검사·실제 추가 재료량·보호 재고/예약분 유지. 미확인9개 그룹은 이름 보완/전체677검사 후10:02 임시 활성 재검증 중. 수령 실패 시 예정시각 보존 보완은 신규5검사 통과, 다음 정상 경계 로딩 대상. 현재 시즌 목표 동기화는 별도 실기 통과 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 조건분기 | 10/21 이미수령 확인. 공유false 유지; 신규 수령 미확인 |
 | `IslandCollect` | Island | Scheduler | 조건분기 | 10/21 추가수집없음 확인. 새수집 미확인 |
