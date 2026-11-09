@@ -42,6 +42,11 @@ class KoreanRecipeIconVerifier:
             for scale in (1.3, 1.325, 1.35, 1.375):
                 refs.append((by_name[path.stem], cv2.resize(icon, None, fx=scale, fy=scale,
                                                          interpolation=cv2.INTER_CUBIC)))
+        # Reviewed KR card artwork variants. Only the icon core is stored;
+        # the same score, competing-product margin and text gates still apply.
+        for path in Path('assets/kr/island_recipe_icon').glob('*.png'):
+            if path.stem.isdigit() and int(path.stem) in DIC_ISLAND_ITEM:
+                refs.append((int(path.stem), load_image(str(path))))
         return refs
 
     def confirm(self, frame, observed_name, allowed_products):

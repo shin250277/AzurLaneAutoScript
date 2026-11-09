@@ -32,4 +32,6 @@ class KoreanRecipeStockDigit(Digit):
         # glyphs (including their inner antialiasing), not the badge background.
         # Never repair a recognized number by dropping or guessing digits.
         image[image > 160] = 255
-        return image
+        # Give the recognizer a stable white border without modifying digits.
+        # Tight low-height crops can otherwise lose a thin final '1'.
+        return np.pad(image, ((2, 2), (2, 2)), mode='constant', constant_values=255)
