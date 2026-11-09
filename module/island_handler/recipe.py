@@ -403,8 +403,11 @@ class IslandRecipe(IslandExchange, IslandShop):
                         logger.info('KR recipe names recovered by two stable read-only captures')
                         return ids
                     previous_complete = ids
-                else:
-                    previous_complete = None
+                # A missing OCR result supplies no contradictory identity.
+                # Keep the last complete observation within this fixed three-
+                # capture window. Any known-name conflict, changed row geometry
+                # or page already aborts above. Two complete identical reads
+                # are still required; never merge partial reads to authorize.
             self.device.image_save('./log/kr_island_recipe_unknown.png')
             raise KoreanRecipeNameUnknown('Korean recipe names are not all uniquely recognized; no production started')
         return corrected_ids

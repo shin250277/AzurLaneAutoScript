@@ -36,6 +36,24 @@ class RecipeReadRetryTest(unittest.TestCase):
         self.assertEqual(ui.device.screenshot.call_count,3)
         ui.device.click.assert_not_called()
 
+    def test_unknown_between_identical_full_observations_is_not_a_conflict(self):
+        ui = self.make()
+        self.assertEqual(self.run_reads(ui, [['A','?'], ['A','B'], ['A','?'], ['A','B']]), [1,2])
+        self.assertEqual(ui.device.screenshot.call_count, 3)
+        ui.device.click.assert_not_called()
+        ui.device.drag.assert_not_called()
+
+    def test_single_complete_observation_still_cannot_authorize(self):
+        ui = self.make()
+        with self.assertRaises(recipe.KoreanRecipeNameUnknown):
+            self.run_reads(ui, [['A','?'], ['A','B'], ['A','?'], ['A','?']])
+
+    def test_conflict_between_full_observations_stops_immediately(self):
+        ui = self.make()
+        with self.assertRaises(recipe.KoreanRecipeNameUnknown):
+            self.run_reads(ui, [['A','?'], ['A','B'], ['A','C'], ['A','B']])
+        self.assertEqual(ui.device.screenshot.call_count, 2)
+
     def test_conflicting_known_row_stops_without_replacing_identity(self):
         ui = self.make()
         with self.assertRaises(recipe.KoreanRecipeNameUnknown):
