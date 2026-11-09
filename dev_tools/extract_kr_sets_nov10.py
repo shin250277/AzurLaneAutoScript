@@ -7,6 +7,11 @@ from module.base.utils import crop
 from dev_tools.extract_kr_recipe_followup_nov9 import grid
 
 CASES = [
+    ('706_9207', 'be934a35c34ccd58dc092cc51c7a229b284ffb2a42d3b921b0abb7f4762f31e2', 0, 3037, '밧줄'),
+    ('706_9207', 'be934a35c34ccd58dc092cc51c7a229b284ffb2a42d3b921b0abb7f4762f31e2', 2, 3039, '향낭'),
+    ('603_9081', '90a62078f6a171060e7e5658509c5baf731aca0a6f86c573a93c9d21e9f1d226', 0, 3009, '애플파이'),
+    ('603_9081', '90a62078f6a171060e7e5658509c5baf731aca0a6f86c573a93c9d21e9f1d226', 2, 3025, '망고 찹쌀밥'),
+    ('601_9061', 'e6a9eec05e298484e20fdc54ccbe4481ad1fb52b27cbd5f9207198921d11b356', 2, 3120, '불도장'),
     ('unknown', '9645912a68c8a0a9a22dba37429cb07015ca5df79fa018cf45c64ec91911f720', 1, 2704, '황광석'),
     ('604_9091', '348823cb0e6b901c2d1c1b4861f4c7fb277e7d8d17f16e3d8861769c5d71e868', 0, 3034, '햄버그 덮밥'),
     ('604_9091', '348823cb0e6b901c2d1c1b4861f4c7fb277e7d8d17f16e3d8861769c5d71e868', 1, 3115, '레몬 새우'),
@@ -23,6 +28,9 @@ CASES = [
 
 if __name__ == '__main__':
     for suffix, digest, row, item_id, name in CASES:
+        selected = next((arg.split('=', 1)[1] for arg in sys.argv if arg.startswith('--only=')), None)
+        if selected is not None and str(item_id) != selected:
+            continue
         path = Path('log/kr_island_recipe_unknown.png' if suffix == 'unknown'
                     else 'log/kr_island_recipe_audit_%s.png' % suffix)
         assert sha256(path.read_bytes()).hexdigest() == digest, suffix

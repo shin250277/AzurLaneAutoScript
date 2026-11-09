@@ -20,14 +20,31 @@ def mask_consensus(frame, references):
     This supplements, rather than weakens, existing grayscale matching. A
     caller must never use it to overwrite a conflicting valid OCR name.
     """
+    return _mask_consensus(frame, references, (110, 130, 150), glyph_mask)
+
+
+def adaptive_mask_consensus(frame, references):
+    """Same whole-word/margin gates at three locally measured contrasts.
+
+    No resizing or extra tolerance. Different per-level winners remain unknown,
+    particularly similar short names such as the two fish samchi/chamchi.
+    Caller must independently require strong, complete grayscale shape.
+    """
+    def adaptive(gray, delta):
+        threshold, _ = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        return glyph_mask(gray, threshold + delta)
+    return _mask_consensus(frame, references, (-10, 0, 10), adaptive)
+
+
+def _mask_consensus(frame, references, levels, make_mask):
     winners = []
-    for level in (110, 130, 150):
-        observed = glyph_mask(frame, level)
+    for level in levels:
+        observed = make_mask(frame, level)
         if observed is None:
             return None
         scores = {}
         for name, gray in references:
-            mask = glyph_mask(gray, level)
+            mask = make_mask(gray, level)
             if mask is None or any(abs(a-b) > 2 for a, b in zip(mask.shape, observed.shape)):
                 continue
             score = cv2.minMaxLoc(cv2.matchTemplate(

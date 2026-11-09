@@ -783,6 +783,8 @@ class IslandRecipe(IslandExchange, IslandShop):
     def goto_ingredient_shop_page(self, entrance_button):
         click_timer = Timer(1, count=3).reset()
         for _ in self.loop(timeout=15):
+            if self.config.SERVER == 'kr' and self.ui_page_appear(page_island_shop, offset=(0, 20)):
+                return True
             if self.appear(ISLAND_INFO_GOTO_SHOP, offset=(20, 20)):
                 break
             if self.is_in_recipe_menu():
@@ -827,6 +829,13 @@ class IslandRecipe(IslandExchange, IslandShop):
                      if recipe_id in (101013, 101015, 101016, 101018) else None)
             actual_cost = verified_owned_unit_cost(cost, counters, parts)
             if actual_cost is None:
+                return False, 0
+            # Only observed ordinary-coin material dialogs are connected here.
+            # Composite ingredients and surplus-buffer work stay owned-only.
+            from module.island_handler.kr_coin_material import replenish_for_recipe
+            counters = replenish_for_recipe(self, recipe_id, actual_cost, counters,
+                                            protected, batch_count, mode)
+            if counters is None:
                 return False, 0
             count = owned_batch_limit(actual_cost, counters,
                                       batch_count, DIC_ISLAND_RECIPE[recipe_id]['production_limit'],

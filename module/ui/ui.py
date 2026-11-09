@@ -702,6 +702,11 @@ class UI(InfoHandler):
                 self.ui_current = destination
                 break
 
+            # A shop back action may reveal the underlying island recipe
+            # screen midway through navigation, not only at startup.
+            if self.config.SERVER == 'kr' and self._handle_kr_island_character_back():
+                continue
+
             # Other pages
             clicked = False
             for page in Page.iter_pages():

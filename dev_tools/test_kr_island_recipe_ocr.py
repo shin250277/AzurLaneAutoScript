@@ -129,7 +129,7 @@ with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
     backend.assert_not_called()
 dot_tuna = np.array(Image.open('dev_tools/fixtures/kr_tuna_dot_name.png'))
 with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
-    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[[]], [['참•치'], ['참치'], ['참치']]]
+    backend.return_value.atomic_ocr_for_single_lines.side_effect = [[[]], [['참치'], ['참치'], ['참치']]]
     assert ocr.ocr([dot_tuna], direct_ocr=True) == ['참치']
     assert backend.return_value.atomic_ocr_for_single_lines.call_count == 2
 mining_top = [np.array(Image.open('assets/kr/island_item_name/%s_recipe_top.png' % i)) for i in [2700,2701]]

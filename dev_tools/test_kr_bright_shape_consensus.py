@@ -12,7 +12,10 @@ class BrightShapeConsensusTest(unittest.TestCase):
         batches = iter([normal or ['?', '황광식', '황광석'], bright])
         def recognize(frames):
             return [list(initial)] if len(frames) == 1 else [list(v) for v in next(batches, [])]
-        with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
+        # Isolate the triple-OCR path: adaptive whole-label masks are tested
+        # independently and may accept this exact observed shape without OCR.
+        with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend, patch(
+                'module.island_handler.korean_name_mask.adaptive_mask_consensus', return_value=None):
             backend.return_value.atomic_ocr_for_single_lines.side_effect = recognize
             return KoreanIslandNameOcr([]).ocr([frame], direct_ocr=True)
 

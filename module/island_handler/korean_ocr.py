@@ -249,6 +249,13 @@ class KoreanIslandNameOcr(Ocr):
                                     and (len(shapes) == 1 or shapes[1][0] < .94)
                                     and (not candidates or candidates[0][0] <= .94
                                          or candidates[0][1] == shapes[0][1]))
+                    if bright_shape:
+                        from module.island_handler.korean_name_mask import adaptive_mask_consensus
+                        adaptive = adaptive_mask_consensus(gray, self.mask_references)
+                        if adaptive == shapes[0][1]:
+                            values[index] = adaptive
+                            logger.info('KR whole-label shape and adaptive mask consensus: %s' % adaptive)
+                            continue
                     if (shapes and shapes[0][0] > .97
                             and (not candidates or candidates[0][0] <= .94 or bright_shape)
                             and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10

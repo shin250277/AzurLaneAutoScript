@@ -326,8 +326,9 @@ class IslandProduction(IslandRecipe, IslandDock):
                 run_trial(self)
             if not getattr(self, 'kr_recipe_audit_complete', False):
                 raise RequestHumanTakeover('KR production requires a completed current-run recipe audit')
-            # IslandRecipe.run uses the KR owned-only ingredient and final
-            # identity/balance guards; it cannot purchase or exchange materials.
+            # IslandRecipe.run retains final identity/stock protection guards.
+            # Only the independently verified KR coin-material path may buy;
+            # foreign-server purchasing/exchange branches remain unreachable.
         target_time = super().run(slot_id=slot_id)
         if target_time is not None:
             target_time = target_time.replace(microsecond=0)
@@ -514,6 +515,19 @@ class IslandProduction(IslandRecipe, IslandDock):
                 break
 
     def run(self):
+        if self.config.SERVER == 'kr':
+            from module.island_handler.kr_coin_material import recover_preview
+            from module.ui.page import page_island_shop
+            from module.ui_white.assets import BACK_ARROW_WHITE
+            recover_preview(self)
+            if self.ui_page_appear(page_island_shop):
+                self.device.click(BACK_ARROW_WHITE)
+                for _ in self.loop(timeout=10):
+                    if (self.is_in_recipe_menu() or self.ui_page_appear(page_island_manage)
+                            or self.ui_page_appear(page_island)):
+                        break
+                else:
+                    raise RequestHumanTakeover('KR material shop return unrecognized; no guessed navigation')
         if self.config.SERVER == 'kr' and self.is_in_recipe_menu():
             self.ui_back(check_button=page_island_manage.check_button)
         self.ensure_island_production_page()

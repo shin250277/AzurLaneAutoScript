@@ -5,6 +5,19 @@ import unittest
 
 
 class IslandCharacterRecoveryTest(unittest.TestCase):
+    def test_recipe_back_is_handled_during_page_transition(self):
+        from unittest.mock import patch
+        from module.ui.ui import UI
+        from module.ui.page import page_research
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.ui_page_appear.side_effect = [False, True]
+        ui._handle_kr_island_character_back.return_value = True
+        with patch('module.ui.ui.Page.iter_pages', return_value=[]):
+            UI.ui_goto(ui, page_research)
+        ui._handle_kr_island_character_back.assert_called_once_with()
+        ui.ui_additional.assert_not_called()
+
     def test_restaurant_back_requires_title_and_arrow(self):
         from module.ui.ui import UI
         from module.island_handler.assets import ISLAND_RESTAURANT_CHECK
