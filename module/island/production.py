@@ -239,6 +239,11 @@ class IslandProduction(IslandRecipe, IslandDock):
                                                    'retain pending finish time and stop')
                     if slot_id in self.slot_finish_time:
                         del self.slot_finish_time[slot_id]
+                        if self.config.SERVER == 'kr':
+                            # A later facility may fail before run() saves state.
+                            # Persist only a confirmed claim, preserving other slots.
+                            self.config.cross_set('IslandProduction.Storage.Storage.SlotFinishTime',
+                                                  {k: v.isoformat(sep=' ') for k, v in self.slot_finish_time.items()})
 
     def claim_all_rewards(self):
         logger.hr("Claim Production Rewards", level=2)
@@ -308,6 +313,11 @@ class IslandProduction(IslandRecipe, IslandDock):
         if target_time is not None:
             target_time = target_time.replace(microsecond=0)
             self.slot_finish_time[slot_id] = target_time
+            if self.config.SERVER == 'kr':
+                # A later facility can fail. Persist this confirmed start now,
+                # without changing scheduler/protection settings or other slots.
+                self.config.cross_set('IslandProduction.Storage.Storage.SlotFinishTime',
+                                      {k: v.isoformat(sep=' ') for k, v in self.slot_finish_time.items()})
             for _ in self.loop(timeout=5):
                 if self.handle_island_additional():
                     continue

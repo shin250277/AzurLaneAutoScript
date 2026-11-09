@@ -24,7 +24,7 @@ class OwnedDispatchTest(unittest.TestCase):
                      page_island_manage=SimpleNamespace(check_button='manage'))
         exec(compile(ast.fix_missing_locations(tree), 'production', 'exec'), scope)
         ui = scope['IslandProduction']()
-        ui.config = SimpleNamespace(SERVER='kr')
+        ui.config = SimpleNamespace(SERVER='kr', cross_set=Mock())
         ui.kr_recipe_audit_complete = complete
         ui.kr_verified_recipe_slots = {9011} if complete else set()
         ui.slot_finish_time = {}
@@ -73,4 +73,22 @@ class OwnedDispatchTest(unittest.TestCase):
         del ui.kr_verified_recipe_slots
         with self.assertRaisesRegex(RequestHumanTakeover, 'verified recipe group'):
             ui.dispatch_slot(9011, 'slot')
+        ui.base_run.assert_not_called()
+
+    def test_confirmed_start_is_checkpointed_before_later_ui_failure(self):
+        ui = self.make_ui(True)
+        ui.slot_finish_time[9001] = datetime(2026, 11, 9, 7)
+        ui.handle_island_additional = Mock(side_effect=RuntimeError('later UI failure'))
+        with self.assertRaisesRegex(RuntimeError, 'later UI failure'):
+            ui.dispatch_slot(9011, 'slot')
+        ui.config.cross_set.assert_called_once_with(
+            'IslandProduction.Storage.Storage.SlotFinishTime',
+            {9001: '2026-11-09 07:00:00', 9011: '2026-11-09 08:00:00'})
+
+    def test_audit_does_not_checkpoint_a_production(self):
+        ui = self.make_ui(True)
+        ui.ui_back = Mock()
+        ui.ensure_island_production_page = Mock()
+        self.assertFalse(ui.dispatch_slot(9011, 'slot', audit_only=True))
+        ui.config.cross_set.assert_not_called()
         ui.base_run.assert_not_called()
