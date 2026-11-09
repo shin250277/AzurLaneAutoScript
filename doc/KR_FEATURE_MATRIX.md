@@ -4,7 +4,7 @@
 
 현재 전수 **목록화**만 완료했으며 전수 **실기 검증**은 미완료다. ‘실기’도 기재된 해역·옵션·날짜 범위만 뜻한다. 공통 실행 엔진을 쓰는 복제 슬롯이나 이벤트 미개방은 통과로 자동 승격하지 않는다.
 
-근거: [11/8 재개 기록](KR_VALIDATION_2026-11-08.md), [11/6 재개 기록](KR_VALIDATION_2026-11-06.md), [10/21 기록](KR_VALIDATION_2026-10-21.md), [10/22 기록](KR_VALIDATION_2026-10-22.md), [10/2 기록](KR_VALIDATION_2026-10-02.md). 과거 문서의 범위를 현재 완료로 확대하지 않는다. 원시 계정 로그·설정·화면은 첨부하지 않는다.
+근거: [11/9 수정·실기 기록](KR_VALIDATION_2026-11-09.md), [11/8 재개 기록](KR_VALIDATION_2026-11-08.md), [11/6 재개 기록](KR_VALIDATION_2026-11-06.md), [10/21 기록](KR_VALIDATION_2026-10-21.md), [10/22 기록](KR_VALIDATION_2026-10-22.md), [10/2 기록](KR_VALIDATION_2026-10-02.md). 과거 문서의 범위를 현재 완료로 확대하지 않는다. 원시 계정 로그·설정·화면은 첨부하지 않는다.
 
 ## 전체 메뉴와 세부 설정 그룹
 
@@ -22,7 +22,7 @@
 | `Main3` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 오프라인·공통경로 | 10/22 합성 설정으로 Main/Main2/Main3 해역·횟수·스케줄러 바인딩 및 쓰기 경로 격리 통과. 별도 슬롯 실기 완료는 아님 |
 | `GemsFarming` | Farm | Scheduler, GemsFarming, EquipmentCode, Campaign, StopCondition, Fleet, Submarine, Emotion | 미확인·범위제한 | 함선 확보/퇴역 반복과 별도 육성 동작. 현재 비활성 유지; 일반 일괄퇴역 승인으로 확대하지 않음 |
 | `EventGeneral` | Event | EventGeneral, TaskBalancer | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
-| `Event` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
+| `Event` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/9 템페스타와 안개회랑 T1~T6 개방 및 T6 연속2회/횟수0 자동 종료/메인 복귀. 긴급 의뢰 팝업 보완의 동일 화면 실기는 별도 |
 | `Event2` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Raid` | Event | Scheduler, Raid, Campaign, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Hospital` | Event | Scheduler, Hospital, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
@@ -33,7 +33,7 @@
 | `EventB` | EventDaily | Scheduler, EventDaily, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `EventC` | EventDaily | Scheduler, EventDaily, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `EventD` | EventDaily | Scheduler, EventDaily, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
-| `EventSp` | EventDaily | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
+| `EventSp` | EventDaily | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/9 사용자 편성 후17:15:41 보스S/17:15:53 종료 및 다음날 예약. 임시false 복원, 정기의뢰 후17:17:04 메인 복귀 |
 | `RaidDaily` | EventDaily | Scheduler, RaidDaily, Campaign, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `CoalitionSp` | EventDaily | Scheduler, Campaign, Coalition, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Commission` | Reward | Scheduler, Commission | 실기 | 11/6 08:40 수령·재출항/4칸/정상 종료 재확인. 신규 의뢰 이름/기름 의뢰 보호는 별도 분기 |
@@ -69,10 +69,10 @@
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장8종·목장4품목군·양식장16종·광산6종·벌목장4종·과수원9종·원예7종·전자공방4종 이름/재고/선택/가능한 재료 읽기 및 복귀 통과.09:50 달걀1배치/09:51 정수 필터1배치 보유 재료 생산 시작·작업 정상 종료·메인 복귀 확인. 실제 완료·수령 남음(각10:50/13:51 예정). 생산 직전 재검사·실제 추가 재료량·보호 재고/예약분 유지. 미확인9개 그룹은 이름 보완/전체677검사 후10:02 임시 활성 재검증 중. 수령 실패 시 예정시각 보존 보완은 신규5검사 통과, 다음 정상 경계 로딩 대상. 현재 시즌 목표 동기화는 별도 실기 통과 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장8종·목장4품목군·양식장16종·광산6종·벌목장4종·과수원9종·원예7종·전자공방4종 및 식당601 전체 감사/관리 복귀 통과(모든 렌더링 변형 통과 아님).09:50 달걀1배치/09:51 정수 필터1배치,10:29 야채 샐러드10배치/정수 필터1배치 보유 재료 생산 시작·작업 정상 종료 확인. 실제 완료·수령 남음. 생산 직전 재검사·추가 재료량·보호 재고/예약분 유지. 식당/공방 하단7개 이름과 광산 좌표 보완 후10:31 GUI 재검증 중. 수령 실패 예정시각 보존은 로딩 완료, 시작 즉시 시각 저장 보완은 오프라인 통과/다음 재로딩 대상. 현재 시즌 목표 동기화는 별도 실기 통과 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
-| `IslandFreebie` | Island | Scheduler, IslandFreebie | 조건분기 | 10/21 이미수령 확인. 공유false 유지; 신규 수령 미확인 |
-| `IslandCollect` | Island | Scheduler | 조건분기 | 10/21 추가수집없음 확인. 새수집 미확인 |
+| `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
+| `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |
 | `IslandSeasonTask` | Island | Scheduler, IslandSeasonTask | 현재 시즌 목표 연계 실기 | 11/9 08:14 전체 목록 두 스캔의 미완료11과제/8품목 일치→TaskTarget 반영→정상 종료/메인 복귀 통과, 임시false 복원. 이름 누락·행 건너뛰기·스크롤 횟수 오판정 수정. 보호 재고·식당 export/구매/교환 없음. 보상수령 및11/19 점검 후 신규 시즌은 별도 미검증 |
 | `IslandBusiness` | Island | Scheduler, IslandRestaurant | 실기 | 10/21 기존 메뉴/등급/보유음식으로 5곳 운영. 10/2 정산/휴가/메인복귀 |
 | `Daemon` | Tool | Daemon | 미확인 | 사용자 수동 플레이 보조. 전투/보상 핸들러 단위 검증과 별도 |

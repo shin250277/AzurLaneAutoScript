@@ -298,6 +298,21 @@ class IslandRecipe(IslandExchange, IslandShop):
         rows = self._get_recipe_buttons()
         count = len(rows)
         delta_y = RECIPE_DELTA[1]
+        if server.server == 'kr' and count >= 4:
+            # A weak anchor can match a decoration above a selected recipe.
+            # Remove it only when one unique lattice has >=3 observed rows;
+            # never synthesize a missing row or change foreign-server geometry.
+            ys = rows[:, 1]
+            groups = {tuple(i for i, y in enumerate(ys) if
+                            abs((y - base) / delta_y - round((y - base) / delta_y)) * delta_y <= 3)
+                      for base in ys}
+            best_size = max(map(len, groups))
+            best = [group for group in groups if len(group) == best_size]
+            if (len(best) == 1 and 3 <= best_size < count
+                    and all(abs(step - delta_y) <= 3 for step in np.diff(ys[list(best[0])]))):
+                logger.info('KR recipe lattice excludes off-grid decoration: {}'.format(ys.tolist()))
+                rows = rows[list(best[0])]
+                count = len(rows)
         slot = DIC_ISLAND_SLOT.get(getattr(self, 'working_slot_id', None), {})
         if (server.server == 'kr' and slot.get('place') == 102
                 and len(slot.get('formula', []) + slot.get('activity_formula', [])) == 1
@@ -406,7 +421,9 @@ class IslandRecipe(IslandExchange, IslandShop):
     def settle_korean_recipe_grid(self):
         """Wait for three row geometries within two pixels; never add input."""
         observations = []
-        for _ in range(6):
+        # KR inertia can expose a fourth row only on observation five.
+        # Keep the same three-read criterion, with a bounded extra two reads.
+        for _ in range(8):
             if not self.is_in_recipe_menu():
                 raise RequestHumanTakeover('KR recipe page changed while waiting for scroll')
             grid = self.get_recipe_grid()

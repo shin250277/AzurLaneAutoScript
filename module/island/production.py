@@ -227,10 +227,29 @@ class IslandProduction(IslandRecipe, IslandDock):
         self.device.image_save('./log/kr_island_production_close_timeout.png')
         raise RequestHumanTakeover('Production popup did not settle; do not swipe or dispatch')
 
+    def confirm_korean_empty_slot(self, slot_button):
+        # Read-only reconciliation for estimates left by an older process or
+        # a manual claim. A busy/unknown slot must retain its pending estimate.
+        for _ in range(3):
+            self.device.screenshot()
+            if (not self.ui_page_appear(page_island_manage)
+                    or self.is_enter_window_shown()
+                    or not self.is_slot_empty(slot_button)):
+                return False
+        return True
+
     def claim_reward_in_page(self, finished_slots=[]):
         for place_id, slot_grid in self.slot_grids.items():
             for slot_id, slot_button in zip(DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], slot_grid.buttons):
                 if self.is_slot_finished(slot_button) or self.slot_finish_time.get(slot_id, datetime.max) <= datetime.now():
+                    if (self.config.SERVER == 'kr'
+                            and self.slot_finish_time.get(slot_id, datetime.max) <= datetime.now()
+                            and self.confirm_korean_empty_slot(slot_button)):
+                        logger.info('Reconcile stale finish estimate for confirmed empty slot: %s' % slot_id)
+                        del self.slot_finish_time[slot_id]
+                        self.config.cross_set('IslandProduction.Storage.Storage.SlotFinishTime',
+                                              {k: v.isoformat(sep=' ') for k, v in self.slot_finish_time.items()})
+                        continue
                     claimed = self.claim_slot_reward(slot_button)
                     if self.config.SERVER == 'kr' and claimed is not True:
                         # A due estimate is not proof that the reward was received.

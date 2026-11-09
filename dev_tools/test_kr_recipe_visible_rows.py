@@ -67,11 +67,15 @@ class VisibleRecipeRowsTest(unittest.TestCase):
         self.assertFalse(grid.kr_scrollable)
 
     def test_scroll_does_not_mistake_filtered_two_rows_for_list_end(self):
-        for action in [IslandRecipe.next_recipe_page, IslandRecipe.prev_recipe_page]:
-            ui = SimpleNamespace(recipe_grid=self.grid(61, 3), device=Mock())
-            action(ui)
-            ui.device.drag.assert_called_once()
-            ui.device.screenshot.assert_called_once()
+        for region in ('kr', 'jp'):
+            for action in [IslandRecipe.next_recipe_page, IslandRecipe.prev_recipe_page]:
+                ui = SimpleNamespace(recipe_grid=self.grid(61, 3), device=Mock(),
+                                     settle_korean_recipe_grid=Mock())
+                with patch.object(server, 'server', region):
+                    action(ui)
+                ui.device.drag.assert_called_once()
+                ui.device.screenshot.assert_called_once()
+                self.assertEqual(ui.settle_korean_recipe_grid.call_count, int(region == 'kr'))
 
     def test_non_scrolling_single_recipe_does_not_drag(self):
         for action in [IslandRecipe.next_recipe_page, IslandRecipe.prev_recipe_page]:
