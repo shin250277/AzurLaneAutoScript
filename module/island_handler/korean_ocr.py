@@ -244,10 +244,14 @@ class KoreanIslandNameOcr(Ocr):
                             logger.info('KR long-label grayscale and ink coverage agree: %s' % name)
                             continue
                     if (shapes and shapes[0][0] > .97 and (not candidates or candidates[0][0] <= .94)
-                            and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10)):
+                            and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10
+                                 or shapes[1][0] < .94)):
                         # A background-dependent exact reference is not itself
                         # authority. Require whole-label geometry above and
                         # three independent contrast OCR readings to agree.
+                        # A runner-up below the existing identity threshold
+                        # may permit this READ, never authorize acceptance.
+                        # Short Hangul can otherwise block all OCR retries.
                         name = shapes[0][1]
                         reads = WindowsKoreanOcr().atomic_ocr_for_single_lines([
                             self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))

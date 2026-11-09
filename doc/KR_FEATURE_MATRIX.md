@@ -69,7 +69,7 @@
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·修正 재검증 | 11/9 농장·목장·양식장·광산·벌목·과수원·원예·전자공방·식당601 감사/관리 복귀 확인(모든 렌더링 변형 통과 아님). 달걀/목장/샐러드/필터 실제 수령 및19:16 즉시 시각 삭제 저장 통과.19:29 카페12배치/필터1배치 신규 시작 즉시 저장·정상 종료,19:50 양모 시작 저장 통과. 다음 카페21:29/필터23:29/양모11/10 00:50 수령은 시간 대기.19:51 카페 이름 실패 후9변형 보완/전체718개 통과,20:01 GUI 재검증 중/반복 활성false. 보호 재고·식당 예약분 유지, 구매 없음 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장·목장·양식장·광산·벌목·과수원·원예·전자공방·식당601 감사/관리 복귀 확인(모든 렌더링 변형 통과 아님). 달걀/목장/샐러드/필터 실제 수령 및19:16 즉시 시각 삭제 저장 통과.19:29 카페12배치/필터1배치 신규 시작 즉시 저장·정상 종료,19:50 양모 시작 저장 통과. 다음 카페21:29/필터23:29/양모11/10 00:50 수령은 시간 대기.20:37 양식장 재료 검사 참치 지속 미인식 안전 중단/임시false.20:44 세 명암 전원 일치 보완 관련16개 및 실제 OCR 재생 통과, 동일 실기 미확인. 식당·공방8시설의 렌더링 미확인은 남은 목록 참조. 보호 재고·식당 예약분 유지, 구매 없음 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |
