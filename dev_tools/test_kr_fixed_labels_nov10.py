@@ -20,3 +20,13 @@ class FixedLabelsTest(unittest.TestCase):
         with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
             backend.return_value.atomic_ocr_for_single_lines.side_effect = lambda xs: [[] for _ in xs]
             self.assertEqual(KoreanIslandNameOcr([]).ocr([np.full((31,146,3),255,np.uint8)], direct_ocr=True), [''])
+
+    def test_clipped_omelet_still_requires_independent_icon_and_long_text(self):
+        from module.island_handler.korean_recipe_icon import KoreanRecipeIconVerifier
+        verifier = KoreanRecipeIconVerifier()
+        frame = np.array(Image.open('dev_tools/fixtures/kr_omelet_icon_nov10.png'))
+        self.assertEqual(verifier.confirm(frame, '끼운 당근 계란말0', {3033}), 3033)
+        self.assertIsNone(verifier.confirm(frame, '', {3033}))
+        self.assertIsNone(verifier.confirm(frame, '당근', {3033}))
+        self.assertIsNone(verifier.confirm(frame, '햄버그 덮밥', {3033}))
+        self.assertIsNone(verifier.confirm(frame, '끼운 당근 계란말0', {3034}))
