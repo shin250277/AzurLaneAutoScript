@@ -16,13 +16,16 @@ if __name__ == '__main__':
             labels = [crop(frame, b.area) for b in buttons.crop((123,19,269,50)).buttons]
             print(source.name, KoreanIslandNameOcr([]).ocr(labels, direct_ocr=True), flush=True)
         sys.exit(0)
-    frame, buttons = grid(Path('log/kr_island_recipe_unknown.png'))
-    label = crop(frame, buttons.crop((123,19,269,50)).buttons[0].area)
+    source = Path(sys.argv[sys.argv.index('--source')+1]) if '--source' in sys.argv else Path('log/kr_island_recipe_unknown.png')
+    row = int(sys.argv[sys.argv.index('--row')+1]) if '--row' in sys.argv else 0
+    frame, buttons = grid(source)
+    label = crop(frame, buttons.crop((123,19,269,50)).buttons[row].area)
     gray = cv2.cvtColor(label, cv2.COLOR_RGB2GRAY)
     if '--fixture' in sys.argv:
         from hashlib import sha256
         from PIL import Image
-        source = Path('log/kr_island_recipe_unknown.png')
+        if source != Path('log/kr_island_recipe_unknown.png') or row != 0:
+            raise RuntimeError('Fixture export is restricted to the reviewed tuna row')
         if sha256(source.read_bytes()).hexdigest() != '0efcbbee6f240786bab5dc0c7cbf403c1e1d51f9f493998b57c0b55258769aa3':
             raise RuntimeError('Changed failure frame requires review')
         Image.fromarray(label).save('dev_tools/fixtures/kr_tuna_nov9_dispatch.png')
