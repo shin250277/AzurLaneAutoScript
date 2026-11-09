@@ -49,7 +49,7 @@ class KoreanRecipeIconVerifier:
                 refs.append((int(path.stem), load_image(str(path))))
         return refs
 
-    def confirm(self, frame, observed_name, allowed_products):
+    def match_item(self, frame, allowed_products):
         if not isinstance(frame, np.ndarray) or frame.shape != (95, 95, 3) or np.std(frame) < 10:
             return None
         scores = {}
@@ -64,20 +64,55 @@ class KoreanRecipeIconVerifier:
         item = ranked[0][1]
         if item not in allowed_products:
             return None
+        return item
+
+    def confirm(self, frame, observed_name, allowed_products):
+        item = self.match_item(frame, allowed_products)
+        if item is None:
+            return None
         name = DIC_ISLAND_ITEM[item]['name']['kr']
         if not label_supports_icon(name, observed_name,
                                    [v['name'].get('kr','') for v in DIC_ISLAND_ITEM.values()]):
             return None
         return item
 
+    @cached_property
+    def label_references(self):
+        return [(DIC_ISLAND_ITEM[int(path.stem.split('_')[0])]['name']['kr'],
+                 cv2.cvtColor(load_image(str(path)), cv2.COLOR_RGB2GRAY))
+                for path in Path('assets/kr/island_item_name').glob('*.png')]
+
+    def confirm_visual(self, frame, label, observed_name, allowed_products):
+        """Require independent artwork and complete three-level ink agreement.
+
+        This never authorizes from short text alone. Foreign/known conflicting
+        OCR, one-syllable names, partial words and competing products fail.
+        The caller still requires two stable captures before selecting a row.
+        """
+        item = self.match_item(frame, allowed_products)
+        if item is None or not isinstance(label, np.ndarray) or label.shape != (31, 146, 3):
+            return None
+        name = DIC_ISLAND_ITEM[item]['name']['kr']
+        if any(hangul(value['name'].get('kr', '')) == hangul(observed_name)
+               and hangul(value['name'].get('kr', '')) != hangul(name)
+               for value in DIC_ISLAND_ITEM.values()):
+            return None
+        from module.island_handler.korean_name_mask import long_label_coverage_agrees
+        gray = cv2.cvtColor(label, cv2.COLOR_RGB2GRAY)
+        if long_label_coverage_agrees(gray, self.label_references, name, minimum_hangul=2):
+            return item
+        return None
+
 
 _VERIFIER = KoreanRecipeIconVerifier()
 
 
-def resolve_recipe_icons(names, recipe_ids, frames, slot_id):
+def resolve_recipe_icons(names, recipe_ids, frames, slot_id, labels=None):
     """Fill unknown identities only, within this observed facility's formulas."""
     result = list(recipe_ids)
     if slot_id not in DIC_ISLAND_SLOT or not (len(names) == len(result) == len(frames)):
+        return result
+    if labels is not None and len(labels) != len(result):
         return result
     slot = DIC_ISLAND_SLOT[slot_id]
     products = {}
@@ -88,6 +123,8 @@ def resolve_recipe_icons(names, recipe_ids, frames, slot_id):
         if recipe is not None:
             continue
         product = _VERIFIER.confirm(frame, name, products)
+        if product is None and labels is not None:
+            product = _VERIFIER.confirm_visual(frame, labels[index], name, products)
         if product is not None and len(products[product]) == 1:
             result[index] = products[product][0]
     return result

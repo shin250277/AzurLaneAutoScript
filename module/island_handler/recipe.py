@@ -390,7 +390,7 @@ class IslandRecipe(IslandExchange, IslandShop):
                     from module.island_handler.korean_recipe_icon import resolve_recipe_icons
                     icon_grid = fresh_recipe_grid.crop((20, 20, 115, 115), name='KR_RECIPE_ICON_GRID')
                     icons = [self.image_crop(button.area, copy=True) for button in icon_grid.buttons]
-                    confirmed = resolve_recipe_icons(names, ids, icons, self.working_slot_id)
+                    confirmed = resolve_recipe_icons(names, ids, icons, self.working_slot_id, labels=frames)
                     if confirmed != ids:
                         logger.info('KR recipe icon and visible long text agree: %s' % confirmed)
                     ids = confirmed
