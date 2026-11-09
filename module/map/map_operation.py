@@ -273,6 +273,13 @@ class MapOperation(MysteryHandler, FleetPreparation, Retirement, FastForwardHand
             if self.is_in_stage():
                 break
 
+            kr_prep = preparation_button(self, interval=2)
+            if kr_prep:
+                # Same localized dialog and observed displacement as UI recovery.
+                # Never click the adjacent Handover or sortie buttons here.
+                self.device.click(kr_prep.move((45, -335), name='KR_PREPARATION_CLOSE'))
+                continue
+
             if self.appear(MAP_PREPARATION, offset=(20, 20), interval=2) \
                     or self.appear(MAP_PREPARATION_HARD, offset=(20, 20), interval=2):
                 self.device.click(MAP_PREPARATION_CANCEL)
