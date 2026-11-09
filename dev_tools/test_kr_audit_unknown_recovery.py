@@ -1,4 +1,4 @@
-"""Collect independent read-only failures without ever admitting production."""
+"""Isolate unknown groups without granting them production authority."""
 from unittest.mock import Mock
 from types import SimpleNamespace
 import unittest
@@ -27,14 +27,22 @@ class AuditUnknownRecoveryTest(unittest.TestCase):
     def test_unknown_name_is_saved_and_other_group_read_but_no_spending_allowed(self):
         run, ui = self.make()
         ui.dispatch_slot.side_effect = [UnknownName('unknown'), False]
-        with self.assertRaisesRegex(TaskStopped, 'unresolved KR recipe groups'):
-            run(ui)
+        self.assertIs(run(ui), True)
+        self.assertEqual(ui.kr_verified_recipe_slots, {2})
+        self.assertEqual(ui.kr_unresolved_recipe_groups, [(101, 1)])
         self.assertEqual(ui.dispatch_slot.call_count, 2)
         ui.device.image_save.assert_called_once_with('./log/kr_island_recipe_audit_101_1.png')
         ui.ui_back.assert_called_once_with(check_button='manage')
         ui.ui_ensure.assert_called_once()
         ui.run_recipe.assert_not_called()
         ui.dispatch_place.assert_not_called()
+
+    def test_all_unknown_groups_stop_and_leave_no_authority(self):
+        run, ui = self.make()
+        ui.dispatch_slot.side_effect = UnknownName('unknown')
+        with self.assertRaisesRegex(TaskStopped, 'unresolved KR recipe groups'):
+            run(ui)
+        self.assertEqual(ui.kr_verified_recipe_slots, set())
 
     def test_unknown_page_cannot_be_skipped(self):
         run, ui = self.make()

@@ -8,6 +8,11 @@ from dev_tools.test_os_task_stop_boundaries import method
 
 
 class StockCropTest(unittest.TestCase):
+    def test_pale_counter_background_does_not_invent_suffix(self):
+        frame = load_image('dev_tools/fixtures/kr_stock_phantom_suffix.png')
+        ocr = KoreanRecipeStockDigit([], lang='cnocr', letter=(80, 80, 80), threshold=160)
+        self.assertEqual(ocr.ocr([frame], direct_ocr=True), [126])
+
     def test_kr_repeated_final_digit_retains_bottom_context(self):
         frame = load_image('dev_tools/fixtures/kr_stock_repeated_digits.png')
         ocr = KoreanRecipeStockDigit([], lang='cnocr', letter=(80, 80, 80), threshold=160)

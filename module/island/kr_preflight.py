@@ -26,6 +26,20 @@ def verified_season_targets(task_ids, active_ids, tasks, items):
     return result
 
 
+def verified_owned_unit_cost(cost, counters, components=None):
+    """One-batch displayed cost; an explicit surcharge is never inferred.
+
+    This is not start permission. The caller still caps batches, reserves all
+    protected stock and verifies the final scaled counters before any input.
+    """
+    if not cost:
+        return {} if counters == [] else None
+    if not validate_recipe_counters(cost, 1, counters, require_available=False,
+                                    components=components):
+        return None
+    return {item: counter[1] for item, counter in zip(cost, counters)}
+
+
 def owned_batch_limit(cost, counters, requested, production_limit, protected):
     """Finite batches from verified one-batch counters; never buy/exchange.
 

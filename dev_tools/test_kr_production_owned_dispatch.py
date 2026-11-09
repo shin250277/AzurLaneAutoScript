@@ -26,6 +26,7 @@ class OwnedDispatchTest(unittest.TestCase):
         ui = scope['IslandProduction']()
         ui.config = SimpleNamespace(SERVER='kr')
         ui.kr_recipe_audit_complete = complete
+        ui.kr_verified_recipe_slots = {9011} if complete else set()
         ui.slot_finish_time = {}
         ui.loop = Mock(side_effect=[iter([None]), iter([None])])
         ui.is_in_island_dock = lambda: True
@@ -59,3 +60,17 @@ class OwnedDispatchTest(unittest.TestCase):
             ui.dispatch_slot(9011, 'slot')
         ui.base_run.assert_not_called()
         self.assertEqual(ui.slot_finish_time, {})
+
+    def test_completed_audit_does_not_authorize_an_unverified_slot(self):
+        ui = self.make_ui(True)
+        with self.assertRaisesRegex(RequestHumanTakeover, 'verified recipe group'):
+            ui.dispatch_slot(9012, 'other')
+        ui.island_dock_select_manjuu.assert_not_called()
+        ui.base_run.assert_not_called()
+
+    def test_missing_slot_authority_is_fail_closed(self):
+        ui = self.make_ui(True)
+        del ui.kr_verified_recipe_slots
+        with self.assertRaisesRegex(RequestHumanTakeover, 'verified recipe group'):
+            ui.dispatch_slot(9011, 'slot')
+        ui.base_run.assert_not_called()

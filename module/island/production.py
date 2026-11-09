@@ -250,6 +250,11 @@ class IslandProduction(IslandRecipe, IslandDock):
         return self.appear_then_click(ISLAND_PRODUCTION_SELECT_CHARACTER, offset=(60, 20), interval=1)
 
     def dispatch_slot(self, slot_id, slot_button, worker='manjuu', audit_only=False):
+        if self.config.SERVER == 'kr' and not audit_only:
+            if not getattr(self, 'kr_recipe_audit_complete', False):
+                raise RequestHumanTakeover('KR production requires a completed current-run recipe audit')
+            if slot_id not in getattr(self, 'kr_verified_recipe_slots', set()):
+                raise RequestHumanTakeover('KR production requires a verified recipe group for this slot')
         if slot_id in DIC_ISLAND_PRODUCTION_PLACE[102]['slot']:
             del_cached_property(super(), 'recipe_id_sequence')
             del_cached_property(super(), 'all_recipe_stocks')
@@ -350,6 +355,10 @@ class IslandProduction(IslandRecipe, IslandDock):
         slot_grid = self.slot_grids[place_id]
         is_first = True
         for slot_id, slot_button in zip(DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], slot_grid.buttons):
+            if (self.config.SERVER == 'kr'
+                    and slot_id not in getattr(self, 'kr_verified_recipe_slots', set())):
+                logger.warning('Skip unverified KR recipe group slot: %s' % slot_id)
+                continue
             if not is_first and has_cached_property(super(), 'recipe_id_sequence') and not self.recipe_id_sequence:
                 logger.info(f'No more recipe for place {place_id}, skip remaining slots')
                 break
@@ -362,6 +371,8 @@ class IslandProduction(IslandRecipe, IslandDock):
 
     def audit_korean_recipes(self):
         """Inspect each distinct recipe group; never displace a working slot."""
+        self.kr_verified_recipe_slots = set()
+        self.kr_unresolved_recipe_groups = []
         inspected = set()
         unresolved = []
         for _ in range(40):
@@ -388,7 +399,7 @@ class IslandProduction(IslandRecipe, IslandDock):
                                 except KoreanRecipeNameUnknown:
                                     # Only a recognized recipe page may be left.
                                     # Keep gathering independent read-only evidence,
-                                    # but any unresolved group blocks ALL dispatch.
+                                    # Unresolved groups never receive dispatch authority.
                                     if not self.is_in_recipe_menu():
                                         raise
                                     self.device.image_save('./log/kr_island_recipe_audit_{}_{}.png'.format(
@@ -400,6 +411,9 @@ class IslandProduction(IslandRecipe, IslandDock):
                                     unresolved.append((place_id, slot_id))
                                 else:
                                     logger.attr('KR facility recipe audit complete', (place_id, slot_id))
+                                    # Only sibling slots with exactly the same current
+                                    # formula/activity group share this read-only audit.
+                                    self.kr_verified_recipe_slots.update(s for s, _ in slots)
                                 probed = True
                                 break
                         if probed:
@@ -410,8 +424,11 @@ class IslandProduction(IslandRecipe, IslandDock):
                 if probed:
                     break
                 if not self.next_page():
+                    self.kr_unresolved_recipe_groups = unresolved
                     if unresolved:
-                        raise RequestHumanTakeover('unresolved KR recipe groups {}; no production'.format(unresolved))
+                        logger.warning('Unresolved KR recipe groups remain blocked: %s' % unresolved)
+                        if not self.kr_verified_recipe_slots:
+                            raise RequestHumanTakeover('unresolved KR recipe groups {}; no production'.format(unresolved))
                     logger.info('KR facility recipe audit finished; no production started by audit')
                     return True
             if not probed:

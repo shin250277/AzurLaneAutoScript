@@ -36,6 +36,7 @@ class ProductionCharacterTest(unittest.TestCase):
                      page_island_manage=SimpleNamespace(check_button='manage'))
         exec(compile(tree, 'production', 'exec'), scope)
         ui = SimpleNamespace(config=SimpleNamespace(SERVER='kr'),
+                             kr_recipe_audit_complete=True, kr_verified_recipe_slots={9111},
                              loop=Mock(return_value=iter([None, None])),
                              is_in_island_dock=lambda: False,
                              handle_production_character_entry=lambda: False,

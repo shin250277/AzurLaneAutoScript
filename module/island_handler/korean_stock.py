@@ -26,4 +26,10 @@ def mask_stock_prefix(image):
 
 class KoreanRecipeStockDigit(Digit):
     def pre_process(self, image):
-        return mask_stock_prefix(super().pre_process(image))
+        image = mask_stock_prefix(super().pre_process(image)).copy()
+        # The pale rounded stock badge otherwise survives letter extraction as
+        # gray context and CNOCR can hallucinate a trailing digit. Keep the dark
+        # glyphs (including their inner antialiasing), not the badge background.
+        # Never repair a recognized number by dropping or guessing digits.
+        image[image > 160] = 255
+        return image

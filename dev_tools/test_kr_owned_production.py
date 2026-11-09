@@ -27,6 +27,7 @@ class OwnedProductionTest(unittest.TestCase):
                              get_active_recipe_id=lambda: 42,
                              get_recipe_ingredient_counters=lambda: [(30, 6, 24)],
                              kr_owned_protected={1: 24}, loop=lambda **kw: range(2),
+                             kr_owned_cost=(42, {1: 3}),
                              match_template_color=Mock(return_value=True))
         self.assertEqual(scope['run_recipe'](ui, 42, 2), (timedelta(minutes=1), 2))
         ui.device.click.assert_called_once_with('start')

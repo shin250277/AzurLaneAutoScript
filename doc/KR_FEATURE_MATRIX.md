@@ -69,7 +69,7 @@
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장8종·목장4품목군·양식장16종·광산6종·벌목장4종·과수원9종 이름/재고/선택/가능한 재료 읽기 및 복귀 통과.08:19 원예7종·08:22 전자공방4종 전체 읽기/재료/복귀 통과 및08:31/33 재통과. 배경·스크롤 변형의 다른 시설 이름은 계속 보완 중이며08:34 미해결 그룹으로 안전 중단. 전체 감사 성공 후 보유 재료 전용 연결 구현, 신규 생산 시작·완료·수령 실기 남음. 검증 임시true이며 작업 종료 후false 복원 대상. 현재 시즌 목표 동기화는 별도 실기 통과 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장8종·목장4품목군·양식장16종·광산6종·벌목장4종·과수원9종·원예7종·전자공방4종 이름/재고/선택/가능한 재료 읽기 및 복귀 통과. 배경·스크롤 변형은 계속 보완 중.09:18 현재 실행 감사 성공 그룹만 허가하고 미확인 그룹을 차단한 채 독립 생산 단계 진입 확인. 생산 직전 재검사·보유 재료 전용·보호 재고/예약분 유지. 신규 생산 시작·완료·수령 실기 남음. 임시true는 종료 후false 복원 대상. 현재 시즌 목표 동기화는 별도 실기 통과 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 조건분기 | 10/21 이미수령 확인. 공유false 유지; 신규 수령 미확인 |
 | `IslandCollect` | Island | Scheduler | 조건분기 | 10/21 추가수집없음 확인. 새수집 미확인 |
@@ -92,7 +92,15 @@
 
 ## 메뉴 외 실행 진입점
 
-`alas.py`의 `sos`, `maritime_escort`, `c72_mystery_farming`, `c122_medium_leveling`, `c124_large_leveling`도 별도 확인 대상이다. 메뉴에 없다는 이유로 지원 범위에서 누락하지 않는다. 현재 실행 가능성·구형/특수 용도·종료 조건은 소스 대조 전 미확인으로 유지한다. `start`, `goto_main`, `wait_until`, `loop`, `run`, 오류 로그 저장은 공통 운용 경로다.
+11/9 소스 대조 결과를 아래처럼 구분한다. 메뉴에 없다는 이유로 누락하지 않되 폐지된 기능을 현재 미완료 기능으로 세지 않는다. `start`, `goto_main`, `wait_until`, `loop`, `run`, 오류 로그 저장은 공통 운용 경로다.
+
+| 실행 진입점 | 현재 코드 범위 | 판정 |
+|---|---|---|
+| `sos` | `CampaignSos.run`은 KR/CN/EN/JP에서 화면 진입 전에 스케줄러 비활성화·task_stop | KR 폐지 기능. 현재 실기 대상 아님 |
+| `maritime_escort` | 이벤트 기간 검사 후 진입·철수 보상, 잔여 없으면 다음 갱신 예약 | 이벤트 발생조건. 상시 비이벤트 미완료로 세지 않음 |
+| `c72_mystery_farming` | 설정의 해역/폴더/모드를 같은 `CampaignRun.run`에 전달 | 공통 엔진 진입점 확인. 해당 특수 해역 실기와 별개 |
+| `c122_medium_leveling` | 동일 `CampaignRun.run` 경로 | 공통 엔진 진입점 확인. 별도 레벨링 실기 통과 아님 |
+| `c124_large_leveling` | 동일 `CampaignRun.run` 경로 | 공통 엔진 진입점 확인. 별도 레벨링 실기 통과 아님 |
 
 ## 공통 분기 — 별도 완료 판정 필요
 

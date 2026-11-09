@@ -352,6 +352,35 @@ class IslandRecipe(IslandExchange, IslandShop):
         product_names = RECIPE_PRODUCT_NAME_OCR.ocr(product_name_images, direct_ocr=True)
         corrected_ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]
         if server.server == 'kr' and (not corrected_ids or None in corrected_ids):
+            # Translucent labels/scrolling long text can be caught between
+            # rasterization frames. Retry observations only, never clicks or
+            # name correction. Require unchanged row geometry, no conflicting
+            # known identity and two consecutive complete matching reads.
+            areas = [tuple(button.area) for button in product_name_grid.buttons]
+            known = list(corrected_ids)
+            previous_complete = None
+            for _ in range(3):
+                self.device.sleep(.35)
+                self.device.screenshot()
+                if not self.is_in_recipe_menu():
+                    break
+                fresh_grid = self.get_recipe_grid().crop(name_area, name='RECIPE_PRODUCT_NAME_GRID')
+                if [tuple(button.area) for button in fresh_grid.buttons] != areas:
+                    break
+                frames = [self.image_crop(button.area, copy=True) for button in fresh_grid.buttons]
+                names = RECIPE_PRODUCT_NAME_OCR.ocr(frames, direct_ocr=True)
+                ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in names]
+                if len(ids) != len(known) or any(a is not None and b is not None and a != b
+                                                for a, b in zip(known, ids)):
+                    break
+                known = [a if a is not None else b for a, b in zip(known, ids)]
+                if ids and None not in ids and len(set(ids)) == len(ids):
+                    if ids == previous_complete:
+                        logger.info('KR recipe names recovered by two stable read-only captures')
+                        return ids
+                    previous_complete = ids
+                else:
+                    previous_complete = None
             self.device.image_save('./log/kr_island_recipe_unknown.png')
             raise KoreanRecipeNameUnknown('Korean recipe names are not all uniquely recognized; no production started')
         return corrected_ids
@@ -712,7 +741,9 @@ class IslandRecipe(IslandExchange, IslandShop):
         if self.config.SERVER == 'kr':
             # Never enter the foreign-server purchasing/exchange branches.
             # The selected recipe and a one-batch display must agree first.
-            from module.island.kr_preflight import owned_batch_limit
+            from module.island.kr_preflight import owned_batch_limit, verified_owned_unit_cost
+            self.kr_owned_cost = None
+            self.kr_owned_protected = None
             if (self.get_active_recipe_id() != recipe_id
                     or ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image) != 1):
                 return False, 0
@@ -727,9 +758,17 @@ class IslandRecipe(IslandExchange, IslandShop):
                 if any(isinstance(v, bool) or not isinstance(v, Integral) or v < 0 for v in values):
                     return False, 0
                 protected[item] = sum(values)
-            count = owned_batch_limit(cost, self.get_recipe_ingredient_counters(),
+            counters = self.get_recipe_ingredient_counters()
+            # Only ranch formulas have the observed base+surcharge display.
+            parts = (getattr(self, 'recipe_ingredient_components', None)
+                     if recipe_id in (101013, 101015, 101016, 101018) else None)
+            actual_cost = verified_owned_unit_cost(cost, counters, parts)
+            if actual_cost is None:
+                return False, 0
+            count = owned_batch_limit(actual_cost, counters,
                                       batch_count, DIC_ISLAND_RECIPE[recipe_id]['production_limit'],
                                       protected)
+            self.kr_owned_cost = (recipe_id, actual_cost)
             self.kr_owned_protected = protected
             return count == batch_count and count > 0, count
         # use this before setting recipe batch count to read out current ingredient need per batch,
@@ -945,21 +984,30 @@ class IslandRecipe(IslandExchange, IslandShop):
         logger.attr('Recipe_remain_time', remain_time)
         if remain_time is not None:
             if self.config.SERVER == 'kr':
-                from module.island.kr_preflight import owned_start_verified
+                from module.island.kr_preflight import owned_start_verified, validate_recipe_counters
                 from module.exception import RequestHumanTakeover
                 # Do not use the repeating foreign-server start-click loop.
                 self.device.screenshot()
                 protected = getattr(self, 'kr_owned_protected', None)
+                evidence = getattr(self, 'kr_owned_cost', None)
+                counters = self.get_recipe_ingredient_counters()
+                declared = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
+                parts = (getattr(self, 'recipe_ingredient_components', None)
+                         if recipe_id in (101013, 101015, 101016, 101018) else None)
                 if (protected is None or self.get_active_recipe_id() != recipe_id
+                        or evidence is None or evidence[0] != recipe_id
                         or ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image) != real_count
                         or remain_time.total_seconds() <= 0
+                        or (declared and not validate_recipe_counters(
+                            declared, real_count, counters, require_available=False, components=parts))
                         or not owned_start_verified(
-                            DIC_ISLAND_RECIPE[recipe_id]['commission_cost'],
-                            self.get_recipe_ingredient_counters(), real_count, protected)):
+                            evidence[1], counters, real_count, protected)):
                     raise RequestHumanTakeover('KR final production evidence changed; no start')
                 self.device.click(ISLAND_RECIPE_TIME_ANCHOR)
                 for _ in self.loop(timeout=15):
                     if self.match_template_color(page_island_manage.check_button, offset=(0, 20)):
+                        self.kr_last_consumption = (recipe_id, real_count,
+                            {item: counter[1] for item, counter in zip(evidence[1], counters)})
                         logger.info(f'KR owned recipe {recipe_id} started once, amount {real_count}')
                         return remain_time, real_count
                 raise RequestHumanTakeover('KR production start outcome uncertain; no repeated start click')
@@ -977,6 +1025,12 @@ class IslandRecipe(IslandExchange, IslandShop):
     def update_recipe_id_sequence_and_stock(self, recipe_id, batch_count):
         recipe_cost = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
         consumed_items = {item_id: amount * batch_count for item_id, amount in recipe_cost.items()}
+        if self.config.SERVER == 'kr':
+            evidence = getattr(self, 'kr_last_consumption', None)
+            if evidence is None or evidence[:2] != (recipe_id, batch_count):
+                raise RequestHumanTakeover('KR production consumption evidence missing')
+            consumed_items = evidence[2]
+            self.kr_last_consumption = None
         for old_recipe_id, info in self.recipe_info_by_id.items():
             product_id = get_recipe_product_id(old_recipe_id)
             if old_recipe_id == recipe_id:
