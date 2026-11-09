@@ -206,8 +206,10 @@ class KoreanIslandNameOcr(Ocr):
                 # do not loosen the template ambiguity margin or guess Hangul.
                 clean = value.strip(' \t\r\n『』「」')
                 candidates = fallback_candidates[index]
-                if (value in known_names and candidates and candidates[0][0] > 0.94
-                        and value != candidates[0][1]):
+                normalized_value = ''.join(value.split())
+                normalized_known = {''.join(n.split()) for n in known_names if n}
+                if (normalized_value in normalized_known and candidates and candidates[0][0] > 0.94
+                        and normalized_value != ''.join(candidates[0][1].split())):
                     # Two individually valid product names disagree: neither
                     # source is sufficient to authorize selecting a recipe.
                     values[index] = ''
@@ -243,7 +245,12 @@ class KoreanIslandNameOcr(Ocr):
                             values[index] = name
                             logger.info('KR long-label grayscale and ink coverage agree: %s' % name)
                             continue
-                    if (shapes and shapes[0][0] > .97 and (not candidates or candidates[0][0] <= .94)
+                    bright_shape = (shapes and shapes[0][0] > .995
+                                    and (len(shapes) == 1 or shapes[1][0] < .94)
+                                    and (not candidates or candidates[0][0] <= .94
+                                         or candidates[0][1] == shapes[0][1]))
+                    if (shapes and shapes[0][0] > .97
+                            and (not candidates or candidates[0][0] <= .94 or bright_shape)
                             and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10
                                  or shapes[1][0] < .94)):
                         # A background-dependent exact reference is not itself
@@ -260,6 +267,23 @@ class KoreanIslandNameOcr(Ocr):
                                 ''.join(''.join(read).split()) == ''.join(name.split()) for read in reads)):
                             values[index] = name
                             logger.info('KR whole-label shape and triple OCR consensus: %s' % name)
+                            continue
+                        if bright_shape:
+                            # Faint complete strokes can be lost at 130/150.
+                            # Never outvote a valid competing product, and
+                            # require all three brighter readings, not 2/3.
+                            normalized = [''.join(''.join(read).split()) for read in reads]
+                            known_normalized = {''.join(n.split()) for n in known_names if n}
+                            expected = ''.join(name.split())
+                            if not any(n in known_normalized and n != expected for n in normalized):
+                                bright_reads = WindowsKoreanOcr().atomic_ocr_for_single_lines([
+                                    self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                                    for level in (160, 170, 180)])
+                                if len(bright_reads) == 3 and all(
+                                        ''.join(''.join(read).split()) == expected for read in bright_reads):
+                                    values[index] = name
+                                    logger.info('KR whole-label bright triple OCR consensus: %s' % name)
+                            # No weaker retry may override this disagreement.
                             continue
                 if (value not in known_names and len(candidates) > 1
                         and candidates[0][0] > 0.94 and candidates[1][0] >= 0.94
@@ -339,3 +363,10 @@ class KoreanIslandNameOcr(Ocr):
                                 logger.info('KR recipe glyph-context consensus: %s' % name)
         logger.attr(self.name or 'KR_ISLAND_NAMES', values)
         return values[0] if len(self.buttons) == 1 else values
+
+
+class KoreanIslandShopNameOcr(KoreanIslandNameOcr):
+    # Shop names belong to purchase recipes, not production product ids.
+    # Never reuse product templates under this different id namespace.
+    from module.island.data import DIC_ISLAND_SHOP_RECIPE as name_dictionary
+    template_folder = 'assets/kr/island_shop_name'
