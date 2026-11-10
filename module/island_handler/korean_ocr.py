@@ -1,5 +1,6 @@
 """Observed name templates with offline Hangul OCR fallback, not CN guesses."""
 from pathlib import Path
+import re
 
 import cv2
 import numpy as np
@@ -15,6 +16,12 @@ from module.ocr.windows_ocr import WindowsKoreanOcr
 def confirmed_contrast_name(candidate, reads, known_names):
     return (len(reads) == 3 and reads.count(candidate) >= 2
             and not any(value in known_names and value != candidate for value in reads))
+
+
+def punctuation_only_name(value, candidate):
+    """Only terminal punctuation noise; never remove letters or internal marks."""
+    return (isinstance(value, str) and bool(re.search(r'[!,.;:]\s*$', value))
+            and ''.join(value.rstrip(' \t\r\n!,.;:').split()) == ''.join(candidate.split()))
 
 
 def photometric_agreement(template, observed):
@@ -221,6 +228,23 @@ class KoreanIslandNameOcr(Ocr):
                 values[index] = value
                 if value not in known_names:
                     shapes = shape_candidates[index]
+                    if (shapes and shapes[0][0] > .96
+                            and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .15)
+                            and punctuation_only_name(value, shapes[0][1])):
+                        # Whole-label span was already checked when collecting
+                        # shapes. A complete OCR name plus trailing decoration
+                        # still needs three exact independent contrast reads.
+                        name = shapes[0][1]
+                        frame = frames[index]
+                        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+                        reads = WindowsKoreanOcr().atomic_ocr_for_single_lines([
+                            self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                            for level in (130, 150, 170)])
+                        if len(reads) == 3 and all(''.join(''.join(read).split()) == ''.join(name.split())
+                                                   for read in reads):
+                            values[index] = name
+                            logger.info('KR whole-label punctuation and triple OCR agree: %s' % name)
+                            continue
                     if (shapes and shapes[0][1] in lighting_candidates[index]
                             and len(lighting_candidates[index]) == 1
                             and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .10)
