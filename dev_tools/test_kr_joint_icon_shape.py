@@ -8,6 +8,21 @@ from module.island_handler.korean_recipe_icon import KoreanRecipeIconVerifier
 from module.island_handler.korean_name_mask import long_label_coverage_agrees
 
 class JointIconShapeTest(unittest.TestCase):
+    def test_bright_mango_requires_complete_three_level_group(self):
+        v = KoreanRecipeIconVerifier()
+        icon = load_image('dev_tools/fixtures/kr_nov10_joint_bright_mango_icon.png')
+        label = load_image('dev_tools/fixtures/kr_nov10_joint_bright_mango_name.png')
+        gray = cv2.cvtColor(label, cv2.COLOR_RGB2GRAY)
+        self.assertFalse(long_label_coverage_agrees(gray, v.label_references,
+            '망고 찹쌀밥', minimum_hangul=2, minimum_gap=.05))
+        with patch('module.ocr.windows_ocr.WindowsKoreanOcr') as backend:
+            self.assertEqual(v.confirm_visual(icon, label, '망고 잡쌀밥', {3025}), 3025)
+            backend.assert_not_called()
+            backend.return_value.atomic_ocr_for_single_lines.return_value = [[], [], []]
+            self.assertIsNone(v.confirm_visual(icon, label, '햄버그 덮밥', {3025}))
+            with patch.object(v, 'complete_shape_agrees', return_value=False):
+                self.assertIsNone(v.confirm_visual(icon, label, '', {3025}))
+
     def setUp(self):
         self.icon=load_image('dev_tools/fixtures/kr_nov10_joint_apple_icon.png')
         self.label=load_image('dev_tools/fixtures/kr_nov10_joint_apple_name.png')

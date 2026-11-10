@@ -80,7 +80,8 @@ def whole_label_coverage(a, b):
     return best
 
 
-def long_label_coverage_agrees(frame, references, candidate, minimum_hangul=6, minimum_gap=.15):
+def long_label_coverage_agrees(frame, references, candidate, minimum_hangul=6, minimum_gap=.15,
+                               levels=(130, 150, 170)):
     """Supplement independent grayscale identity only for long Korean labels.
 
     Fractional scroll rendering changes antialiasing by a pixel. Require
@@ -90,7 +91,7 @@ def long_label_coverage_agrees(frame, references, candidate, minimum_hangul=6, m
     """
     if sum('\uac00' <= c <= '\ud7a3' for c in candidate) < minimum_hangul:
         return False
-    for level in (130, 150, 170):
+    for level in levels:
         observed = glyph_mask(frame, level)
         scores = {}
         for name, gray in references:

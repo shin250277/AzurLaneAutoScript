@@ -126,8 +126,10 @@ class KoreanRecipeIconVerifier:
         # glyph shape or artwork. Only the joint independent winners can use the
         # narrower ink margin; retain >=.995 full ink coverage at every level.
         if (len(hangul(name)) >= 2 and self.complete_shape_agrees(gray, name)
-                and long_label_coverage_agrees(gray, self.label_references, name,
-                                              minimum_hangul=2, minimum_gap=.05)):
+                and any(long_label_coverage_agrees(gray, self.label_references, name,
+                                                  minimum_hangul=2, minimum_gap=.05,
+                                                  levels=levels)
+                        for levels in ((130, 150, 170), (150, 170, 190)))):
             from module.logger import logger
             logger.info('KR independent artwork, complete grayscale and triple ink agree: %s' % name)
             return item
