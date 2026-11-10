@@ -8,6 +8,7 @@ from module.island_handler.korean_recipe_icon import KoreanRecipeIconVerifier
 from dev_tools.extract_kr_remaining_pairs import SAMPLES
 
 ALL_SAMPLES = SAMPLES + [('mango', 1, 3025), ('gloves', 0, 3038), ('apple', 0, 3009), ('day', 1, 3120), ('day', 2, 2704), ('day', 1, 3035), ('day', 1, 3006)]
+ALL_SAMPLES += [('evening',1,3025), ('evening',0,3048), ('evening',1,3007), ('evening',1,3014)]
 
 
 class RemainingPairsTest(unittest.TestCase):
