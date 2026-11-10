@@ -224,6 +224,9 @@ class IslandUI(UI):
             offset=offset,
             retry_wait=retry_wait,
             skip_first_screenshot=skip_first_screenshot,
+            # KR purchase rewards can cover the back arrow after the balance
+            # has already updated. Dismiss them while returning to the recipe.
+            additional=self.handle_island_additional if self.config.SERVER == 'kr' else None,
         )
 
     def has_white_band(self, threshold=1200):
