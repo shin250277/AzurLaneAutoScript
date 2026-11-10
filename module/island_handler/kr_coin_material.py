@@ -36,12 +36,19 @@ def marker(image, name):
 
 
 def read_quantity(image):
-    """Require independent digit models to agree; never infer quantity from price."""
+    """Require buy-count and received-count displays to agree, not price inference.
+
+    Only unit-yield shop recipes may reach this dialog (checked in buy_material).
+    The dark buy-count font loses its leading 1 in azur_lane on device captures;
+    cnocr reads it, independently checked against the white received-count font.
+    """
     from module.ocr.ocr import Digit
-    values = [Digit([(756, 360, 850, 382)], lang=lang,
-                    letter=(57, 58, 60), threshold=threshold,
-                    name='kr_material_amount_' + lang).ocr(image)
-              for lang, threshold in [('azur_lane', 80), ('cnocr', 128)]]
+    values = [Digit([(756, 360, 850, 382)], lang='cnocr',
+                    letter=(57, 58, 60), threshold=128,
+                    name='kr_material_buy_count').ocr(image),
+              Digit([(660, 505, 704, 530)], lang='azur_lane',
+                    letter=(221, 221, 221), threshold=128,
+                    name='kr_material_received_count').ocr(image)]
     return values[0] if values[0] == values[1] and 1 <= values[0] <= 100 else 0
 
 
@@ -69,7 +76,7 @@ def buy_material(ui, item, amount, entrance):
     target = DIC_ISLAND_SHOP_ITEM_TO_RECIPE.get(item)
     recipe = DIC_ISLAND_SHOP_RECIPE.get(target, {})
     cost = recipe.get('resource_consume', {})
-    if (ui.config.SERVER != 'kr' or set(cost) != {1}
+    if (ui.config.SERVER != 'kr' or set(cost) != {1} or recipe.get('items') != {item: 1}
             or material_shortfall(0, 1, 0, amount) is None):
         return False
     if not ui.goto_ingredient_shop_page(entrance):

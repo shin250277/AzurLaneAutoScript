@@ -3,6 +3,17 @@ from module.island_handler.kr_coin_material import purchase_allowed, material_sh
 
 
 class CoinMaterialTest(unittest.TestCase):
+    def test_nonunit_yield_never_uses_received_count_as_purchase_count(self):
+        from unittest.mock import Mock, patch
+        from module.island.data import DIC_ISLAND_SHOP_RECIPE
+        from module.island_handler.kr_coin_material import buy_material
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        recipe = dict(DIC_ISLAND_SHOP_RECIPE[411000], items={1000: 2})
+        with patch.dict(DIC_ISLAND_SHOP_RECIPE, {411000: recipe}):
+            self.assertFalse(buy_material(ui, 1000, 1, 'ingredient'))
+        ui.goto_ingredient_shop_page.assert_not_called()
+
     def test_fish_tab_failure_prevents_item_selection(self):
         from unittest.mock import Mock
         from module.island_handler.kr_coin_material import buy_material
@@ -41,10 +52,12 @@ class CoinMaterialTest(unittest.TestCase):
         import numpy as np
         from module.base.utils import load_image
         from module.island_handler.kr_coin_material import read_quantity
-        for value in (1, 14):
+        for key, value in [(1, 1), (14, 14), ('14_device', 14)]:
             frame = np.full((720, 1280, 3), 255, dtype=np.uint8)
             frame[360:382,756:850] = load_image(
-                'dev_tools/fixtures/kr_material_quantity_%s.png' % value)
+                'dev_tools/fixtures/kr_material_quantity_%s.png' % key)
+            frame[505:530,660:704] = load_image(
+                'dev_tools/fixtures/kr_material_received_%s.png' % key)
             self.assertEqual(read_quantity(frame), value)
 
     def test_persistent_quantity_disagreement_stops_without_purchase(self):
