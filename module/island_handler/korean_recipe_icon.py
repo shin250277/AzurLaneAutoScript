@@ -82,6 +82,27 @@ class KoreanRecipeIconVerifier:
                  cv2.cvtColor(load_image(str(path)), cv2.COLOR_RGB2GRAY))
                 for path in Path('assets/kr/island_item_name').glob('*.png')]
 
+    @cached_property
+    def shape_reader(self):
+        from module.island_handler.korean_ocr import KoreanIslandNameOcr
+        return KoreanIslandNameOcr([])
+
+    def complete_shape_agrees(self, gray, candidate):
+        """Independent full-label grayscale winner, not a substring or ink vote."""
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        scores = {}
+        for name, template, exact in self.shape_reader.templates:
+            if not exact or any(a < b for a, b in zip(blurred.shape, template.shape)):
+                continue
+            _, score, _, point = cv2.minMaxLoc(cv2.matchTemplate(blurred, template, cv2.TM_CCOEFF_NORMED))
+            if not self.shape_reader.complete_label_span(gray, point[0], point[0]+template.shape[1]):
+                continue
+            if np.isfinite(score):
+                scores[name] = max(scores.get(name, 0), score)
+        ranked = sorted(((s,n) for n,s in scores.items()), reverse=True)
+        return bool(ranked and ranked[0][1] == candidate and ranked[0][0] > .98
+                    and len(ranked) > 1 and ranked[0][0]-ranked[1][0] > .20)
+
     def confirm_visual(self, frame, label, observed_name, allowed_products):
         """Require independent artwork and complete three-level ink agreement.
 
@@ -100,6 +121,15 @@ class KoreanRecipeIconVerifier:
         from module.island_handler.korean_name_mask import long_label_coverage_agrees
         gray = cv2.cvtColor(label, cv2.COLOR_RGB2GRAY)
         if long_label_coverage_agrees(gray, self.label_references, name, minimum_hangul=2):
+            return item
+        # A different word may share dilated strokes without sharing grayscale
+        # glyph shape or artwork. Only the joint independent winners can use the
+        # narrower ink margin; retain >=.995 full ink coverage at every level.
+        if (len(hangul(name)) >= 2 and self.complete_shape_agrees(gray, name)
+                and long_label_coverage_agrees(gray, self.label_references, name,
+                                              minimum_hangul=2, minimum_gap=.05)):
+            from module.logger import logger
+            logger.info('KR independent artwork, complete grayscale and triple ink agree: %s' % name)
             return item
         # Translucent card backgrounds can defeat pixel references. Independently
         # identified artwork may request (never substitute for) three full-name

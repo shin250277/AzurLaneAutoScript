@@ -80,7 +80,7 @@ def whole_label_coverage(a, b):
     return best
 
 
-def long_label_coverage_agrees(frame, references, candidate, minimum_hangul=6):
+def long_label_coverage_agrees(frame, references, candidate, minimum_hangul=6, minimum_gap=.15):
     """Supplement independent grayscale identity only for long Korean labels.
 
     Fractional scroll rendering changes antialiasing by a pixel. Require
@@ -98,6 +98,6 @@ def long_label_coverage_agrees(frame, references, candidate, minimum_hangul=6):
             scores[name] = max(scores.get(name, 0), value)
         ranked = sorted(((v, n) for n, v in scores.items()), reverse=True)
         if (not ranked or ranked[0][1] != candidate or ranked[0][0] < .995
-                or (len(ranked) > 1 and ranked[0][0]-ranked[1][0] < .15)):
+                or (len(ranked) > 1 and ranked[0][0]-ranked[1][0] < minimum_gap)):
             return False
     return True

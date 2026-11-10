@@ -25,12 +25,25 @@ class VisualPairTest(unittest.TestCase):
                 self.assertIsNone(verifier.confirm_visual(icon, label, '양모', {item}))
                 self.assertIsNone(verifier.confirm_visual(icon, np.full_like(label, 255), '', {item}))
 
-    def test_insufficient_icon_or_competing_label_evidence_stays_rejected(self):
+    def test_without_independent_grayscale_insufficient_ink_stays_rejected(self):
         verifier = KoreanRecipeIconVerifier()
         for item in (3025, 3115):
             icon = load_image('dev_tools/fixtures/kr_late_%s_icon.png' % item)
             label = load_image('dev_tools/fixtures/kr_late_%s.png' % item)
-            self.assertIsNone(verifier.confirm_visual(icon, label, '', {item}))
+            # Preserve the old ink-only rejection. The reviewed 3025 pair is a
+            # correct complete name/artwork, not an adversarial wrong label;
+            # the new independent grayscale evidence is tested separately.
+            with patch.object(verifier,'complete_shape_agrees',return_value=False):
+                self.assertIsNone(verifier.confirm_visual(icon, label, '', {item}))
+
+    def test_reviewed_complete_mango_can_use_joint_evidence_not_other_name(self):
+        verifier=KoreanRecipeIconVerifier()
+        icon=load_image('dev_tools/fixtures/kr_late_3025_icon.png')
+        label=load_image('dev_tools/fixtures/kr_late_3025.png')
+        with patch('module.ocr.windows_ocr.WindowsKoreanOcr') as backend:
+            self.assertEqual(verifier.confirm_visual(icon,label,'',{3025}),3025)
+            backend.assert_not_called()
+            self.assertIsNone(verifier.confirm_visual(icon,label,'오렌지 파이',{3025}))
 
     def test_other_product_label_cannot_borrow_correct_icon(self):
         verifier = KoreanRecipeIconVerifier()
