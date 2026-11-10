@@ -110,7 +110,7 @@ class KoreanRecipeIconVerifier:
             reader = KoreanIslandNameOcr([])
             known = {''.join(v['name'].get('kr', '').split()) for v in DIC_ISLAND_ITEM.values()}
             expected = ''.join(name.split())
-            for levels in ((130, 150, 170), (170, 180, 190)):
+            for levels in ((130, 150, 170), (170, 180, 190), (180, 190, 200)):
                 reads = WindowsKoreanOcr().atomic_ocr_for_single_lines([
                     reader.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
                     for level in levels])

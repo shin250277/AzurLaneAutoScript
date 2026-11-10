@@ -19,6 +19,21 @@ class IconContrastTest(unittest.TestCase):
     def test_three_exact_full_names_with_artwork(self):
         self.assertEqual(self.read(['수첩']*3)[0],3049)
 
+    def test_bright_triplet_requires_all_three_and_no_known_conflict(self):
+        icon=load_image('dev_tools/fixtures/kr_nov10_pair_notebook_3049_icon.png')
+        label=load_image('dev_tools/fixtures/kr_nov10_pair_notebook_3049_name.png')
+        verifier=KoreanRecipeIconVerifier()
+        verifier.label_references=[]
+        for first, last, expected in [
+                (['?','',''], ['수첩']*3, 3049),
+                (['?','',''], ['수첩','수첩',''], None),
+                (['철광석','',''], ['수첩']*3, None)]:
+            with patch.object(verifier,'match_item',return_value=3049), patch(
+                    'module.ocr.windows_ocr.WindowsKoreanOcr') as ocr:
+                ocr.return_value.atomic_ocr_for_single_lines.side_effect=[
+                    [list(v) for v in first], [[],[],[]], [list(v) for v in last]]
+                self.assertEqual(verifier.confirm_visual(icon,label,'',{3049}),expected)
+
     def test_no_partial_or_majority_or_transliteration(self):
         for votes in [[],['수첩']*2,['수첩','수첩',''],['수첩','수첩','수건'],
                       ['첩']*3,['수첩;']*3,['수첩A']*3]:
