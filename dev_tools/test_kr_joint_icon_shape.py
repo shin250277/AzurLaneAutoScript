@@ -8,6 +8,25 @@ from module.island_handler.korean_recipe_icon import KoreanRecipeIconVerifier
 from module.island_handler.korean_name_mask import long_label_coverage_agrees
 
 class JointIconShapeTest(unittest.TestCase):
+    def test_orchard_exact_reference_and_conflict_guard(self):
+        from module.island_handler.korean_ocr import KoreanIslandNameOcr
+        v = KoreanRecipeIconVerifier()
+        label = load_image('dev_tools/fixtures/kr_nov10_orchard_name.png')
+        icon = load_image('dev_tools/fixtures/kr_nov10_orchard_icon.png')
+        self.assertEqual(KoreanIslandNameOcr([]).ocr([label], direct_ocr=True), ['감귤'])
+        self.assertEqual(v.match_item(icon, {2017}), 2017)
+        self.assertIsNone(v.confirm_visual(icon, label, '사과', {2017}))
+
+    def test_charlotte_full_name_is_not_shortened_to_strawberry(self):
+        from module.island_handler.korean_ocr import KoreanIslandNameOcr
+        label = load_image('dev_tools/fixtures/kr_nov10_charlotte_name.png')
+        self.assertEqual(KoreanIslandNameOcr([]).ocr([label], direct_ocr=True), ['딸기 샬럿'])
+
+    def test_dispatch_cloth_uses_reviewed_exact_reference(self):
+        from module.island_handler.korean_ocr import KoreanIslandNameOcr
+        label = load_image('dev_tools/fixtures/kr_nov10_dispatch_cloth_name.png')
+        self.assertEqual(KoreanIslandNameOcr([]).ocr([label], direct_ocr=True), ['천'])
+
     def test_bright_mango_requires_complete_three_level_group(self):
         v = KoreanRecipeIconVerifier()
         icon = load_image('dev_tools/fixtures/kr_nov10_joint_bright_mango_icon.png')
