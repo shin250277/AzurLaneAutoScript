@@ -6,6 +6,7 @@ from module.base.utils import crop
 from dev_tools.extract_kr_recipe_followup_nov9 import grid
 
 CASES = [
+    ('201_9211', 1, 5102, '삼치', 'ebc787ccc6b0e7558935450742fe3d3729ef69e46a1d23abe80743b05bfb19a1'),
     ('401_9011', 1, 2704, '황광석', '20057f552219252ba46dc14b57ce588ed4c286e5862cf831d108e00b5ea0a3cf'),
     ('601_9061', 0, 4009, '곶감', '2c0338422535ef0568bd9b2c5947f8faca24d9d361930b1bba9ae4e044fd42e3'),
     ('603_9081', 0, 3028, '딸기 샬럿', 'f7c4b0599ff829169b9868a8e56bbc850501fa3ec38b66d66cb4e0c7886bdc2e'),

@@ -3,6 +3,22 @@ from module.island_handler.kr_coin_material import purchase_allowed, material_sh
 
 
 class CoinMaterialTest(unittest.TestCase):
+    def test_fish_tab_failure_prevents_item_selection(self):
+        from unittest.mock import Mock
+        from module.island_handler.kr_coin_material import buy_material
+        from module.exception import RequestHumanTakeover
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.goto_ingredient_shop_page.return_value = True
+        ui.island_shop_set_navbar_and_tab.return_value = False
+        ui.island_shop_get_currency.return_value = {1: 1000}
+        ui.island_shop_get_item_ids.return_value = []
+        with self.assertRaises(RequestHumanTakeover):
+            buy_material(ui, 1203, 1, 'ingredient')
+        ui.island_shop_set_navbar_and_tab.assert_called_once_with(111203, isolated=True)
+        ui.island_shop_get_item_ids.assert_not_called()
+        ui.device.click.assert_not_called()
+
     def test_quantity_transition_rechecks_without_input_or_price_inference(self):
         from unittest.mock import Mock, patch
         from module.island_handler.kr_coin_material import buy_material

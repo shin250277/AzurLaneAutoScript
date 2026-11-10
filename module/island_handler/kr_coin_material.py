@@ -74,6 +74,11 @@ def buy_material(ui, item, amount, entrance):
         return False
     if not ui.goto_ingredient_shop_page(entrance):
         raise RequestHumanTakeover('KR ingredient shop navigation failed; no purchase')
+    if 111101 <= target < 111300:
+        # The game detail link can open the wrong fishery sub-tab. Reuse the
+        # existing shop routing, then still demand an exact unique item below.
+        if not ui.island_shop_set_navbar_and_tab(target, isolated=True):
+            raise RequestHumanTakeover('KR fish material tab unverified; no purchase')
     balance = ui.island_shop_get_currency().get(1, 0)
     if balance < cost[1] * amount:
         ui.ui_back(check_button=ui.is_in_recipe_menu)
