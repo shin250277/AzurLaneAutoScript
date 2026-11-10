@@ -8,6 +8,11 @@ from dev_tools.test_os_task_stop_boundaries import method
 
 
 class StockCropTest(unittest.TestCase):
+    def test_thin_final_one_preserved_after_scroll(self):
+        frame = load_image('dev_tools/fixtures/kr_stock_final_one.png')
+        ocr = KoreanRecipeStockDigit([], lang='cnocr', letter=(80, 80, 80), threshold=160)
+        self.assertEqual(ocr.ocr([frame], direct_ocr=True), [2761])
+
     def test_pale_counter_background_does_not_invent_suffix(self):
         frame = load_image('dev_tools/fixtures/kr_stock_phantom_suffix.png')
         ocr = KoreanRecipeStockDigit([], lang='cnocr', letter=(80, 80, 80), threshold=160)
