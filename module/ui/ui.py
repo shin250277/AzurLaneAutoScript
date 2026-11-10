@@ -35,6 +35,12 @@ KR_ISLAND_SEED_HEADER = Button(
 KR_ISLAND_PROCESSING_HEADER = Button(
     area=(148, 18, 310, 54), color=(0, 0, 0), button=(148, 18, 310, 54),
     file='./assets/kr/ui/ISLAND_PROCESSING_HEADER.png')
+KR_ISLAND_MATERIAL_DETAIL = Button(
+    area=(351, 157, 452, 192), color=(0, 0, 0), button=(902, 156, 937, 192),
+    file='./assets/kr/ui/ISLAND_MATERIAL_DETAIL.png')
+KR_ISLAND_MATERIAL_DETAIL_CLOSE = Button(
+    area=(902, 156, 937, 192), color=(0, 0, 0), button=(902, 156, 937, 192),
+    file='./assets/kr/ui/ISLAND_MATERIAL_DETAIL.png', name='KR_ISLAND_MATERIAL_DETAIL_CLOSE')
 
 KR_DEFEAT_RESULT = Button(
     area=(230, 220, 551, 293), color=(180, 170, 173),
@@ -527,6 +533,11 @@ class UI(InfoHandler):
     def _handle_kr_island_character_back(self):
         if self.config.SERVER != 'kr':
             return False
+        if (self.appear(KR_ISLAND_MATERIAL_DETAIL, offset=(3, 3), similarity=0.95)
+                and self.appear(KR_ISLAND_MATERIAL_DETAIL_CLOSE, offset=(3, 3), similarity=0.95, interval=2)):
+            logger.info('Close KR material detail without following purchase link')
+            self.device.click(KR_ISLAND_MATERIAL_DETAIL_CLOSE)
+            return True
         from module.island_handler.assets import ISLAND_DOCK_CHECK, ISLAND_RECIPE_CHECK
         from module.ui_white.assets import BACK_ARROW_WHITE
         if (self.appear(ISLAND_DOCK_CHECK, offset=(0, 20), similarity=0.85)
@@ -740,7 +751,7 @@ class UI(InfoHandler):
                     self.ui_current = page
                     island_page_detected = page.is_island() or page.parent.is_island()
                     logger.info(f'Page switch: {page} -> {page.parent}')
-                    button = page.links[page.parent]
+                    button = self._kr_navigation_button(page, page.links[page.parent])
                     self.device.click(button)
                     self.ui_button_interval_reset(button)
                     if self.config.SERVER == 'kr' and button == DORMMENU_GOTO_ISLAND:
@@ -764,6 +775,14 @@ class UI(InfoHandler):
 
         # Reset connection
         Page.clear_connection()
+
+    def _kr_navigation_button(self, page, button):
+        # Island mail shares MAIL_CHECK but has no upper-right main shortcut.
+        # Use the actually observed back arrow, then re-detect the parent page.
+        if (self.config.SERVER == 'kr' and page == page_mail
+                and self.appear(BACK_ARROW_WHITE, offset=(20, 20))):
+            return BACK_ARROW_WHITE
+        return button
 
     def ui_ensure(self, destination, skip_first_screenshot=True):
         """

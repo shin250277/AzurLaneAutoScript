@@ -792,6 +792,8 @@ class IslandRecipe(IslandExchange, IslandShop):
                     self.device.click(entrance_button)
         else:
             logger.warning('Unable to find ingredient button, failed to goto ingredient shop page')
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_ingredient_shop_navigation_failed.png')
             return False
         for _ in self.loop(timeout=15, skip_first=False):
             if self.appear_then_click(ISLAND_INFO_GOTO_SHOP, offset=(20, 20), interval=2):
