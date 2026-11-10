@@ -14,7 +14,8 @@ class OwnedDispatchTest(unittest.TestCase):
         tree = ast.parse(Path('module/island/production.py').read_text(encoding='utf-8'))
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == 'IslandProduction')
         cls.bases = [ast.Name(id='Base', ctx=ast.Load())]
-        cls.body = [n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'dispatch_slot']
+        cls.body = [n for n in cls.body if isinstance(n, ast.FunctionDef)
+                    and n.name in ('dispatch_slot', 'scan_korean_dispatch_stocks')]
         tree.body = [cls]
         class Base:
             def run(self, slot_id):
@@ -22,6 +23,8 @@ class OwnedDispatchTest(unittest.TestCase):
         scope = dict(Base=Base, DIC_ISLAND_PRODUCTION_PLACE={102: {'slot': []}},
                      RequestHumanTakeover=RequestHumanTakeover, del_cached_property=Mock(), logger=Mock(),
                      page_island_manage=SimpleNamespace(check_button='manage'))
+        from module.island_handler.recipe import KoreanRecipeNameUnknown
+        scope['KoreanRecipeNameUnknown'] = KoreanRecipeNameUnknown
         exec(compile(ast.fix_missing_locations(tree), 'production', 'exec'), scope)
         ui = scope['IslandProduction']()
         ui.config = SimpleNamespace(SERVER='kr', cross_set=Mock())

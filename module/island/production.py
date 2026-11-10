@@ -312,7 +312,9 @@ class IslandProduction(IslandRecipe, IslandDock):
             self.working_slot_id = slot_id
             del_cached_property(self, 'recipe_grid')
             del_cached_property(self, 'recipe_ids')
-            stocks = self.scan_all_recipe_stocks()
+            stocks = self.scan_korean_dispatch_stocks(slot_id, audit_only)
+            if stocks is None:
+                return False
             logger.attr('KR recipe probe', stocks)
             logger.attr('KR ingredient probe', self.probe_korean_recipe_counters(stocks))
             if audit_only:
@@ -351,6 +353,27 @@ class IslandProduction(IslandRecipe, IslandDock):
             self.ui_back(check_button=page_island_manage.check_button)
             self.ensure_island_production_page()
             return False
+
+    def scan_korean_dispatch_stocks(self, slot_id, audit_only):
+        """Revoke only a failed identity group before any purchase/start."""
+        try:
+            return self.scan_all_recipe_stocks()
+        except KoreanRecipeNameUnknown:
+            if audit_only or not self.is_in_recipe_menu():
+                raise
+            self.device.image_save('./log/kr_island_dispatch_name_{}.png'.format(slot_id))
+            slot = DIC_ISLAND_SLOT[slot_id]
+            siblings = {other for place in DIC_ISLAND_PRODUCTION_PLACE.values()
+                        if slot_id in place['slot'] for other in place['slot']
+                        if DIC_ISLAND_SLOT[other]['formula'] == slot['formula']
+                        and DIC_ISLAND_SLOT[other]['activity_formula'] == slot['activity_formula']}
+            self.kr_verified_recipe_slots.difference_update(siblings)
+            logger.warning('Revoke KR recipe group after dispatch name failure: %s', sorted(siblings))
+            self.ui_back(check_button=page_island_manage.check_button)
+            self.ensure_island_production_page()
+            for key in ('recipe_grid', 'recipe_ids'):
+                del_cached_property(self, key)
+            return None
 
     def probe_korean_recipe_counters(self, stocks):
         """Validate selection/counters without buying ingredients or starting work."""
