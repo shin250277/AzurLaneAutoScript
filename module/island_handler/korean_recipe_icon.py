@@ -101,6 +101,24 @@ class KoreanRecipeIconVerifier:
         gray = cv2.cvtColor(label, cv2.COLOR_RGB2GRAY)
         if long_label_coverage_agrees(gray, self.label_references, name, minimum_hangul=2):
             return item
+        # Translucent card backgrounds can defeat pixel references. Independently
+        # identified artwork may request (never substitute for) three full-name
+        # OCR readings. No partial text, transliteration or 2-of-3 voting.
+        if len(hangul(name)) >= 2:
+            from module.island_handler.korean_ocr import KoreanIslandNameOcr
+            from module.ocr.windows_ocr import WindowsKoreanOcr
+            reader = KoreanIslandNameOcr([])
+            known = {''.join(v['name'].get('kr', '').split()) for v in DIC_ISLAND_ITEM.values()}
+            expected = ''.join(name.split())
+            for levels in ((130, 150, 170), (170, 180, 190)):
+                reads = WindowsKoreanOcr().atomic_ocr_for_single_lines([
+                    reader.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                    for level in levels])
+                words = [''.join(''.join(read).split()) for read in reads]
+                if any(word in known and word != expected for word in words):
+                    return None
+                if len(words) == 3 and all(word == expected for word in words):
+                    return item
         return None
 
 

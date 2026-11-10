@@ -30,7 +30,8 @@ def replay(path, slot_id=None):
 
 if __name__ == '__main__':
     sys.stdout.reconfigure(encoding='utf-8')
-    paths = sorted(Path('log').glob('kr_island_recipe_audit_*.png'))
+    paths = sorted(list(Path('log').glob('kr_island_recipe_audit_*.png'))
+                   + list(Path('log').glob('kr_island_dispatch_name_*.png')))
     if not paths:
         raise SystemExit('No saved recipe audit frames')
     failures = []

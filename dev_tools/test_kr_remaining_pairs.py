@@ -7,7 +7,7 @@ from module.island_handler.korean_ocr import KoreanIslandNameOcr
 from module.island_handler.korean_recipe_icon import KoreanRecipeIconVerifier
 from dev_tools.extract_kr_remaining_pairs import SAMPLES
 
-ALL_SAMPLES = SAMPLES + [('mango', 1, 3025), ('gloves', 0, 3038)]
+ALL_SAMPLES = SAMPLES + [('mango', 1, 3025), ('gloves', 0, 3038), ('apple', 0, 3009), ('day', 1, 3120)]
 
 
 class RemainingPairsTest(unittest.TestCase):
