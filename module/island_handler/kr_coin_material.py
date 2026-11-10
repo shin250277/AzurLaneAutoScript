@@ -83,11 +83,23 @@ def buy_material(ui, item, amount, entrance):
         raise RequestHumanTakeover('KR shop item not uniquely identified; no purchase')
     ui.device.click(ui._island_shop_item_grid.buttons[ids.index(target)])
     expected_name = recipe['name']['kr']
+    quantity_rechecks = 0
     for _ in ui.loop(timeout=30):
         evidence = dialog_evidence(ui.device.image)
         if evidence is None:
             continue
         name, current, price = evidence
+        if current == 0:
+            # A newly changed counter can be captured mid-animation. Reobserve,
+            # never press another quantity button or derive a count from price.
+            quantity_rechecks += 1
+            if quantity_rechecks < 3:
+                ui.device.sleep(0.35)
+                continue
+            from module.base.utils import save_image
+            save_image(ui.device.image, './log/kr_material_quantity_unreadable.png')
+            raise RequestHumanTakeover('KR quantity models disagree after rechecks; no purchase')
+        quantity_rechecks = 0
         if not purchase_allowed(cost, name, current, price, expected_name, current, True):
             raise RequestHumanTakeover('KR purchase dialog identity or coin price mismatch')
         if current == amount:

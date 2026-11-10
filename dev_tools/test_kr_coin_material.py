@@ -3,6 +3,24 @@ from module.island_handler.kr_coin_material import purchase_allowed, material_sh
 
 
 class CoinMaterialTest(unittest.TestCase):
+    def test_quantity_transition_rechecks_without_input_or_price_inference(self):
+        from unittest.mock import Mock, patch
+        from module.island_handler.kr_coin_material import buy_material
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.loop.side_effect = lambda **kwargs: iter([None, None, None, None])
+        ui.goto_ingredient_shop_page.return_value = True
+        ui.island_shop_get_item_ids.return_value = [411000]
+        ui._island_shop_item_grid.buttons = ['wheat']
+        ui.island_shop_get_currency.side_effect = [{1: 1000}, {1: 720}]
+        ui.ui_page_appear.return_value = True
+        with patch('module.island_handler.kr_coin_material.dialog_evidence',
+                   side_effect=[('밀 씨앗', 0, 280), ('밀 씨앗', 14, 280),
+                                ('밀 씨앗', 14, 280)]), patch(
+                'module.island_handler.kr_coin_material.marker', return_value=False):
+            self.assertTrue(buy_material(ui, 1000, 14, 'ingredient'))
+        self.assertEqual(ui.device.click.call_count, 2)  # item and one confirmation only
+
     def test_actual_quantity_digits(self):
         import numpy as np
         from module.base.utils import load_image
@@ -12,6 +30,25 @@ class CoinMaterialTest(unittest.TestCase):
             frame[360:382,756:850] = load_image(
                 'dev_tools/fixtures/kr_material_quantity_%s.png' % value)
             self.assertEqual(read_quantity(frame), value)
+
+    def test_persistent_quantity_disagreement_stops_without_purchase(self):
+        from unittest.mock import Mock, patch
+        from module.island_handler.kr_coin_material import buy_material
+        from module.exception import RequestHumanTakeover
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.loop.return_value = iter([None] * 4)
+        ui.goto_ingredient_shop_page.return_value = True
+        ui.island_shop_get_item_ids.return_value = [411000]
+        ui._island_shop_item_grid.buttons = ['wheat']
+        ui.island_shop_get_currency.return_value = {1: 1000}
+        with patch('module.island_handler.kr_coin_material.dialog_evidence',
+                   return_value=('밀 씨앗', 0, 280)), patch('module.base.utils.save_image') as save:
+            with self.assertRaises(RequestHumanTakeover):
+                buy_material(ui, 1000, 14, 'ingredient')
+            save.assert_called_once()
+        ui.device.click.assert_called_once_with('wheat')
+        self.assertEqual(ui.device.sleep.call_count, 2)
 
     def test_quantity_disagreement_or_blank_never_authorizes(self):
         from unittest.mock import patch
