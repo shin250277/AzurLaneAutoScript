@@ -77,7 +77,7 @@ class CoinMaterialTest(unittest.TestCase):
                 buy_material(ui, 1000, 14, 'ingredient')
             save.assert_called_once()
         ui.device.click.assert_called_once_with('wheat')
-        self.assertEqual(ui.device.sleep.call_count, 2)
+        self.assertEqual(ui.device.sleep.call_count, 4)  # two identity reads, two quantity retries
 
     def test_quantity_disagreement_or_blank_never_authorizes(self):
         from unittest.mock import patch

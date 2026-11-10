@@ -64,6 +64,24 @@ def dialog_evidence(image):
     return name, amount, price
 
 
+def find_stable_shop_item(ui, target):
+    """Read only: exact unique identity must occupy the same card twice.
+
+    Shop chrome/currency may appear before the card text settles. Never use a
+    fuzzy name, remove unknown cards, or click while waiting for identity.
+    """
+    previous = None
+    for _ in range(4):
+        ui.device.sleep(0.35)
+        ui.device.screenshot()
+        ids = ui.island_shop_get_item_ids()
+        index = ids.index(target) if ids.count(target) == 1 else None
+        if index is not None and index == previous:
+            return index
+        previous = index
+    return None
+
+
 def buy_material(ui, item, amount, entrance):
     from module.base.button import Button
     from module.island.data import DIC_ISLAND_SHOP_ITEM_TO_RECIPE, DIC_ISLAND_SHOP_RECIPE
@@ -90,10 +108,11 @@ def buy_material(ui, item, amount, entrance):
     if balance < cost[1] * amount:
         ui.ui_back(check_button=ui.is_in_recipe_menu)
         return False
-    ids = ui.island_shop_get_item_ids()
-    if ids.count(target) != 1:
+    index = find_stable_shop_item(ui, target)
+    if index is None:
+        ui.device.image_save('./log/kr_material_shop_identity_unreadable.png')
         raise RequestHumanTakeover('KR shop item not uniquely identified; no purchase')
-    ui.device.click(ui._island_shop_item_grid.buttons[ids.index(target)])
+    ui.device.click(ui._island_shop_item_grid.buttons[index])
     expected_name = recipe['name']['kr']
     quantity_rechecks = 0
     for _ in ui.loop(timeout=30):

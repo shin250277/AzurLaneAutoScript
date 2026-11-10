@@ -29,6 +29,13 @@ from module.ui.page import (Page, page_academy, page_build, page_campaign, page_
                             page_shipyard, page_shop, page_sp, page_storage, page_supply_pack)
 from module.ui_white.assets import *
 
+KR_ISLAND_SEED_HEADER = Button(
+    area=(148, 18, 310, 54), color=(0, 0, 0), button=(148, 18, 310, 54),
+    file='./assets/kr/ui/ISLAND_SEED_HEADER.png')
+KR_ISLAND_PROCESSING_HEADER = Button(
+    area=(148, 18, 310, 54), color=(0, 0, 0), button=(148, 18, 310, 54),
+    file='./assets/kr/ui/ISLAND_PROCESSING_HEADER.png')
+
 KR_DEFEAT_RESULT = Button(
     area=(230, 220, 551, 293), color=(180, 170, 173),
     button=(1000, 632, 1050, 657),
@@ -326,6 +333,9 @@ class UI(InfoHandler):
         """
         if page == page_main:
             if self.config.SERVER == 'kr':
+                if any(self.appear(header, offset=(3, 3), similarity=0.95)
+                       for header in (KR_ISLAND_SEED_HEADER, KR_ISLAND_PROCESSING_HEADER)):
+                    return False
                 # During page transitions the main screen may already be
                 # visible behind an overlay. A visible home icon means the
                 # foreground page has not closed yet.
@@ -520,7 +530,9 @@ class UI(InfoHandler):
         from module.island_handler.assets import ISLAND_DOCK_CHECK, ISLAND_RECIPE_CHECK
         from module.ui_white.assets import BACK_ARROW_WHITE
         if (self.appear(ISLAND_DOCK_CHECK, offset=(0, 20), similarity=0.85)
-                or self.appear(ISLAND_RECIPE_CHECK, offset=(20, 20), similarity=0.9)) and self.appear(
+                or self.appear(ISLAND_RECIPE_CHECK, offset=(20, 20), similarity=0.9)
+                or any(self.appear(header, offset=(3, 3), similarity=0.95)
+                       for header in (KR_ISLAND_SEED_HEADER, KR_ISLAND_PROCESSING_HEADER))) and self.appear(
                 BACK_ARROW_WHITE, offset=(20, 20), interval=2):
             logger.info('Leave island character/recipe selection before changing tasks')
             self.device.click(BACK_ARROW_WHITE)
