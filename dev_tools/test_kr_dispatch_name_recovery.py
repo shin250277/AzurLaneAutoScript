@@ -33,6 +33,20 @@ class DispatchNameRecoveryTest(unittest.TestCase):
                 self.scan(self.ui, 1, audit)
         self.ui.ui_back.assert_not_called()
 
+    def test_name_failure_while_inspecting_counters_also_revokes_group(self):
+        self.ui.scan_all_recipe_stocks.return_value = {101007: 18}
+        self.ui.probe_korean_recipe_counters.side_effect = UnknownName()
+        self.assertIsNone(self.scan(self.ui, 1, False))
+        self.assertEqual(self.ui.kr_verified_recipe_slots, {3, 4})
+        self.ui.ui_back.assert_called_once()
+
+    def test_counter_validation_failure_still_propagates(self):
+        self.ui.scan_all_recipe_stocks.return_value = {101007: 18}
+        self.ui.probe_korean_recipe_counters.side_effect = RuntimeError('counter conflict')
+        with self.assertRaises(RuntimeError):
+            self.scan(self.ui, 1, False)
+        self.ui.ui_back.assert_not_called()
+
     def test_counter_or_other_error_is_not_suppressed(self):
         self.ui.scan_all_recipe_stocks.side_effect = RuntimeError('stock conflict')
         with self.assertRaises(RuntimeError):

@@ -315,8 +315,6 @@ class IslandProduction(IslandRecipe, IslandDock):
             stocks = self.scan_korean_dispatch_stocks(slot_id, audit_only)
             if stocks is None:
                 return False
-            logger.attr('KR recipe probe', stocks)
-            logger.attr('KR ingredient probe', self.probe_korean_recipe_counters(stocks))
             if audit_only:
                 self.ui_back(check_button=page_island_manage.check_button)
                 self.ensure_island_production_page()
@@ -357,7 +355,10 @@ class IslandProduction(IslandRecipe, IslandDock):
     def scan_korean_dispatch_stocks(self, slot_id, audit_only):
         """Revoke only a failed identity group before any purchase/start."""
         try:
-            return self.scan_all_recipe_stocks()
+            stocks = self.scan_all_recipe_stocks()
+            logger.attr('KR recipe probe', stocks)
+            logger.attr('KR ingredient probe', self.probe_korean_recipe_counters(stocks))
+            return stocks
         except KoreanRecipeNameUnknown:
             if audit_only or not self.is_in_recipe_menu():
                 raise
