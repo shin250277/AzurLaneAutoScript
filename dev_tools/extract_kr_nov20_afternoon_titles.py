@@ -16,3 +16,9 @@ if __name__ == '__main__':
             for item, y in entries:
                 frame.convert('RGB').crop((304,y,450,y+31)).save(
                     'assets/kr/island_item_name/%s_nov20_afternoon_selected.png' % item)
+    path = Path('log/kr_island_dispatch_name_9091.png')
+    if hashlib.sha256(path.read_bytes()).hexdigest() != '06be3a201fd57f432b63377633a91a55c24a45090b73ad4443191fe9489b0b5a':
+        raise ValueError('Changed frame requires review')
+    with Image.open(str(path)) as frame:
+        frame.convert('RGB').crop((304,295,450,326)).save(
+            'assets/kr/island_item_name/3115_nov20_afternoon_selected.png')
