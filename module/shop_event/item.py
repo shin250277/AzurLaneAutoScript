@@ -227,9 +227,12 @@ class EventShopItemGrid(ItemGrid):
         self.price_ocr = PRICE_OCR
         self.kr_templates = {}
         self.kr_names = None
+        self.kr_currency = None
         if server.server == 'kr':
             from module.shop_event.korean_names import KoreanShopNames
+            from module.shop_event.korean_currency import KoreanEventCurrency
             self.kr_names = KoreanShopNames()
+            self.kr_currency = KoreanEventCurrency()
             for path in Path('./assets/shop/event_kr').glob('*.png'):
                 # Omit the numeric amount and border; compare the actual icon.
                 self.kr_templates[path.stem] = load_image(str(path))[:45, :63]
@@ -288,8 +291,22 @@ class EventShopItemGrid(ItemGrid):
                     left = 48 if blueprint else 40
                     item.amount = self.amount_ocr.ocr([item.crop((left, 50, 63, 63))], direct_ocr=True)[0]
         if counter and len(self.items):
-            counter_list = [item.crop(self.counter_area) for item in self.items]
-            counter_list = self.counter_ocr.ocr(counter_list, direct_ocr=True)
+            counter_frames = [item.crop(self.counter_area) for item in self.items]
+            counter_list = self.counter_ocr.ocr(counter_frames, direct_ocr=True)
+            if server.server == 'kr':
+                # Fractional scroll rasterization can drop the narrow "1" in
+                # 100/100. Retry only invalid reads, using the other existing
+                # digit model at two thresholds. Never infer total from stock.
+                invalid = [index for index, pair in enumerate(counter_list) if pair[1] <= 0]
+                if invalid:
+                    frames = [counter_frames[index] for index in invalid]
+                    retries = [CounterOcr([], lang='cnocr', letter=COUNTER_COLOR, threshold=value,
+                                          name='KR_COUNTER_RECHECK').ocr(frames, direct_ocr=True)
+                               for value in (128, 170)]
+                    for position, index in enumerate(invalid):
+                        first, second = retries[0][position], retries[1][position]
+                        if first == second and first[1] > 0:
+                            counter_list[index] = first
             for i, t in zip(self.items, counter_list):
                 i.count, i.total_count = t
 
@@ -299,6 +316,10 @@ class EventShopItemGrid(ItemGrid):
 
         for i in self.items:
             i.correct_name_and_cost(save_unknown=save_unknown)
+            if self.kr_currency is not None:
+                # Recognize actual currency pixels, never infer premium vs
+                # event points from an item's numerical price.
+                i.kr_currency_token = self.kr_currency.identify(i.crop((-17, 120, 35, 149)))
             if server.server == 'kr' and amount and i.is_ship:
                 # Portrait decoration enters the generic amount crop. Two
                 # independently bounded right-side crops must agree; do not

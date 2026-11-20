@@ -2,6 +2,7 @@ from typing import List, Tuple
 
 from module.base.decorator import del_cached_property
 from module.base.timer import Timer
+from module.base.utils import crop
 from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.shop.assets import NAV_GENERAL, NAV_EVENT
@@ -9,6 +10,7 @@ from module.shop_event.assets import NO_NAV_EVENT_CHECK
 from module.shop_event.clerk import EventShopClerk, ItemNotFoundError
 from module.shop_event.item import EventShopItem, UR_SHIP_PRICES_IN_URPT, COIN_PRICE_IN_URPT, URPT_PRICE_IN_PT
 from module.shop_event.selector import EVENT_SHOP_PRESET_FILTER, FILTER
+from module.shop_event.korean_currency import KoreanEventCurrency, validated_point_items
 from module.ui.assets import SHOP_GOTO_MUNITIONS
 from module.ui.page import page_shop, page_munitions
 from module.ui.ui import KR_MUNITIONS_CHECK
@@ -197,9 +199,13 @@ class EventShop(EventShopClerk):
             logger.warning("No items found in event shop.")
             return True
         if self.config.SERVER == 'kr':
-            self.device.image_save('./log/kr_event_shop_currency_unverified.png')
-            raise RequestHumanTakeover('Korean event-shop currency recognition is not validated; '
-                                       'scanned items only, no purchase or ship unlock.')
+            token = KoreanEventCurrency().identify(crop(self.device.image, (935, 155, 985, 190)))
+            # Only an observed single-currency shop is covered here. Keep UR
+            # exchange, unknown/new event artwork and diamonds fail-closed.
+            if self.event_shop_has_urpt or not validated_point_items(items, token):
+                self.device.image_save('./log/kr_event_shop_currency_unverified.png')
+                raise RequestHumanTakeover('Korean event-shop currency not confirmed from header and every item; '
+                                           'no purchase or ship unlock.')
         logger.hr("Event Shop buy", level=2)
         self.get_current_pts()
         items, urpt_related_items = self.handle_items_related_with_urpt(items, self.config.EventShop_BuyURShip)

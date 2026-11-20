@@ -66,7 +66,8 @@ class ShopScanRowsTest(unittest.TestCase):
         scroll = Mock()
         scroll.at_bottom.side_effect = bottom
         namespace = dict(EVENT_SHOP_SCROLL=scroll, logger=Mock(),
-                         merge_scan_page=self.merge, RequestHumanTakeover=RuntimeError)
+                         merge_scan_page=self.merge, RequestHumanTakeover=RuntimeError,
+                         kr_sold_out_page=lambda image, grid: image == 'sold-out')
         exec(compile(ast.Module(body=[function]), '<scan>', 'exec'), namespace)
         clerk = Mock()
         clerk.config.SERVER = server
@@ -86,4 +87,25 @@ class ShopScanRowsTest(unittest.TestCase):
     def test_scan_has_bounded_attempts(self):
         scan, clerk, scroll = self.scan('kr', [False] * 41 + [True])
         with self.assertRaisesRegex(RuntimeError, 'bottom'):
+            scan(clerk)
+
+    def test_confirmed_sold_out_page_continues_to_actual_bottom(self):
+        scan, clerk, scroll = self.scan('kr', [False, False, True])
+        clerk.device.image = 'sold-out'
+        clerk.event_shop_get_items.side_effect = [[item('A', 239)], [], []]
+        self.assertEqual(len(scan(clerk)), 1)
+        self.assertEqual(scroll.next_page.call_count, 2)
+
+    def test_empty_unrecognized_page_still_stops(self):
+        scan, clerk, scroll = self.scan('kr', [True])
+        clerk.device.image = 'unrecognized'
+        clerk.event_shop_get_items.return_value = []
+        with self.assertRaisesRegex(RuntimeError, 'Empty'):
+            scan(clerk)
+
+    def test_other_servers_do_not_skip_empty_page(self):
+        scan, clerk, scroll = self.scan('jp', [True])
+        clerk.device.image = 'sold-out'
+        clerk.event_shop_get_items.return_value = []
+        with self.assertRaisesRegex(RuntimeError, 'Empty'):
             scan(clerk)

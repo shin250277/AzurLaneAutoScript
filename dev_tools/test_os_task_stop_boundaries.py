@@ -128,6 +128,81 @@ class OsTaskStopBoundariesTest(unittest.TestCase):
                     ui.load_campaign.assert_called_once_with()
                     ui.config.opsi_task_delay.assert_called_once_with(ap_limit=True)
 
+    def test_farming_ap_shortage_delays_without_second_load(self):
+        for name in ('meowfficer_farming', 'hazard1_leveling'):
+            for stage in ('initialization', 'task'):
+                with self.subTest(task=name, stage=stage):
+                    ui = Mock()
+                    ui.config.is_task_enabled.return_value = False
+                    if stage == 'initialization':
+                        ui.load_campaign.side_effect = ActionPointLimit
+                    else:
+                        getattr(ui.load_campaign.return_value, 'os_' + name).side_effect = ActionPointLimit
+                    method('module/campaign/os_run.py', 'OSCampaignRun', 'opsi_' + name)(ui)
+                    ui.load_campaign.assert_called_once_with()
+                    ui.config.task_delay.assert_called_once_with(server_update=True)
+                    if name == 'meowfficer_farming':
+                        ui.config.task_call.assert_called_once_with('Reward')
+                    else:
+                        ui.config.task_call.assert_not_called()
+
+    def test_meow_farming_preserves_ap_and_stops_after_one_zone(self):
+        ui = Mock()
+        ui.is_cl1_enabled = False
+        ui.is_in_opsi_explore.return_value = False
+        ui.get_action_point_limit.return_value = 1000
+        ui.config.OpsiMeowfficerFarming_ActionPointPreserve = 300
+        ui.config.OpsiMeowfficerFarming_TargetZone = 22
+        ui.config.OpsiGeneral_BuyActionPointLimit = 0
+        ui.config.OpsiFleet_Fleet = 1
+        ui.config.OpsiFleet_Submarine = False
+        ui.config.is_task_enabled.return_value = False
+        ui.config.check_task_switch.side_effect = TaskStopped
+        run = method('module/os/tasks/meowfficer_farming.py', 'OpsiMeowfficerFarming',
+                     'os_meowfficer_farming')
+        with self.assertRaises(TaskStopped):
+            run(ui)
+        self.assertEqual(ui.config.OS_ACTION_POINT_PRESERVE, 300)
+        ui.action_point_set.assert_called_once_with(cost=0, keep_current_ap=True, check_rest_ap=True)
+        ui.run_auto_search.assert_called_once_with()
+        ui.os_order_execute.assert_called_once_with(recon_scan=False, submarine_call=False)
+        ui.config.override.assert_not_called()
+
+    def test_hazard_leveling_stops_before_combat_at_currency_floor(self):
+        ui = Mock()
+        ui.config.is_task_enabled.return_value = False
+        ui.config.multi_set.side_effect = nullcontext
+        ui.config.task_stop.side_effect = TaskStopped
+        ui.get_yellow_coins.return_value = 99
+        ui.yellow_coins_preserve = 100
+        ui.is_in_opsi_explore.return_value = True
+        run = method('module/os/tasks/hazard_leveling.py', 'OpsiHazard1Leveling', 'os_hazard1_leveling')
+        with self.assertRaises(TaskStopped):
+            run(ui)
+        self.assertEqual(ui.config.OS_ACTION_POINT_PRESERVE, 200)
+        ui.action_point_set.assert_not_called()
+        ui.run_strategic_search.assert_not_called()
+        ui.config.task_delay.assert_called_once_with(server_update=True)
+
+    def test_hazard_leveling_honors_scheduler_stop_after_one_zone(self):
+        ui = Mock()
+        ui.config.is_task_enabled.return_value = False
+        ui.get_yellow_coins.return_value = 101
+        ui.yellow_coins_preserve = 100
+        ui.config.OpsiGeneral_BuyActionPointLimit = 0
+        ui.config.OpsiHazard1Leveling_TargetZone = 22
+        ui.config.OpsiFleet_Fleet = 1
+        ui._action_point_total = 100
+        ui.zone.zone_id = 22
+        ui.is_zone_name_hidden = True
+        ui.config.check_task_switch.side_effect = TaskStopped
+        run = method('module/os/tasks/hazard_leveling.py', 'OpsiHazard1Leveling', 'os_hazard1_leveling')
+        with self.assertRaises(TaskStopped):
+            run(ui)
+        ui.action_point_set.assert_called_once_with(cost=70, keep_current_ap=True, check_rest_ap=True)
+        ui.run_strategic_search.assert_called_once_with()
+        ui.fleet_set.assert_called_once_with(1)
+
 
 if __name__ == '__main__':
     unittest.main()

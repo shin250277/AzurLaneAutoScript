@@ -35,11 +35,17 @@ if __name__ == '__main__':
     if not paths:
         raise SystemExit('No saved recipe audit frames')
     failures = []
+    identified = set()
     for path in paths:
         try:
-            print(path.name, replay(path), flush=True)
+            result = replay(path)
+            identified.update(result)
+            print(path.name, result, flush=True)
         except Exception as exc:
             failures.append(path.name)
             print(path.name, type(exc).__name__, str(exc), flush=True)
     print('REPLAY frames=%s failed=%s' % (len(paths), failures), flush=True)
+    winter = set(range(9900025, 9900033))
+    print('WINTER recipe_ids=%s missing=%s (screen identity, not production completion)' %
+          (sorted(identified & winter), sorted(winter - identified)), flush=True)
     sys.exit(bool(failures))

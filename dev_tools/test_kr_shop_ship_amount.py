@@ -14,6 +14,7 @@ class ShipAmountTest(unittest.TestCase):
             item.name, item.amount, item.is_ship = 'ShipSSR', 21, True
             grid = EventShopItemGrid.__new__(EventShopItemGrid)
             grid.items, grid.kr_names = [item], None
+            grid.kr_currency = None
             grid.amount_ocr = Mock()
             grid.amount_ocr.ocr.return_value = result
             with patch.object(server, 'server', 'kr'), patch.object(ItemGrid, 'predict'):
@@ -29,6 +30,7 @@ class ShipAmountTest(unittest.TestCase):
             item.name, item.amount, item.is_ship = name, 1000, is_ship
             grid = EventShopItemGrid.__new__(EventShopItemGrid)
             grid.items, grid.kr_names = [item], None
+            grid.kr_currency = None
             grid.amount_ocr = Mock()
             with patch.object(server, 'server', region), patch.object(ItemGrid, 'predict'):
                 grid.predict(None, counter=False, save_unknown=False)

@@ -1,9 +1,10 @@
 import cv2
+from pathlib import Path
 
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property
 from module.base.timer import Timer
-from module.base.utils import color_mask, crop
+from module.base.utils import color_mask, crop, load_image
 from module.combat.assets import GET_SHIP, GET_ITEMS_1, GET_ITEMS_3
 from module.exception import RequestHumanTakeover
 from module.logger import logger
@@ -16,12 +17,52 @@ from module.shop_event.item import ITEM_SHAPE, EventShopItemGrid, DELTA_PRICE_BA
     PRICE_BACKGROUND_COLOR, PRICE_THRESHOLD
 from module.shop_event.ui import EventShopUI, EVENT_SHOP_SCROLL
 from module.ui_white.assets import BACK_ARROW_WHITE
+from module.shop_event.korean_currency import validated_point_items
 
 DETECT_AREA = (221, 194, 1049, 632)
 
 
 class ItemNotFoundError(Exception):
     pass
+
+
+def kr_sold_out_page(image, grid):
+    """An empty prediction is skippable only if every detected card says sold out."""
+    buttons = grid.buttons
+    if not buttons or len(buttons) > 10:
+        return False
+    # The same badge is rerasterized at fractional scroll positions. Smooth
+    # subpixel edges, while retaining the full checkmark + Korean text shape.
+    templates = [cv2.GaussianBlur(load_image(str(path)), (3, 3), 0)
+                 for path in Path('./assets/shop/event_kr_sold_out').glob('*.png')]
+    if not templates:
+        return False
+    confirmed_cards = 0
+    for button in buttons:
+        x, y, right, bottom = button.area
+        if x < DETECT_AREA[0] or right > DETECT_AREA[2] or y < DETECT_AREA[1] \
+                or y + 149 > DETECT_AREA[3]:
+            return False
+        # The final row may contain fewer than five products. Grid cells over
+        # background are not cards; require the actual dark price pill.
+        pill = crop(image, (x - 20, y + 125, x + 85, y + 142))
+        # Price digits occupy up to a third of this crop in observed cards.
+        if cv2.countNonZero(color_mask(pill, PRICE_BACKGROUND_COLOR, threshold=25)) < pill.shape[0] * pill.shape[1] * 0.5:
+            continue
+        card = cv2.GaussianBlur(crop(image, button.area), (3, 3), 0)
+        confirmed = False
+        for template in templates:
+            height, width = template.shape[:2]
+            _, score, _, position = cv2.minMaxLoc(cv2.matchTemplate(card, template, cv2.TM_CCOEFF_NORMED))
+            px, py = position
+            actual = card[py:py + height, px:px + width]
+            if score >= 0.97 and sum(cv2.mean(cv2.absdiff(actual, template))[:3]) / 3 <= 12:
+                confirmed = True
+                break
+        if not confirmed:
+            return False
+        confirmed_cards += 1
+    return confirmed_cards > 0
 
 
 def merge_scan_page(items, previous_last_row, new_items):
@@ -127,8 +168,13 @@ class EventShopClerk(EventShopUI):
         for _ in range(40):
             new_items = self.event_shop_get_items(scroll_pos=EVENT_SHOP_SCROLL.cal_position(main=self))
             if not new_items:
-                raise RequestHumanTakeover('Empty event shop scan page; refuse incomplete inventory')
-            items, previous_last_row = merge_scan_page(items, previous_last_row, new_items)
+                if self.config.SERVER != 'kr' or not kr_sold_out_page(
+                        self.device.image, self.event_shop_items.grids):
+                    raise RequestHumanTakeover('Empty event shop scan page; refuse incomplete inventory')
+                logger.info('KR event shop: every visible full card is sold out; continue to actual bottom')
+                previous_last_row = []
+            else:
+                items, previous_last_row = merge_scan_page(items, previous_last_row, new_items)
             if EVENT_SHOP_SCROLL.at_bottom(main=self):
                 logger.info('Event shop reach bottom')
                 break
@@ -145,6 +191,11 @@ class EventShopClerk(EventShopUI):
         items = self.event_shop_get_items()
         items = [item for item in items if item.name == item_to_buy.name
                  and item.count == item_to_buy.count and item.price == item_to_buy.price]
+        if self.config.SERVER == 'kr':
+            token = getattr(item_to_buy, 'kr_currency_token', None)
+            items = [item for item in items
+                     if item.amount == item_to_buy.amount and item.cost == item_to_buy.cost
+                     and validated_point_items([item], token)]
         if len(items) == 0:
             logger.error(f'Item {item_to_buy} not found at scroll position {scroll_pos}')
             logger.warning(f'Will try to rerun the task.')
@@ -162,6 +213,9 @@ class EventShopClerk(EventShopUI):
             self.event_shop_buy_item_execute(item, amount=amount)
 
     def event_shop_buy_item_execute(self, item, amount):
+        if self.config.SERVER == 'kr' and not validated_point_items(
+                [item], getattr(item, 'kr_currency_token', None)):
+            raise RequestHumanTakeover('Unverified KR event-shop currency; no purchase input')
         self.event_shop_handle_obstruct()
         executed = False
         amount_handled = False

@@ -56,6 +56,32 @@ class SeasonUpdateTest(unittest.TestCase):
             self.assertEqual(row['servers'], ['kr'])
             self.assertTrue(any(goods in shop['goods'] for shop in DIC_ISLAND_SHOP.values()))
 
+    def test_all_eight_winter_recipes_keep_source_costs_and_facility_links(self):
+        from module.island.data import DIC_ISLAND_RECIPE, DIC_ISLAND_SLOT
+        # Public KR island_formula/island_production_slot at pinned 0e0717b8.
+        # These are data contracts, not eight completed production cycles.
+        rows = [
+            (9900025, 4047, 501, {4048: 4}, 8, 5, 90000),
+            (9900026, 4049, 501, {4050: 4}, 12, 9, 30000),
+            (9900027, 4051, 601, {4045: 2, 2602: 1}, 1, 12, 24000),
+            (9900028, 4052, 601, {4049: 2, 2002: 5}, 1, 12, 9000),
+            (9900029, 4053, 603, {4046: 2}, 1, 12, 12000),
+            (9900030, 4054, 603, {4047: 2, 3004: 3}, 1, 12, 12000),
+            (9900031, 4055, 706, {4043: 3}, 1, 6, 48000),
+            (9900032, 4056, 706, {4043: 1, 4044: 4}, 1, 12, 6000),
+        ]
+        for code, item, place, cost, count, limit, workload in rows:
+            with self.subTest(recipe=code):
+                recipe = DIC_ISLAND_RECIPE[code]
+                self.assertEqual(recipe['commission_cost'], cost)
+                self.assertEqual(recipe['commission_product'], {item: count})
+                self.assertEqual(recipe['production_limit'], limit)
+                self.assertEqual(recipe['workload'], workload)
+                self.assertTrue(recipe['name']['kr'])
+                linked = [slot for slot in DIC_ISLAND_SLOT.values() if code in slot['activity_formula']]
+                self.assertTrue(linked)
+                self.assertEqual({slot['place'] for slot in linked}, {place})
+
 
 if __name__ == '__main__':
     unittest.main()

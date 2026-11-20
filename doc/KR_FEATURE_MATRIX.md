@@ -1,16 +1,18 @@
 # KR ALAS 전체 기능 확인표
 
-기준: 2026-10-22. `menu.json`과 `task.yaml`의 합집합 **75개** 메뉴 항목을 `alas.py` 실행 진입점과 대조한다. 설정 화면과 진단 도구도 빠뜨리지 않되 게임 실기 통과 수에 섞지 않는다. 개별 테스트 514개 통과는 이 표의 실기 완료율이 아니다.
+기준: 2026-11-20. `menu.json`과 `task.yaml`의 합집합 **75개** 메뉴 항목을 `alas.py` 실행 진입점과 대조한다. 설정 화면과 진단 도구도 빠뜨리지 않되 게임 실기 통과 수에 섞지 않는다. 개별 회귀 검사 수는 이 표의 실기 완료율이 아니다.
 
-현재 전수 **목록화**만 완료했으며 전수 **실기 검증**은 미완료다. ‘실기’도 기재된 해역·옵션·날짜 범위만 뜻한다. 공통 실행 엔진을 쓰는 복제 슬롯이나 이벤트 미개방은 통과로 자동 승격하지 않는다.
+75개 메뉴의 목록·진입점 대조는 완료했다. 목적은 기존 ALAS의 한국 서버 호환이며, 모든 재료를 소비하거나 모든 생산 시간을 기다리는 것이 완료 기준은 아니다. **공통 처리 경로 확인 + 한국 화면 재생 + 대표 실기**와 개별 옵션 실기 이력을 구분한다. 아래 ‘조건부족/미확인’은 그 자체로 기능 결함 판정이 아니다. 반대로 알려진 실행 차단·인식 실패를 장기 검증만 남은 것처럼 표시하지 않는다.
+
+최신 보완·현재 제한은 [11/20 호환성 마감 기록](KR_COMPATIBILITY_2026-11-20.md), 실제 사용 순서는 [사용 인계](KR_READY_TO_USE.md)를 우선한다.
 
 근거: [11/9 수정·실기 기록](KR_VALIDATION_2026-11-09.md), [11/8 재개 기록](KR_VALIDATION_2026-11-08.md), [11/6 재개 기록](KR_VALIDATION_2026-11-06.md), [10/21 기록](KR_VALIDATION_2026-10-21.md), [10/22 기록](KR_VALIDATION_2026-10-22.md), [10/2 기록](KR_VALIDATION_2026-10-02.md). 과거 문서의 범위를 현재 완료로 확대하지 않는다. 원시 계정 로그·설정·화면은 첨부하지 않는다.
 
 ## 전체 메뉴와 세부 설정 그룹
 
-### 한국 신규 섬 시즌 일정 — 2026-11-09 갱신
+### 한국 신규 섬 시즌 — 2026-11-20 갱신
 
-사용자 확인 일정은 **2026-11-19 점검 후**다. 해외11/5 개방을 KR에 적용하지 않는다. 신규 시즌 실기는 개방 조건 대기이며 현재 일반 생산의 구현/검증 미완료와 구분한다. 날짜 도달만으로 신규 시즌을 자동 활성화하지 않는다. 기존 데이터의11/19 12:00은 점검 종료 확인값이 아니므로 신규 시작 시각으로 재사용하지 않는다. 개방 후 실제 시즌/품목/과제 및 보호 재고를 확인해야 자동 연계를 검증할 수 있다.
+11/19 점검 후 개방된 한국 겨울 시즌5의 30과제·14품목·8생산식·15주문·4활동 데이터를 반영했다. 11/20 실제 과제 전체 판독·목표 동기화·일반 생산 배정/수령을 확인했다. 시즌 개방 대기는 끝났으며, 개별 장시간 생산 주기를 모두 기다리지 않고 한국 제목/아이콘과 공통 생산 흐름을 검사한다. 보호량을 침범하는 시즌 제출은 실행하지 않는다.
 
 | ID | 분류 | 설정 그룹(별도 확인 범위) | 판정 | 확인한 범위 / 다음 확인 |
 |---|---|---|---|---|
@@ -27,7 +29,7 @@
 | `Raid` | Event | Scheduler, Raid, Campaign, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Hospital` | Event | Scheduler, Hospital, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Coalition` | Event | Scheduler, Campaign, Coalition, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
-| `EventShop` | Event | Scheduler, EventShop | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
+| `EventShop` | Event | Scheduler, EventShop | 제한된 통화 경로·오프라인 | 11/20 KR 일괄 구매 차단을 관찰된 일반 통화의 헤더+전 품목 일치 조건으로 대체. 현재 기타 통화6페이지 판독/재고 검사 통과. 다이아/미확인/UR 혼합 통화 거부. 품절 목록 종료 실기 통과, 구매 실행은 하지 않음 |
 | `WarArchives` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 10/21 T1 1회 보스/보상/자동 비활성 |
 | `EventA` | EventDaily | Scheduler, EventDaily, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `EventB` | EventDaily | Scheduler, EventDaily, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
@@ -43,7 +45,7 @@
 | `Meowfficer` | Reward | Scheduler, Meowfficer, MeowfficerTrain | 부분 실기·육성 대상 필요 | 11/6 기존 구매계획 1회 처리/bought=1/15/추가계획0/작업 종료. 훈련 비활성 유지; 훈련·강화 대상 미확정 |
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
-| `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 11/6 대상 없음/필터 복원/정상 종료 재확인. 실제 재료 사용 각성 미검증 |
+| `Awaken` | Reward | Scheduler, Awaken | 조건부족 | 11/20 10:27 대상 없음→즐겨찾기/도크 필터 복원→정상 종료 재확인. 실제 재료 사용 팝업은 미검증이며JP 대체 이미지 일부가 남음 |
 | `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 11/8 잘린 KR 버튼의 이중 크롭/목록 오탐 수정 후 빠른 완료·보상·23:42 정상 종료. 미해금 유형 및 수동전투 미검증 |
 | `Hard` | DailyMission | Scheduler, Hard | 실기 | 11/8 11-4 3회 잔여0/23:48 정상종료 재확인 |
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
@@ -66,21 +68,21 @@
 | `OpsiArchive` | Opsi | Scheduler, OpsiFleet | 실기 | 10/21 장치7회 구매→연속임무→보상→구매재고없음→정상종료 |
 | `OpsiStronghold` | Opsi | Scheduler, OpsiStronghold, OpsiFleetFilter | 조건부족 | 기존 전투력 부족 실패. 같은 조건 무리 재시도 금지 |
 | `OpsiMonthBoss` | Opsi | Scheduler, OpsiMonthBoss, OpsiFleetFilter | 조건부족 | 적응도 보호 유지. 강제 실행 금지; 현재 수치 읽기 확인 가능 |
-| `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 미확인 | 현재 AP/좌표/연료 상한과 종료 조건 확인 후 제한된 실기 필요 |
-| `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 미확인 | 현재 함대/체력/종료 조건 확인 후 제한된 실기 필요 |
+| `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 공통 경로·오프라인 | AP 보존/구매한도0/잠수함false/한 해역 후 스케줄러 중단 및 AP 부족 시 재출격 없는 지연 검사 통과. 전용 반복 실기는 별도 |
+| `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 공통 경로·오프라인 | 코인 하한 도달 시 전투 전 종료, 한 해역 후 중단, AP 부족 지연 검사 통과. 원본 동작에 일반 AP 구매필터 및 지휘냥 파밍 연계가 있으므로 무소비 도구가 아님 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
-| `IslandProduction` | Island | Scheduler, IslandProduction | 부분 실기·수정 재검증 | 11/9 농장·목장·양식장·광산·벌목·과수원·원예·전자공방·식당601 감사/관리 복귀 확인(모든 렌더링 변형 통과 아님). 달걀/목장/샐러드/필터 실제 수령 및19:16 즉시 시각 삭제 저장 통과.19:29 카페12배치/필터1배치 신규 시작 즉시 저장·정상 종료,19:50 양모 시작 저장 통과. 다음 카페21:29/필터23:29/양모11/10 00:50 수령은 시간 대기.20:37 양식장 재료 검사 참치 지속 미인식 안전 중단/임시false.20:44 세 명암 전원 일치 보완 관련16개 및 실제 OCR 재생 통과, 동일 실기 미확인. 식당·공방8시설의 렌더링 미확인은 남은 목록 참조. 보호 재고·식당 예약분 유지, 구매 없음 |
+| `IslandProduction` | Island | Scheduler, IslandProduction | 대표 실기·화면 재생 | 11/20 전체 빈 시설 감사 후 쌀/감귤/찻잎/아이스커피 배정 및15:12 정상 종료. 물밤 케이크 시작→수령→보유1 확인. 과거 이름/행 전환 실패 보완, 저장 화면33개 전체 재생 통과. 점유 시설·모든 생산식별 전체 주기는 실기 범위와 구분. 보호/식당 예약분 유지 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |
-| `IslandSeasonTask` | Island | Scheduler, IslandSeasonTask | 현재 시즌 목표 연계 실기 | 11/9 08:14 전체 목록 두 스캔의 미완료11과제/8품목 일치→TaskTarget 반영→정상 종료/메인 복귀 통과, 임시false 복원. 이름 누락·행 건너뛰기·스크롤 횟수 오판정 수정. 보호 재고·식당 export/구매/교환 없음. 보상수령 및11/19 점검 후 신규 시즌은 별도 미검증 |
+| `IslandSeasonTask` | Island | Scheduler, IslandSeasonTask | 겨울 시즌 목표 연계 실기 | 11/20 신규30과제 전체 판독2회 일치→16품목 목표 동기화/정상 종료.15:13 재확인 완료. 보호 재고/식당 예약분을 유지하는 일괄 제출 로직 검사 통과. 현재 허용되는 수령 과제가 없어 실제 제출·보상은 미실행 |
 | `IslandBusiness` | Island | Scheduler, IslandRestaurant | 실기 | 10/21 기존 메뉴/등급/보유음식으로 5곳 운영. 10/2 정산/휴가/메인복귀 |
 | `Daemon` | Tool | Daemon | 미확인 | 사용자 수동 플레이 보조. 전투/보상 핸들러 단위 검증과 별도 |
 | `OpsiDaemon` | Tool | OpsiDaemon | 미확인 | 대형작전 수동 플레이 보조. 일반 자동 작업과 별도 |
 | `EventStory` | Tool | EventStory | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `IslandProductionPlanner` | Tool | IslandProductionPlanner | 읽기 전용 계산 통과 | 11/9 19:24 계산 성공(생산64/구매24/교환1 제안). 실제 export/구매/교환 없음. 모의 export 필드 범위·직렬화 실패·식당 메뉴 누락 시 무변경 통과. 실제 설정 적용은 별도 승인/검증 |
 | `IslandProductionTrial` | Tool | 독립 도구 | 한정도구 | 과거 감자1회 전용 영수증 보호. 재승인 없이 영수증 초기화/반복 금지 |
-| `EventShopScan` | Tool | 독립 도구 | 스캔 종료 실기·일부 미인식 | 11/9 19:53~54 8페이지/31품목/바닥 도달·정상 종료. 신규3품목/PlateUnknown은 미인식, 구매 없음. 전체 상품 판독/구매 통과와 구분 |
+| `EventShopScan` | Tool | 독립 도구 | 스캔 종료 실기·일부 미인식 | 11/20 16:46:53 품절 행/마지막 부분 행 보완 후24품목·바닥 도달·Finish. 구매 없음. PRSeriesUnknown/PlateUnknown 등은 구매 필터 밖이며 전체 상품 판독/구매 통과와 구분 |
 | `IslandInspect` | Tool | 독립 도구 | 읽기 진단·복귀 실기 | 11/9 19:54~55 주문 요구/현재 시즌 끝까지 고유29과제 읽기·메인 복귀 통과. 일부 수령 완료 제목 미인식은 남음. 주문 제출/보상 수령/목표 변경 없음 |
 | `IslandOrderTrial` | Tool | 독립 도구 | 한정도구 | 철광석1회 전용. 일반주문 대체 아님; 원본task.yaml 누락 수정 |
 | `RaidInspect` | Tool | 독립 도구 | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
