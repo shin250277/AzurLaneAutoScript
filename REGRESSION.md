@@ -45,3 +45,9 @@ Also run `toolkit/python.exe -B -m dev_tools.kr_asset_inventory`,
 All green is regression evidence for this change, not proof of all live game
 conditions. Feature evidence and limitations are in `doc/KR_FEATURE_MATRIX.md`
 and `doc/KR_COMPATIBILITY_2026-11-20.md`.
+
+Closeout:879 checks passed in394.844s. The last overlapping full run had one
+failure from temporary plate-name candidates read before their removal; those
+nine candidate files were not committed. Post-removal31 checks (including the
+exact failed test) and9 currency/plate checks passed. Do not label the last full
+invocation itself green; see the dated report for timings and live evidence.
