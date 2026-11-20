@@ -1133,6 +1133,13 @@ class IslandRecipe(IslandExchange, IslandShop):
         self.working_slot_id = slot_id
         del_cached_property(self, 'recipe_grid')
         del_cached_property(self, 'recipe_ids')
+        if server.server == 'kr':
+            # The ingredient probe can leave a selected-card animation behind.
+            # Rebuilding the grid from that first frame may turn a single ranch
+            # recipe into three decorative anchors. Settle fresh observations
+            # before any identity lookup or purchase/start; never reuse an ID
+            # from the earlier audit to authorize the new screen.
+            self.settle_korean_recipe_grid()
         while self.recipe_id_sequence:
             recipe_id, info, mode = self.recipe_id_sequence[0]
             production_limit = DIC_ISLAND_RECIPE[recipe_id]['production_limit']
