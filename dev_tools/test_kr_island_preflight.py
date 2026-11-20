@@ -51,7 +51,7 @@ class PreflightTest(unittest.TestCase):
                              island_season_bottom_navbar_ensure=Mock(),
                              sync_korean_season=Mock(), receive_all_reward=Mock())
         run(ui)
-        ui.sync_korean_season.assert_called_once_with()
+        ui.sync_korean_season.assert_called_once_with(claim=True)
         ui.receive_all_reward.assert_not_called()
         ui.config.cross_set.assert_not_called()
 

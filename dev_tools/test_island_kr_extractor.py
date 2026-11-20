@@ -15,7 +15,7 @@ class IslandKrExtractorTest(unittest.TestCase):
             run = method('module/island/{}.py'.format(file), cls, 'run',
                          page_island_order='order', page_island_season='season')
             run(ui)
-            ui.sync_korean_season.assert_called_once_with()
+            ui.sync_korean_season.assert_called_once_with(claim=True)
             ui.ui_ensure.assert_not_called()
             ui.receive_all_reward.assert_not_called()
             ui.config.cross_set.assert_not_called()

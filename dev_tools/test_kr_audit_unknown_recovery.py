@@ -18,6 +18,7 @@ class AuditUnknownRecoveryTest(unittest.TestCase):
                      page_island_manage=SimpleNamespace(check_button='manage'),
                      del_cached_property=Mock())
         ui = Mock()
+        ui.kr_deferred_slots = set()
         ui.slot_grids = {101: Mock(buttons=['a']), 201: Mock(buttons=['b'])}
         ui.is_slot_empty.return_value = True
         ui.is_in_recipe_menu.return_value = True

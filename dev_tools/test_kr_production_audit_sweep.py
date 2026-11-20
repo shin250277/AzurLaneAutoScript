@@ -8,7 +8,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
         run = method('module/island/production.py', 'IslandProduction', 'audit_korean_recipes',
                      DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1]}, 201: {'slot': [2]}},
                      DIC_ISLAND_SLOT={i: {'formula': [i], 'activity_formula': []} for i in (1, 2)})
-        ui = Mock()
+        ui = Mock(kr_deferred_slots=set())
         ui.slot_grids = {101: Mock(buttons=['a']), 201: Mock(buttons=['b'])}
         ui.is_slot_empty.return_value = True
         ui.next_page.return_value = False
@@ -24,7 +24,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
         run = method('module/island/production.py', 'IslandProduction', 'audit_korean_recipes',
                      DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1]}},
                      DIC_ISLAND_SLOT={1: {'formula': [1], 'activity_formula': []}})
-        ui = Mock()
+        ui = Mock(kr_deferred_slots=set())
         ui.slot_grids = {101: Mock(buttons=['a'])}
         ui.is_slot_empty.return_value = False
         ui.next_page.return_value = False
@@ -38,7 +38,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
                          1: {'formula': [11], 'activity_formula': []},
                          2: {'formula': [12], 'activity_formula': []},
                          3: {'formula': [12], 'activity_formula': []}})
-        ui = Mock()
+        ui = Mock(kr_deferred_slots=set())
         ui.slot_grids = {102: Mock(buttons=['a', 'b', 'c'])}
         ui.is_slot_empty.side_effect = lambda button: button != 'b'
         ui.next_page.return_value = False
@@ -51,7 +51,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
         run = method('module/island/production.py', 'IslandProduction', 'audit_korean_recipes',
                      DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1]}},
                      DIC_ISLAND_SLOT={1: {'formula': [1], 'activity_formula': []}})
-        ui = Mock()
+        ui = Mock(kr_deferred_slots=set())
         ui.kr_verified_recipe_slots = {999}
         ui.slot_grids = {101: Mock(buttons=['a'])}
         ui.is_slot_empty.return_value = False
@@ -64,7 +64,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
                      DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1, 2]}},
                      has_cached_property=lambda *args: False,
                      del_cached_property=Mock(), super=lambda: object())
-        ui = Mock()
+        ui = Mock(kr_deferred_slots=set())
         ui.config.SERVER = 'kr'
         ui.slot_grids = {101: Mock(buttons=['a', 'b'])}
         ui.kr_verified_recipe_slots = {2}

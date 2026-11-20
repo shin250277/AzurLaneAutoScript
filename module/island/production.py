@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from module.base.button import Button, ButtonGrid
 from module.base.decorator import cached_property, del_cached_property, has_cached_property
@@ -250,6 +250,13 @@ class IslandProduction(IslandRecipe, IslandDock):
                         self.config.cross_set('IslandProduction.Storage.Storage.SlotFinishTime',
                                               {k: v.isoformat(sep=' ') for k, v in self.slot_finish_time.items()})
                         continue
+                    if (self.config.SERVER == 'kr' and not self.is_slot_finished(slot_button)
+                            and self.defer_korean_occupied_slot(slot_button)):
+                        # A saved estimate can predate manual/new-season work.
+                        # Keep it as evidence, but do not claim or replace this slot.
+                        self.kr_deferred_slots = getattr(self, 'kr_deferred_slots', set()) | {slot_id}
+                        logger.warning('Defer occupied KR slot with stale estimate, no input: %s' % slot_id)
+                        continue
                     claimed = self.claim_slot_reward(slot_button)
                     if self.config.SERVER == 'kr' and claimed is not True:
                         # A due estimate is not proof that the reward was received.
@@ -263,6 +270,14 @@ class IslandProduction(IslandRecipe, IslandDock):
                             # Persist only a confirmed claim, preserving other slots.
                             self.config.cross_set('IslandProduction.Storage.Storage.SlotFinishTime',
                                                   {k: v.isoformat(sep=' ') for k, v in self.slot_finish_time.items()})
+
+    def defer_korean_occupied_slot(self, slot_button):
+        for _ in range(3):
+            self.device.screenshot()
+            if (not self.ui_page_appear(page_island_manage) or self.is_enter_window_shown()
+                    or self.is_slot_empty(slot_button) or self.is_slot_finished(slot_button)):
+                return False
+        return True
 
     def claim_all_rewards(self):
         logger.hr("Claim Production Rewards", level=2)
@@ -414,6 +429,8 @@ class IslandProduction(IslandRecipe, IslandDock):
         slot_grid = self.slot_grids[place_id]
         is_first = True
         for slot_id, slot_button in zip(DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], slot_grid.buttons):
+            if self.config.SERVER == 'kr' and slot_id in getattr(self, 'kr_deferred_slots', set()):
+                continue
             if (self.config.SERVER == 'kr'
                     and slot_id not in getattr(self, 'kr_verified_recipe_slots', set())):
                 logger.warning('Skip unverified KR recipe group slot: %s' % slot_id)
@@ -452,6 +469,8 @@ class IslandProduction(IslandRecipe, IslandDock):
                             continue
                         inspected.add(key)
                         for slot_id, button in slots:
+                            if slot_id in getattr(self, 'kr_deferred_slots', set()):
+                                continue
                             if self.is_slot_empty(button):
                                 try:
                                     self.dispatch_slot(slot_id, button, audit_only=True)
@@ -539,6 +558,7 @@ class IslandProduction(IslandRecipe, IslandDock):
                 break
 
     def run(self):
+        self.kr_deferred_slots = set()
         if self.config.SERVER == 'kr':
             from module.island_handler.kr_coin_material import recover_preview
             from module.ui.page import page_island_shop
@@ -564,6 +584,11 @@ class IslandProduction(IslandRecipe, IslandDock):
             raise RequestHumanTakeover('No daily buffer items found in config, please run Island Production Planner first')
         self.dispatch_all()
         next_run_time = list(self.slot_finish_time.values())
+        if self.config.SERVER == 'kr':
+            # Retain historical estimates without scheduling an immediate loop.
+            now = datetime.now()
+            next_run_time = [stamp if stamp > now else now + timedelta(minutes=30)
+                             for stamp in next_run_time]
         with self.config.multi_set():
             sorted_items = sorted(self.slot_finish_time.items(), key=lambda kv: (kv[1], kv[0]))
             slot_finish_time = {k: v.isoformat(sep=' ') for k, v in sorted_items}

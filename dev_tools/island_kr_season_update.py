@@ -37,6 +37,7 @@ def update(tables, season_id, season, tasks, targets):
         if row['target_id'] != target_id or row['target'] != reservation:
             raise ValueError('Existing shared task mechanics differ')
         row['name']['kr'] = name
+        row['target_num'] = target['target_num']
         merge_time(row, raw['unlock_time'])
     row = result['DIC_ISLAND_SEASON'].setdefault(season_id, {
         'start_time': {}, 'end_time': {}, 'task_list': ids, 'activity': [],

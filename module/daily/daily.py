@@ -33,6 +33,9 @@ KR_DAILY_INFO_CONFIRM = Button(
     button=(552, 496, 728, 555),
     name='KR_DAILY_INFO_CONFIRM',
 )
+KR_DAILY_DISMISS = Button(
+    area=(180, 620, 260, 660), color=(0, 0, 0),
+    button=(180, 620, 260, 660), name='KR_DAILY_DISMISS')
 
 DAILY_MISSION_LIST = [DAILY_MISSION_1, DAILY_MISSION_2, DAILY_MISSION_3]
 if server.server != 'jp':
@@ -248,6 +251,24 @@ class Daily(Combat):
         self.device.sleep((1, 1.2))
         return True
 
+    def close_korean_daily_selector(self):
+        """Dismiss outside the modal, then verify the actual daily carousel.
+
+        The blurred back arrow behind the selector is not a close control.
+        Never submit another quick battle while acknowledging one reward.
+        """
+        for _ in self.loop(timeout=8, skip_first=False):
+            if self.match_template_color(DAILY_CHECK, offset=(30, 30), threshold=15):
+                return True
+            if self.match_template_color(KR_DAILY_SKIP, offset=(20, 20)):
+                self.device.click(KR_DAILY_DISMISS)
+                continue
+            if self.appear(DAILY_ENTER_CHECK, threshold=30, interval=2):
+                self.device.click(BACK_ARROW)
+                continue
+            self.handle_get_items()
+        raise RequestHumanTakeover('KR daily reward received but return unconfirmed; no repeat battle')
+
     def daily_enter(self, button, skip_first_screenshot=True):
         """
         Args:
@@ -292,14 +313,14 @@ class Daily(Combat):
                     threshold=20, count=700):
                 self.device.click(KR_DAILY_INFO_CONFIRM)
                 continue
-            if self.config.Daily_UseDailySkip:
+            if self.config.Daily_UseDailySkip and (not reward_received or self.config.SERVER != 'kr'):
                 if self.config.SERVER == 'kr':
                     if self.match_template_color(KR_DAILY_SKIP, offset=(20, 20), interval=5):
                         self.device.click(KR_DAILY_SKIP)
                         continue
                 elif self.appear_then_click(DAILY_SKIP, offset=(20, 20), interval=5):
                     continue
-            else:
+            elif not self.config.Daily_UseDailySkip:
                 if self.config.SERVER == 'kr':
                     if self.match_template_color(KR_DAILY_NORMAL_RUN, offset=(20, 20), interval=5):
                         self.device.click(KR_DAILY_NORMAL_RUN)
@@ -323,8 +344,7 @@ class Daily(Combat):
                     # Close it before the caller tries to leave the daily
                     # detail page; the blurred BACK_ARROW cannot be matched.
                     if self.config.SERVER == 'kr':
-                        self.device.click(BACK_ARROW)
-                        self._kr_daily_skip_returned = True
+                        self._kr_daily_skip_returned = self.close_korean_daily_selector()
                     return False
                 if self.info_bar_count():
                     return False

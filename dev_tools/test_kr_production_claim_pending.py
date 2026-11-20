@@ -17,7 +17,35 @@ class PendingClaimTest(unittest.TestCase):
             slot_finish_time={slot: stamp},
             is_slot_finished=Mock(return_value=finished),
             confirm_korean_empty_slot=Mock(return_value=False),
+            defer_korean_occupied_slot=Mock(return_value=False),
             claim_slot_reward=Mock(return_value=result))
+
+    def test_stale_occupied_slot_defers_without_claim_or_erasing_estimate(self):
+        slot, ui = self.ui(result=False)
+        stamp = ui.slot_finish_time[slot]
+        ui.defer_korean_occupied_slot.return_value = True
+        IslandProduction.claim_reward_in_page(ui)
+        self.assertEqual(ui.slot_finish_time[slot], stamp)
+        self.assertEqual(ui.kr_deferred_slots, {slot})
+        ui.claim_slot_reward.assert_not_called()
+        ui.config.cross_set.assert_not_called()
+
+    def test_occupied_confirmation_needs_three_stable_manage_frames(self):
+        from dev_tools.test_os_task_stop_boundaries import method
+        run = method('module/island/production.py', 'IslandProduction',
+                     'defer_korean_occupied_slot', page_island_manage=SimpleNamespace())
+        for page, empty, finished, expected in ((True, False, False, True),
+                                               (False, False, False, False),
+                                               (True, True, False, False),
+                                               (True, False, True, False)):
+            ui = SimpleNamespace(device=Mock(), ui_page_appear=Mock(return_value=page),
+                                 is_enter_window_shown=Mock(return_value=False),
+                                 is_slot_empty=Mock(return_value=empty),
+                                 is_slot_finished=Mock(return_value=finished))
+            self.assertEqual(run(ui, 'slot'), expected)
+            ui.device.click.assert_not_called()
+            if expected:
+                self.assertEqual(ui.device.screenshot.call_count, 3)
 
     def test_stale_due_empty_slot_reconciles_without_claiming(self):
         slot, ui = self.ui(result=False)

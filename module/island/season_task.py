@@ -244,7 +244,9 @@ class IslandSeasonTask(IslandUI):
                     logger.info('No rewards to receive')
                 break
 
-    def scan_all(self):
+    def scan_all(self, capture_progress=False):
+        if capture_progress:
+            self._kr_task_progress = {}
         ISLAND_SEASON_TASK_SCROLL.set_top(main=self, skip_first_screenshot=False)
         logger.hr('scanning season tasks')
         unfinished_tasks = []
@@ -258,9 +260,25 @@ class IslandSeasonTask(IslandUI):
                     or len(self.task_names) != len(self.season_task_grid.buttons)):
                 self.device.image_save('./log/kr_island_season_scan_invalid.png')
                 raise RequestHumanTakeover('Incomplete KR season scan; preserve production targets')
-            for task_id, button in zip(self.task_names, self.season_task_grid.buttons):
+            counters = None
+            if capture_progress:
+                counter_grid = self.season_task_grid.crop((285, 18, 365, 48))
+                counters = Ocr(counter_grid.buttons, lang='cnocr', letter=(102, 108, 112),
+                               threshold=128, alphabet='0123456789/').ocr(self.device.image)
+                if not isinstance(counters, list) or len(counters) != len(self.task_names):
+                    raise RequestHumanTakeover('Incomplete KR season counters; no submission')
+            for index, (task_id, button) in enumerate(zip(self.task_names, self.season_task_grid.buttons)):
                 image = self.image_crop(button.area, copy=True)
-                if TEMPLATE_ISLAND_SEASON_TASK_OBTAINED.match(image):
+                obtained = bool(TEMPLATE_ISLAND_SEASON_TASK_OBTAINED.match(image))
+                if capture_progress:
+                    if task_id is None:
+                        raise RequestHumanTakeover('Unknown KR task in claim audit; no submission')
+                    evidence = (counters[index], obtained)
+                    old = self._kr_task_progress.get(task_id)
+                    if old is not None and old != evidence:
+                        raise RequestHumanTakeover('KR task changed while scanning; no submission')
+                    self._kr_task_progress[task_id] = evidence
+                if obtained:
                     if self.config.SERVER == 'kr':
                         # Do not assume every later card is also obtained.
                         # Goal updates require reaching the actual list end.
@@ -301,7 +319,7 @@ class IslandSeasonTask(IslandUI):
         logger.info(f'Unfinished tasks: {unfinished_tasks}')
         return unfinished_tasks
 
-    def audit_korean_season(self, return_verified=False):
+    def audit_korean_season(self, return_verified=False, capture_progress=False):
         """Exercise navigation/OCR without claiming or changing the production plan."""
         active = current_season_task_ids() if return_verified else None
         if return_verified and not active:
@@ -310,7 +328,9 @@ class IslandSeasonTask(IslandUI):
         self.island_season_bottom_navbar_ensure(left=3)
         del_cached_property(self, 'season_task_grid')
         del_cached_property(self, 'task_names')
-        unfinished = self.scan_all()
+        unfinished = self.scan_all(capture_progress=True) if capture_progress else self.scan_all()
+        if capture_progress and set(self._kr_task_progress) != active:
+            raise RequestHumanTakeover('Incomplete KR claim task coverage; no submission')
         verified = None
         if return_verified:
             verified = verified_season_targets(unfinished, active, DIC_ISLAND_TASK, DIC_ISLAND_ITEM)
@@ -329,13 +349,25 @@ class IslandSeasonTask(IslandUI):
             return verified
         raise RequestHumanTakeover('KR season scan complete; production target update remains blocked pending validation')
 
-    def sync_korean_season(self):
+    def sync_korean_season(self, claim=False):
         """Update only verified goals, never export planner settings or buy items."""
         active = current_season_task_ids()
-        first = self.audit_korean_season(return_verified=True)
-        second = self.audit_korean_season(return_verified=True)
+        if claim:
+            from module.island.kr_season_claim import PENDING_KEY
+            if self.config.cross_get(PENDING_KEY, None):
+                raise RequestHumanTakeover('Unresolved KR season claim; do not automatically retry')
+            first = self.audit_korean_season(return_verified=True, capture_progress=True)
+            first_progress = dict(self._kr_task_progress)
+            second = self.audit_korean_season(return_verified=True, capture_progress=True)
+            if first_progress != self._kr_task_progress:
+                raise RequestHumanTakeover('KR claim counters disagree; no submission')
+        else:
+            first = self.audit_korean_season(return_verified=True)
+            second = self.audit_korean_season(return_verified=True)
         if not active or active != current_season_task_ids() or first != second:
             raise RequestHumanTakeover('KR season scans disagree; preserve production targets')
+        if claim and self.claim_korean_season_rewards():
+            return self.sync_korean_season(claim=False)
         yaml_text = self.config.cross_get('IslandSeasonTask.IslandSeasonTask.TaskTarget', '{}')
         old = normalize_item_keys(load_item_mapping(yaml_text, config_name='TaskTarget'))
         if second != old:
@@ -343,9 +375,44 @@ class IslandSeasonTask(IslandUI):
                                   item_mapping_to_yaml(second, use_item_name=True))
         self.config.task_delay(server_update=True)
 
+    def claim_korean_season_rewards(self):
+        from datetime import datetime
+        from module.island.kr_season_claim import claimable_tasks, PENDING_KEY
+        from module.island.utils import load_hard_floor_items
+        from module.island_handler.restaurant_config import get_menu_reserve_items
+        protected = normalize_item_keys(load_hard_floor_items(
+            self.config.cross_get('IslandProduction.IslandProduction.HardFloorItems', '{}')))
+        for item, amount in get_menu_reserve_items(self.config).items():
+            protected[item] = protected.get(item, 0) + amount
+        ready = claimable_tasks(self._kr_task_progress, DIC_ISLAND_TASK, protected)
+        if ready is None:
+            raise RequestHumanTakeover('Invalid KR claim quantities; no submission')
+        if not ready:
+            logger.info('KR season: no claim permitted by completion/stock protections')
+            return False
+        self.device.screenshot()
+        if not self.match_template_color(ISLAND_SEASON_TASK_RECEIVE_ALL, offset=(0, 0)):
+            raise RequestHumanTakeover('KR season claim control not verified; no submission')
+        self.config.cross_set(PENDING_KEY, {'tasks': ready, 'at': datetime.now().isoformat()})
+        self.config.update()
+        self.device.image_save('./log/kr_season_claim_before.png')
+        self.device.click(ISLAND_SEASON_TASK_RECEIVE_ALL)
+        # Exactly one submission. No click retry when acknowledgement is unclear.
+        for _ in self.loop(timeout=8, skip_first=False):
+            self.handle_island_additional()
+        self.audit_korean_season(return_verified=True, capture_progress=True)
+        after = dict(self._kr_task_progress)
+        self.audit_korean_season(return_verified=True, capture_progress=True)
+        if (after != self._kr_task_progress
+                or any(not after.get(task, (None, False))[1] for task in ready)):
+            raise RequestHumanTakeover('KR claim acknowledgement uncertain; automatic retry blocked')
+        self.config.cross_set(PENDING_KEY, None)
+        logger.info('KR season claims confirmed: %s' % ready)
+        return True
+
     def run(self):
         if self.config.SERVER == 'kr':
-            return self.sync_korean_season()
+            return self.sync_korean_season(claim=True)
         self.ui_ensure(page_island_season)
         self.island_season_bottom_navbar_ensure(left=3)
         self.receive_all_reward()
