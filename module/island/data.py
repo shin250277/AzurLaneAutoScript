@@ -2,6 +2,7 @@
 # Don't modify it manually.
 # KR pass: python -m dev_tools.island_kr_extractor SOURCE --revision SHA --write
 # KR source: https://github.com/AzurLaneTools/AzurLaneLuaScripts/tree/54f446354ab5f0da0dc0b9168c8f1aa7c0f0349f/KR
+# KR season 5 source: https://github.com/AzurLaneTools/AzurLaneLuaScripts/tree/0e0717b8ecb551b90bae1f47df3a01bace3bc58d/KR
 
 DIC_ISLAND_ITEM = {
     0: {'name': {'cn': '岛屿开发PT', 'en': 'Island Development Points', 'jp': '離島開発Pt', 'tw': '島嶼開發PT', 'kr': '섬 개발 PT'}, 'pt_num': 1, 'manage_influence': 0, 'order_price': 0},
@@ -223,6 +224,20 @@ DIC_ISLAND_ITEM = {
     5107: {'name': {'cn': '黄鳍金枪鱼', 'en': 'Yellowfin Tuna', 'jp': 'キハダ', 'tw': '黃鰭金槍魚', 'kr': '황다랑어'}, 'pt_num': 198, 'manage_influence': 0, 'order_price': 1320},
     5108: {'name': {'cn': '海参', 'en': 'Sea Cucumber', 'jp': 'ナマコ', 'tw': '海參', 'kr': '해삼'}, 'pt_num': 162, 'manage_influence': 0, 'order_price': 1080},
     9900: {'name': {'cn': '珍珠', 'en': 'Pearl', 'jp': '真珠', 'tw': '珍珠', 'kr': '진주'}, 'pt_num': 0, 'manage_influence': 0, 'order_price': 0},
+    4043: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '매화'}, 'pt_num': 72, 'manage_influence': 0, 'order_price': 1},
+    4044: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '수선화'}, 'pt_num': 1, 'manage_influence': 0, 'order_price': 1},
+    4045: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '겨울 표고버섯'}, 'pt_num': 36, 'manage_influence': 0, 'order_price': 1},
+    4046: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '물밤'}, 'pt_num': 25, 'manage_influence': 0, 'order_price': 1},
+    4047: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '설탕귤'}, 'pt_num': 8, 'manage_influence': 0, 'order_price': 1},
+    4048: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '설탕귤 씨앗'}, 'pt_num': 1, 'manage_influence': 0, 'order_price': 1},
+    4049: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '푸른 대추'}, 'pt_num': 2, 'manage_influence': 0, 'order_price': 1},
+    4050: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '푸른 대추 씨앗'}, 'pt_num': 1, 'manage_influence': 0, 'order_price': 1},
+    4051: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '겨울 표고버섯 닭고기 조림'}, 'pt_num': 80, 'manage_influence': 250, 'order_price': 800},
+    4052: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '푸른 대추죽'}, 'pt_num': 12, 'manage_influence': 250, 'order_price': 120},
+    4053: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '물밤 케이크'}, 'pt_num': 60, 'manage_influence': 250, 'order_price': 600},
+    4054: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '설탕귤 찹쌀떡'}, 'pt_num': 38, 'manage_influence': 250, 'order_price': 320},
+    4055: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '매화 향낭'}, 'pt_num': 270, 'manage_influence': 0, 'order_price': 1},
+    4056: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '겨울 꽃다발'}, 'pt_num': 156, 'manage_influence': 0, 'order_price': 1},
 }
 
 DIC_ISLAND_RECIPE = {
@@ -372,6 +387,14 @@ DIC_ISLAND_RECIPE = {
     9900022: {'name': {'cn': '番茄炒蛋', 'en': 'Tomato and Egg Stir-Fry', 'jp': 'トマトと卵の炒め', 'tw': '番茄炒蛋', 'kr': '토마토 달걀볶음'}, 'workload': 9000, 'commission_cost': {4033: 4, 2601: 8}, 'production_limit': 5, 'commission_product': {4040: 1}, 'second_product_display': {}},
     9900023: {'name': {'cn': '茉莉精油', 'en': 'Jasmine Essential Oil', 'jp': 'ジャスミン精油', 'tw': '茉莉精油', 'kr': '자스민 에센셜 오일'}, 'workload': 48000, 'commission_cost': {4029: 3}, 'production_limit': 5, 'commission_product': {4041: 1}, 'second_product_display': {}},
     9900024: {'name': {'cn': '夏季花束', 'en': 'Summery Bouquet', 'jp': '夏の花束', 'tw': '夏季花束', 'kr': '여름 꽃다발'}, 'workload': 6000, 'commission_cost': {4029: 2, 4030: 2}, 'production_limit': 5, 'commission_product': {4042: 1}, 'second_product_display': {}},
+    9900025: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '설탕귤'}, 'workload': 90000, 'commission_cost': {4048: 4}, 'production_limit': 5, 'commission_product': {4047: 8}, 'second_product_display': {}},
+    9900026: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '푸른 대추'}, 'workload': 30000, 'commission_cost': {4050: 4}, 'production_limit': 9, 'commission_product': {4049: 12}, 'second_product_display': {}},
+    9900027: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '겨울 표고버섯 닭고기 조림'}, 'workload': 24000, 'commission_cost': {4045: 2, 2602: 1}, 'production_limit': 12, 'commission_product': {4051: 1}, 'second_product_display': {}},
+    9900028: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '푸른 대추죽'}, 'workload': 9000, 'commission_cost': {4049: 2, 2002: 5}, 'production_limit': 12, 'commission_product': {4052: 1}, 'second_product_display': {}},
+    9900029: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '물밤 케이크'}, 'workload': 12000, 'commission_cost': {4046: 2}, 'production_limit': 12, 'commission_product': {4053: 1}, 'second_product_display': {}},
+    9900030: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '설탕귤 찹쌀떡'}, 'workload': 12000, 'commission_cost': {4047: 2, 3004: 3}, 'production_limit': 12, 'commission_product': {4054: 1}, 'second_product_display': {}},
+    9900031: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '매화 향낭'}, 'workload': 48000, 'commission_cost': {4043: 3}, 'production_limit': 6, 'commission_product': {4055: 1}, 'second_product_display': {}},
+    9900032: {'name': {'cn': '', 'en': '', 'jp': '', 'tw': '', 'kr': '겨울 꽃다발'}, 'workload': 6000, 'commission_cost': {4043: 1, 4044: 4}, 'production_limit': 12, 'commission_product': {4056: 1}, 'second_product_display': {}},
 }
 
 DIC_ISLAND_SLOT = {
@@ -393,18 +416,18 @@ DIC_ISLAND_SLOT = {
     9034: {'attribute': 3, 'place': 102, 'formula': [101018], 'activity_formula': []},
     9041: {'attribute': 4, 'place': 901, 'formula': [901001, 901002, 901003, 901004, 901005, 901006, 901101, 901102, 901103], 'activity_formula': []},
     9042: {'attribute': 4, 'place': 901, 'formula': [901001, 901002, 901003, 901004, 901005, 901006, 901101, 901102, 901103], 'activity_formula': []},
-    9061: {'attribute': 4, 'place': 601, 'formula': [601001, 601002, 601003, 601004, 601005, 601006, 601007, 601008, 601101, 601102], 'activity_formula': [9900003, 9900004]},
-    9062: {'attribute': 4, 'place': 601, 'formula': [601001, 601002, 601003, 601004, 601005, 601006, 601007, 601008, 601101, 601102], 'activity_formula': [9900003, 9900004]},
-    9071: {'attribute': 4, 'place': 602, 'formula': [602001, 602002, 602003, 602004, 602005, 602006, 602101, 602102, 602103], 'activity_formula': [9900007, 9900008]},
-    9072: {'attribute': 4, 'place': 602, 'formula': [602001, 602002, 602003, 602004, 602005, 602006, 602101, 602102, 602103], 'activity_formula': [9900007, 9900008]},
-    9081: {'attribute': 4, 'place': 603, 'formula': [603001, 603002, 603003, 603004, 603005, 603006, 603007, 603101, 603102, 603103], 'activity_formula': []},
-    9082: {'attribute': 4, 'place': 603, 'formula': [603001, 603002, 603003, 603004, 603005, 603006, 603007, 603101, 603102, 603103], 'activity_formula': []},
+    9061: {'attribute': 4, 'place': 601, 'formula': [601001, 601002, 601003, 601004, 601005, 601006, 601007, 601008, 601101, 601102], 'activity_formula': [9900027, 9900028]},
+    9062: {'attribute': 4, 'place': 601, 'formula': [601001, 601002, 601003, 601004, 601005, 601006, 601007, 601008, 601101, 601102], 'activity_formula': [9900027, 9900028]},
+    9071: {'attribute': 4, 'place': 602, 'formula': [602001, 602002, 602003, 602004, 602005, 602006, 602101, 602102, 602103], 'activity_formula': []},
+    9072: {'attribute': 4, 'place': 602, 'formula': [602001, 602002, 602003, 602004, 602005, 602006, 602101, 602102, 602103], 'activity_formula': []},
+    9081: {'attribute': 4, 'place': 603, 'formula': [603001, 603002, 603003, 603004, 603005, 603006, 603007, 603101, 603102, 603103], 'activity_formula': [9900029, 9900030]},
+    9082: {'attribute': 4, 'place': 603, 'formula': [603001, 603002, 603003, 603004, 603005, 603006, 603007, 603101, 603102, 603103], 'activity_formula': [9900029, 9900030]},
     9091: {'attribute': 4, 'place': 604, 'formula': [604001, 604002, 604004, 604005, 604006, 604007, 604008, 604101, 604102], 'activity_formula': []},
     9092: {'attribute': 4, 'place': 604, 'formula': [604001, 604002, 604004, 604005, 604006, 604007, 604008, 604101, 604102], 'activity_formula': []},
-    9101: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900001, 9900002]},
-    9102: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900001, 9900002]},
-    9103: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900001, 9900002]},
-    9104: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900001, 9900002]},
+    9101: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900025, 9900026]},
+    9102: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900025, 9900026]},
+    9103: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900025, 9900026]},
+    9104: {'attribute': 1, 'place': 501, 'formula': [501001, 501002, 501003, 501004, 501005, 501006, 501007], 'activity_formula': [9900025, 9900026]},
     9111: {'attribute': 1, 'place': 502, 'formula': [502001, 502002, 502003, 502004, 502005, 502006, 502007], 'activity_formula': []},
     9112: {'attribute': 1, 'place': 502, 'formula': [502001, 502002, 502003, 502004, 502005, 502006, 502007], 'activity_formula': []},
     9201: {'attribute': 6, 'place': 703, 'formula': [701014, 701015, 701016, 701017, 701018, 701023], 'activity_formula': []},
@@ -413,8 +436,8 @@ DIC_ISLAND_SLOT = {
     9204: {'attribute': 6, 'place': 704, 'formula': [701008, 701009, 701010, 701011, 701012, 701013], 'activity_formula': []},
     9205: {'attribute': 6, 'place': 705, 'formula': [701019, 701020, 701021, 701022], 'activity_formula': []},
     9206: {'attribute': 6, 'place': 705, 'formula': [701019, 701020, 701021, 701022], 'activity_formula': []},
-    9207: {'attribute': 6, 'place': 706, 'formula': [701001, 701002, 701003, 701004, 701005, 701006, 701007], 'activity_formula': [9900005, 9900006]},
-    9208: {'attribute': 6, 'place': 706, 'formula': [701001, 701002, 701003, 701004, 701005, 701006, 701007], 'activity_formula': [9900005, 9900006]},
+    9207: {'attribute': 6, 'place': 706, 'formula': [701001, 701002, 701003, 701004, 701005, 701006, 701007], 'activity_formula': [9900031, 9900032]},
+    9208: {'attribute': 6, 'place': 706, 'formula': [701001, 701002, 701003, 701004, 701005, 701006, 701007], 'activity_formula': [9900031, 9900032]},
     9211: {'attribute': 3, 'place': 201, 'formula': [201001, 201002, 201003, 201004, 201005, 201006, 201007, 201008, 201101, 201102, 201103, 201104, 201105, 201106, 201107, 201108], 'activity_formula': []},
     9212: {'attribute': 3, 'place': 201, 'formula': [201001, 201002, 201003, 201004, 201005, 201006, 201007, 201008, 201101, 201102, 201103, 201104, 201105, 201106, 201107, 201108], 'activity_formula': []},
     9213: {'attribute': 3, 'place': 201, 'formula': [201001, 201002, 201003, 201004, 201005, 201006, 201007, 201008, 201101, 201102, 201103, 201104, 201105, 201106, 201107, 201108], 'activity_formula': []},
@@ -442,6 +465,10 @@ DIC_ISLAND_ACTIVITY = {
     990023: {'type': 5002, 'start_time': {'cn': '2026-08-06 00:00:00', 'en': '2026-08-06 00:00:00', 'jp': '2026-08-06 00:00:00', 'tw': '2026-08-20 00:00:00', 'kr': '2026-08-20 00:00:00'}, 'end_time': {'cn': '2026-11-05 12:00:00', 'en': '2026-11-04 23:59:59', 'jp': '2026-11-05 16:00:00', 'tw': '2026-11-19 14:59:59', 'kr': '2026-11-19 12:00:00'}, 'config_data': [100046, 100047, 100048, 100049, 100050, 100051, 100052, 100053, 100054, 100055, 100056, 100057, 100058, 100059, 100060]},
     990024: {'type': 5003, 'start_time': {'cn': '2026-08-06 00:00:00', 'en': '2026-08-06 00:00:00', 'jp': '2026-08-06 00:00:00', 'tw': '2026-08-20 00:00:00', 'kr': '2026-08-20 00:00:00'}, 'end_time': {'cn': '2026-11-05 12:00:00', 'en': '2026-11-04 23:59:59', 'jp': '2026-11-05 16:00:00', 'tw': '2026-11-19 14:59:59', 'kr': '2026-11-19 12:00:00'}, 'config_data': [1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008]},
     990025: {'type': 5004, 'start_time': {'cn': '2026-08-06 00:00:00', 'en': '2026-08-06 00:00:00', 'jp': '2026-08-06 00:00:00', 'tw': '2026-08-20 00:00:00', 'kr': '2026-08-20 00:00:00'}, 'end_time': {'cn': '2026-11-05 12:00:00', 'en': '2026-11-04 23:59:59', 'jp': '2026-11-05 16:00:00', 'tw': '2026-11-19 14:59:59', 'kr': '2026-11-19 12:00:00'}, 'config_data': [9900001, 9900002, 9900003, 9900004, 9900005, 9900006, 9900007, 9900008]},
+    990027: {'type': 5001, 'start_time': {'kr': '2026-11-19 00:00:00'}, 'end_time': {'kr': '2027-02-17 12:00:00'}, 'config_data': [6]},
+    990028: {'type': 5002, 'start_time': {'kr': '2026-11-19 00:00:00'}, 'end_time': {'kr': '2027-02-17 12:00:00'}, 'config_data': [100061, 100062, 100063, 100064, 100065, 100066, 100067, 100068, 100069, 100070, 100071, 100072, 100073, 100074, 100075]},
+    990029: {'type': 5003, 'start_time': {'kr': '2026-11-19 00:00:00'}, 'end_time': {'kr': '2027-02-17 12:00:00'}, 'config_data': [1025, 1026, 1027, 1028, 1029, 1030, 1031, 1032]},
+    990030: {'type': 5004, 'start_time': {'kr': '2026-11-19 00:00:00'}, 'end_time': {'kr': '2027-02-17 12:00:00'}, 'config_data': [9900025, 9900026, 9900027, 9900028, 9900029, 9900030, 9900031, 9900032]},
 }
 
 DIC_ISLAND_WILD_GATHER = {
@@ -506,6 +533,7 @@ DIC_ISLAND_SEASON = {
     2: {'start_time': {'cn': '2026-02-05 12:00:01', 'en': '2026-02-05 00:00:00', 'jp': '2026-02-05 16:00:01', 'tw': '2026-02-05 12:00:01', 'kr': '2026-02-26 00:00:00'}, 'end_time': {'cn': '2026-05-07 12:00:00', 'en': '2026-05-06 23:59:59', 'jp': '2026-05-07 16:00:00', 'tw': '2026-05-07 12:00:00', 'kr': '2026-05-21 12:00:00'}, 'task_list': [80001201, 80001202, 80001203, 80001204, 80001205, 80001206, 80001207, 80001208, 80001209, 80001210, 80001211, 80001212, 80001213, 80001214, 80001215, 80001216, 80001217, 80001218, 80001219, 80001220, 80001221, 80001222, 80001223, 80001224, 80001225, 80001226, 80001227, 80001228, 80001229, 80001230], 'activity': [990005, 990006, 990007, 990008], 'activity_by_server': {'kr': [990005, 990006, 990007, 990008]}},
     3: {'start_time': {'cn': '2026-05-07 12:00:01', 'en': '2026-05-07 00:00:00', 'jp': '2026-05-07 16:00:01', 'tw': '2026-05-07 12:00:01', 'kr': '2026-05-21 00:00:00'}, 'end_time': {'cn': '2026-08-06 12:00:00', 'en': '2026-08-05 23:59:59', 'jp': '2026-08-06 16:00:00', 'tw': '2026-08-06 12:00:00', 'kr': '2026-08-20 12:00:00'}, 'task_list': [80001301, 80001302, 80001303, 80001304, 80001305, 80001306, 80001307, 80001308, 80001309, 80001310, 80001311, 80001312, 80001313, 80001314, 80001315, 80001316, 80001317, 80001318, 80001319, 80001320, 80001321, 80001322, 80001323, 80001324, 80001325, 80001326, 80001327, 80001328, 80001329, 80001330], 'activity': [990016, 990017, 990018, 990019], 'activity_by_server': {'kr': [990016, 990017, 990018, 990019]}},
     4: {'start_time': {'cn': '2026-08-06 12:00:01', 'en': '2026-08-06 00:00:00', 'jp': '2026-08-06 16:00:01', 'tw': '2026-08-20 00:00:00', 'kr': '2026-08-20 00:00:00'}, 'end_time': {'cn': '2026-11-05 12:00:00', 'en': '2026-11-04 23:59:59', 'jp': '2026-11-05 16:00:00', 'tw': '2026-11-19 15:00:00', 'kr': '2026-11-19 12:00:00'}, 'task_list': [80001401, 80001402, 80001403, 80001404, 80001405, 80001406, 80001407, 80001408, 80001409, 80001410, 80001411, 80001412, 80001413, 80001414, 80001415, 80001416, 80001417, 80001418, 80001419, 80001420, 80001421, 80001422, 80001423, 80001424, 80001425, 80001426, 80001427, 80001428, 80001429, 80001430], 'activity': [990022, 990023, 990024, 990025], 'activity_by_server': {'kr': [990022, 990023, 990024, 990025]}},
+    5: {'start_time': {'kr': '2026-11-19 00:00:00'}, 'end_time': {'kr': '2027-02-17 12:00:00'}, 'task_list': [80001501, 80001502, 80001503, 80001504, 80001505, 80001506, 80001507, 80001508, 80001509, 80001510, 80001511, 80001512, 80001513, 80001514, 80001515, 80001516, 80001517, 80001518, 80001519, 80001520, 80001521, 80001522, 80001523, 80001524, 80001525, 80001526, 80001527, 80001528, 80001529, 80001530], 'activity': [], 'activity_by_server': {'kr': [990027, 990028, 990029, 990030]}, 'servers': ['kr']},
 }
 
 DIC_ISLAND_SEASON_ORDER = {
@@ -570,6 +598,21 @@ DIC_ISLAND_SEASON_ORDER = {
     100058: {'activity_id': 990023, 'next_order': 100059, 'season_pt_num': 8000, 'request': {4009: 5, 4014: 5}, 'award': {0: 32000}},
     100059: {'activity_id': 990023, 'next_order': 100060, 'season_pt_num': 8000, 'request': {4010: 5, 4012: 5}, 'award': {0: 32000}},
     100060: {'activity_id': 990023, 'next_order': 0, 'season_pt_num': 8000, 'request': {4011: 5, 4013: 5}, 'award': {0: 32000}},
+    100061: {'activity_id': 990028, 'next_order': 100062, 'season_pt_num': 1000, 'request': {4043: 4}, 'award': {0: 4000}},
+    100062: {'activity_id': 990028, 'next_order': 100063, 'season_pt_num': 1000, 'request': {4044: 4}, 'award': {0: 4000}},
+    100063: {'activity_id': 990028, 'next_order': 100064, 'season_pt_num': 1000, 'request': {4045: 4}, 'award': {0: 4000}},
+    100064: {'activity_id': 990028, 'next_order': 100065, 'season_pt_num': 1000, 'request': {4046: 4}, 'award': {0: 4000}},
+    100065: {'activity_id': 990028, 'next_order': 100066, 'season_pt_num': 1000, 'request': {4047: 10}, 'award': {0: 4000}},
+    100066: {'activity_id': 990028, 'next_order': 100067, 'season_pt_num': 1000, 'request': {4049: 10}, 'award': {0: 4000}},
+    100067: {'activity_id': 990028, 'next_order': 100068, 'season_pt_num': 2500, 'request': {4051: 5}, 'award': {0: 10000}},
+    100068: {'activity_id': 990028, 'next_order': 100069, 'season_pt_num': 2500, 'request': {4052: 5}, 'award': {0: 10000}},
+    100069: {'activity_id': 990028, 'next_order': 100070, 'season_pt_num': 2500, 'request': {4053: 5}, 'award': {0: 10000}},
+    100070: {'activity_id': 990028, 'next_order': 100071, 'season_pt_num': 2500, 'request': {4054: 5}, 'award': {0: 10000}},
+    100071: {'activity_id': 990028, 'next_order': 100072, 'season_pt_num': 2500, 'request': {4055: 5}, 'award': {0: 10000}},
+    100072: {'activity_id': 990028, 'next_order': 100073, 'season_pt_num': 2500, 'request': {4056: 5}, 'award': {0: 10000}},
+    100073: {'activity_id': 990028, 'next_order': 100074, 'season_pt_num': 8000, 'request': {4052: 5, 4053: 5}, 'award': {0: 32000}},
+    100074: {'activity_id': 990028, 'next_order': 100075, 'season_pt_num': 8000, 'request': {4056: 5, 4054: 5}, 'award': {0: 32000}},
+    100075: {'activity_id': 990028, 'next_order': 0, 'season_pt_num': 8000, 'request': {4055: 5, 4052: 5}, 'award': {0: 32000}},
 }
 
 DIC_ISLAND_SHOP = {
@@ -581,7 +624,7 @@ DIC_ISLAND_SHOP = {
     10024: {'name': {'cn': '丰壤农田', 'en': 'Faircrop Fields', 'jp': '豊穣の畑', 'tw': '豐壤農田', 'kr': '비옥한 농지'}, 'tag_type': 3, 'order': 1, 'parent_id': 10023, 'currency': [1], 'goods': [411000, 411001, 411002, 411003, 411005, 411006, 411008, 411009]},
     10025: {'name': {'cn': '种子', 'en': 'Seeds', 'jp': '種', 'tw': '種子', 'kr': '씨앗'}, 'tag_type': 1, 'order': 1, 'parent_id': None, 'currency': [], 'goods': []},
     10026: {'name': {'cn': '种子', 'en': 'Seeds', 'jp': '種', 'tw': '種子', 'kr': '씨앗'}, 'tag_type': 2, 'order': 1, 'parent_id': 10025, 'currency': [], 'goods': []},
-    10027: {'name': {'cn': '坠香果园', 'en': 'Sweetscent Orchard', 'jp': '薫る果樹園', 'tw': '墜香果園', 'kr': '향기로운 과수원'}, 'tag_type': 3, 'order': 1, 'parent_id': 10026, 'currency': [1], 'goods': [411016, 411017, 411018, 411019, 411020, 411021, 411022, 411023, 411024]},
+    10027: {'name': {'cn': '坠香果园', 'en': 'Sweetscent Orchard', 'jp': '薫る果樹園', 'tw': '墜香果園', 'kr': '향기로운 과수원'}, 'tag_type': 3, 'order': 1, 'parent_id': 10026, 'currency': [1], 'goods': [411016, 411017, 411018, 411019, 411020, 411021, 411022, 411023, 411024, 411029, 411030]},
     10028: {'name': {'cn': '种子', 'en': 'Seeds', 'jp': '種', 'tw': '種子', 'kr': '씨앗'}, 'tag_type': 1, 'order': 1, 'parent_id': None, 'currency': [], 'goods': []},
     10029: {'name': {'cn': '种子', 'en': 'Seeds', 'jp': '種', 'tw': '種子', 'kr': '씨앗'}, 'tag_type': 2, 'order': 1, 'parent_id': 10028, 'currency': [], 'goods': []},
     10030: {'name': {'cn': '青芽苗圃', 'en': 'Newsprout Nursery', 'jp': '青々苗場', 'tw': '青芽苗圃', 'kr': '초록색 모밭'}, 'tag_type': 3, 'order': 1, 'parent_id': 10029, 'currency': [1], 'goods': [411004, 411007, 411010, 411011, 411012, 411014, 411015, 411025, 411026, 411027, 411028]},
@@ -595,7 +638,7 @@ DIC_ISLAND_SHOP = {
     10109: {'name': {'cn': '种子', 'en': 'Seeds', 'jp': '種', 'tw': '種子', 'kr': '씨앗'}, 'tag_type': 1, 'order': 3, 'parent_id': None, 'currency': [], 'goods': []},
     10110: {'name': {'cn': '种子', 'en': 'Seeds', 'jp': '種', 'tw': '種子', 'kr': '씨앗'}, 'tag_type': 2, 'order': 1, 'parent_id': 10109, 'currency': [], 'goods': []},
     10111: {'name': {'cn': '丰壤农田', 'en': 'Faircrop Fields', 'jp': '豊穣の畑', 'tw': '豐壤農田', 'kr': '비옥한 농지'}, 'tag_type': 3, 'order': 1, 'parent_id': 10110, 'currency': [1], 'goods': [411000, 411001, 411002, 411003, 411005, 411006, 411008, 411009]},
-    10112: {'name': {'cn': '坠香果园', 'en': 'Sweetscent Orchard', 'jp': '薫る果樹園', 'tw': '墜香果園', 'kr': '향기로운 과수원'}, 'tag_type': 3, 'order': 2, 'parent_id': 10110, 'currency': [1], 'goods': [411016, 411017, 411018, 411019, 411020, 411021, 411022, 411023, 411024]},
+    10112: {'name': {'cn': '坠香果园', 'en': 'Sweetscent Orchard', 'jp': '薫る果樹園', 'tw': '墜香果園', 'kr': '향기로운 과수원'}, 'tag_type': 3, 'order': 2, 'parent_id': 10110, 'currency': [1], 'goods': [411016, 411017, 411018, 411019, 411020, 411021, 411022, 411023, 411024, 411029, 411030]},
     10113: {'name': {'cn': '青芽苗圃', 'en': 'Newsprout Nursery', 'jp': '青々苗場', 'tw': '青芽苗圃', 'kr': '초록색 모밭'}, 'tag_type': 3, 'order': 3, 'parent_id': 10110, 'currency': [1], 'goods': [411004, 411007, 411010, 411011, 411012, 411014, 411015, 411025, 411026, 411027, 411028]},
 }
 
@@ -652,6 +695,8 @@ DIC_ISLAND_SHOP_RECIPE = {
     411026: {'name': {'cn': '凤梨种子', 'en': 'Pineapple Seeds', 'jp': 'パイナップルの種', 'tw': '鳳梨種子', 'kr': '파인애플 씨앗'}, 'resource_consume': {1: 180}, 'items': {4022: 1}, 'start_time': {'cn': '2026-02-05 00:00:00', 'en': '2026-02-05 00:00:00', 'jp': '2026-02-05 00:00:00', 'tw': '2026-02-05 00:00:00', 'kr': '2026-02-26 12:00:01'}, 'end_time': {'cn': '2026-05-07 12:00:00', 'en': '2026-05-06 23:59:59', 'jp': '2026-05-07 16:00:00', 'tw': '2026-05-07 12:00:00', 'kr': '2026-05-21 12:00:00'}},
     411027: {'name': {'cn': '番茄种子', 'en': 'Tomato Seeds', 'jp': 'トマトの種', 'tw': '番茄種子', 'kr': '토마토 씨앗'}, 'resource_consume': {1: 120}, 'items': {4034: 1}, 'start_time': {'cn': '2026-05-07 12:00:01', 'en': '2026-05-07 00:00:00', 'jp': '2026-05-07 16:00:01', 'tw': '2026-05-07 12:00:01', 'kr': '2026-05-21 12:00:01'}, 'end_time': {'cn': '2026-08-06 12:00:00', 'en': '2026-08-05 23:59:59', 'jp': '2026-08-06 16:00:00', 'tw': '2026-08-06 12:00:00', 'kr': '2026-08-20 12:00:00'}},
     411028: {'name': {'cn': '黄瓜种子', 'en': 'Cucumber Seeds', 'jp': 'キュウリの種', 'tw': '黃瓜種子', 'kr': '오이 씨앗'}, 'resource_consume': {1: 80}, 'items': {4036: 1}, 'start_time': {'cn': '2026-05-07 12:00:01', 'en': '2026-05-07 00:00:00', 'jp': '2026-05-07 16:00:01', 'tw': '2026-05-07 12:00:01', 'kr': '2026-05-21 12:00:01'}, 'end_time': {'cn': '2026-08-06 12:00:00', 'en': '2026-08-05 23:59:59', 'jp': '2026-08-06 16:00:00', 'tw': '2026-08-06 12:00:00', 'kr': '2026-08-20 12:00:00'}},
+    411029: {'name': {'kr': '설탕귤 씨앗'}, 'resource_consume': {1: 160}, 'items': {4048: 1}, 'start_time': {'kr': '2026-11-19 12:00:01'}, 'end_time': {'kr': '2027-02-17 12:00:00'}, 'servers': ['kr']},
+    411030: {'name': {'kr': '푸른 대추 씨앗'}, 'resource_consume': {1: 80}, 'items': {4050: 1}, 'start_time': {'kr': '2026-11-19 12:00:01'}, 'end_time': {'kr': '2027-02-17 12:00:00'}, 'servers': ['kr']},
 }
 
 DIC_ISLAND_SHOP_ITEM_TO_RECIPE = {
@@ -707,6 +752,8 @@ DIC_ISLAND_SHOP_ITEM_TO_RECIPE = {
     4022: 411026,
     4034: 411027,
     4036: 411028,
+    4048: 411029,
+    4050: 411030,
 }
 
 DIC_ISLAND_EXCHANGE_RECIPE = {
@@ -1226,6 +1273,36 @@ DIC_ISLAND_TASK = {
     90002005: {'name': {'cn': '和角色进行一次互动', 'en': 'Interact with any character.', 'jp': '仲間とインタラクトする', 'tw': '和角色進行一次互動', 'kr': '동료와 상호작용하기'}, 'target_id': 900020051, 'target': {}, 'start_time': {'cn': '2026-06-05 00:00:00', 'en': '2026-06-05 00:00:00', 'jp': '2026-06-05 00:00:00', 'tw': '2026-06-05 00:00:00', 'kr': '2026-06-18 00:00:00'}, 'end_time': {'cn': '2026-06-18 12:00:00', 'en': '2026-06-17 23:59:59', 'jp': '2026-06-18 12:00:00', 'tw': '2026-06-18 12:00:00', 'kr': '2026-07-02 12:00:00'}},
     90002006: {'name': {'cn': '完成任意货运委托', 'en': 'Complete any Transport Job.', 'jp': '任意の輸送委託を1回こなす', 'tw': '完成任意貨運委託', 'kr': '임의의 수송 의뢰 1회 처리'}, 'target_id': 900020061, 'target': {0: 1}, 'start_time': {'cn': '2026-06-05 00:00:00', 'en': '2026-06-05 00:00:00', 'jp': '2026-06-05 00:00:00', 'tw': '2026-06-05 00:00:00', 'kr': '2026-06-18 00:00:00'}, 'end_time': {'cn': '2026-06-18 12:00:00', 'en': '2026-06-17 23:59:59', 'jp': '2026-06-18 12:00:00', 'tw': '2026-06-18 12:00:00', 'kr': '2026-07-02 12:00:00'}},
     90002007: {'name': {'cn': '获得任意餐品三次', 'en': 'Collect 3 meals.', 'jp': '任意の料理を3個入手する', 'tw': '獲得任意餐品三次', 'kr': '임의의 요리 3개 획득'}, 'target_id': 900020071, 'target': {20000: 3}, 'start_time': {'cn': '2026-06-05 00:00:00', 'en': '2026-06-05 00:00:00', 'jp': '2026-06-05 00:00:00', 'tw': '2026-06-05 00:00:00', 'kr': '2026-06-18 00:00:00'}, 'end_time': {'cn': '2026-06-18 12:00:00', 'en': '2026-06-17 23:59:59', 'jp': '2026-06-18 12:00:00', 'tw': '2026-06-18 12:00:00', 'kr': '2026-07-02 12:00:00'}},
+    80001501: {'name': {'kr': '차 비축'}, 'target_id': 80015001, 'target': {2014: 500}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001502: {'name': {'kr': '감귤 보급'}, 'target_id': 80015002, 'target': {2017: 500}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001503: {'name': {'kr': '망고 입고'}, 'target_id': 80015003, 'target': {2019: 250}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001504: {'name': {'kr': '아보카도의 향기'}, 'target_id': 80015004, 'target': {2021: 100}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001505: {'name': {'kr': '민물고기 보급'}, 'target_id': 80015005, 'target': {2521: 100}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001506: {'name': {'kr': '바닷물고기 입고'}, 'target_id': 80015006, 'target': {2522: 100}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001507: {'name': {'kr': '푸짐한 모둠 요리'}, 'target_id': 80015007, 'target': {3030: 100}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001508: {'name': {'kr': '달콤 쫀득 콤비'}, 'target_id': 80015008, 'target': {3025: 50}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001509: {'name': {'kr': '디저트 비축'}, 'target_id': 80015009, 'target': {3028: 25}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001510: {'name': {'kr': '은광석 채집'}, 'target_id': 80015010, 'target': {2705: 25}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001511: {'name': {'kr': '고급 목재 입고'}, 'target_id': 80015011, 'target': {2803: 25}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001512: {'name': {'kr': '향낭 보급'}, 'target_id': 80015012, 'target': {3039: 10}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001513: {'name': {'kr': '식기 정비'}, 'target_id': 80015013, 'target': {3047: 10}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001514: {'name': {'kr': '사무용품'}, 'target_id': 80015014, 'target': {3053: 10}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001515: {'name': {'kr': '시간 관리'}, 'target_id': 80015015, 'target': {3054: 10}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001516: {'name': {'kr': '전력 비축'}, 'target_id': 80015016, 'target': {3055: 10}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001517: {'name': {'kr': '첫 수령'}, 'target_id': 80015017, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001518: {'name': {'kr': '안정적인 납품'}, 'target_id': 80015018, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001519: {'name': {'kr': '일상적인 보급'}, 'target_id': 80015019, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001520: {'name': {'kr': '고효율 납품'}, 'target_id': 80015020, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001521: {'name': {'kr': '여유로운 재고'}, 'target_id': 80015021, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001522: {'name': {'kr': '비축은 영원하리'}, 'target_id': 80015022, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001523: {'name': {'kr': '발전의 토대'}, 'target_id': 80015023, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001524: {'name': {'kr': '첫 의뢰'}, 'target_id': 80015024, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001525: {'name': {'kr': '안정적인 의뢰'}, 'target_id': 80015025, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001526: {'name': {'kr': '건실한 지원군'}, 'target_id': 80015026, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001527: {'name': {'kr': '의뢰 전문가'}, 'target_id': 80015027, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001528: {'name': {'kr': '발전의 기둥'}, 'target_id': 80015028, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001529: {'name': {'kr': '발전의 중심'}, 'target_id': 80015029, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
+    80001530: {'name': {'kr': '번영의 기반'}, 'target_id': 80015030, 'target': {}, 'start_time': {'kr': 'always'}, 'end_time': {'kr': 'always'}},
 }
 
 DIC_ISLAND_RESTAURANT_MENU_TO_RECIPE = {

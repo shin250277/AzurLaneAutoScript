@@ -69,6 +69,8 @@ class IslandShop(IslandShopUI):
         corrected_name = None
         corrected_id = None
         for recipe_id, recipe in DIC_ISLAND_SHOP_RECIPE.items():
+            if 'servers' in recipe and server.server not in recipe['servers']:
+                continue
             recipe_name = recipe['name'][server.server]
             if isinstance(name, str) and isinstance(recipe_name, str) and len(recipe_name) >= len(name) and len(name) > 0:
                 best_sub_distance = float('inf')

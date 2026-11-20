@@ -46,6 +46,8 @@ def get_current_activity_list(time):
             or None if no season covers it.
     """
     for season, content in DIC_ISLAND_SEASON.items():
+        if 'servers' in content and server.server not in content['servers']:
+            continue  # Explicit regional addition is not a foreign schedule.
         if (server.server not in content['start_time']
                 or server.server not in content['end_time']):
             raise ValueError('Missing {} island season schedule (season {})'.format(server.server, season))
@@ -666,6 +668,8 @@ class ProductionPlanCalculator:
             })
 
         for shop_id, recipe in DIC_ISLAND_SHOP_RECIPE.items():
+            if 'servers' in recipe and server.server not in recipe['servers']:
+                continue
             activities.append({
                 'kind': 'shop',
                 'id': shop_id,

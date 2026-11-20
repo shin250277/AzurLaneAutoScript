@@ -8,6 +8,22 @@ from pathlib import Path
 
 
 class IslandInspectionTest(unittest.TestCase):
+    def test_scroll_guard_is_cleared_only_for_new_identified_cards(self):
+        from dev_tools.test_kr_island_preflight import method
+        from unittest.mock import Mock
+        scroll = Mock(name='scroll')
+        scroll.at_bottom.side_effect = [False, False, False, True]
+        run = method('module/island/inspect.py', 'inspect_task_pages',
+                     ISLAND_SEASON_TASK_SCROLL=scroll, del_cached_property=Mock(),
+                     TEMPLATE_ISLAND_SEASON_TASK_OBTAINED=Mock())
+        ui = Mock()
+        ui.get_task_codename.side_effect = [[1], [1], [2, None], [2]]
+        ui.season_task_grid.buttons = []
+        run(ui)
+        self.assertEqual(ui.device.click_record_remove.call_count, 1)
+        ui.device.click_record_remove.assert_called_with(scroll.name)
+        ui.config.cross_set.assert_not_called()
+
     def test_order_inspection_only_selects_left_side_orders(self):
         code = '''
 from unittest.mock import Mock

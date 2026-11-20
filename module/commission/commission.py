@@ -28,6 +28,15 @@ from module.ui_white.assets import REWARD_1_WHITE, REWARD_GOTO_COMMISSION_WHITE
 COMMISSION_SWITCH = Switch('Commission_switch', is_selector=True)
 COMMISSION_SWITCH.add_state('daily', COMMISSION_DAILY)
 COMMISSION_SWITCH.add_state('urgent', COMMISSION_URGENT)
+# KR's full sidebar rectangles extend into the back-navigation hit region.
+# Use the observed tab labels, not the outer panel, for selector input.
+KR_COMMISSION_SWITCH = Switch('KR_commission_switch', is_selector=True)
+KR_COMMISSION_SWITCH.add_state('daily', COMMISSION_DAILY, click_button=Button(
+    area=(35, 145, 70, 180), color=(), button=(35, 145, 70, 180),
+    file=None, name='KR_COMMISSION_DAILY_TAB'))
+KR_COMMISSION_SWITCH.add_state('urgent', COMMISSION_URGENT, click_button=Button(
+    area=(35, 240, 70, 275), color=(), button=(35, 240, 70, 275),
+    file=None, name='KR_COMMISSION_URGENT_TAB'))
 COMMISSION_SCROLL = Scroll(COMMISSION_SCROLL_AREA, color=(247, 211, 66), name='COMMISSION_SCROLL')
 KR_COMMISSION_OIL_CONFIRM = Button(
     area=(422, 329, 856, 360), color=(), button=(422, 329, 856, 360),
@@ -218,7 +227,8 @@ class RewardCommission(UI, InfoHandler):
         return True
 
     def _commission_ensure_mode(self, mode):
-        if COMMISSION_SWITCH.set(mode, main=self):
+        switch = KR_COMMISSION_SWITCH if self.config.SERVER == 'kr' else COMMISSION_SWITCH
+        if switch.set(mode, main=self):
             # If daily list has commissions > 4, usually to be 5, and 1 <= urgent <= 4
             # commission list will have an animation to scroll,
             # which causes the topmost one undetected.

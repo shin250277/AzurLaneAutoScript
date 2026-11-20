@@ -56,7 +56,8 @@ class IslandKrExtractorTest(unittest.TestCase):
         with patch.object(server, 'server', 'kr'):
             self.assertEqual(get_current_activity_list(datetime(2026, 9, 14)),
                              [990022, 990023, 990024, 990025])
-            self.assertIsNone(get_current_activity_list(datetime(2026, 11, 19, 12)))
+            self.assertEqual(get_current_activity_list(datetime(2026, 11, 19, 12)),
+                             [990027, 990028, 990029, 990030])
             self.assertEqual(get_current_activity_list(datetime(2026, 1, 1)), [])
 
 

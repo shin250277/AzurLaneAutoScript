@@ -36,6 +36,11 @@ class IslandInspect(IslandSeasonTask, IslandOrder):
             self.device.image_save('./log/kr_island_inspect_tasks_%02d.png' % index)
             del_cached_property(self, 'season_task_grid')
             codes = self.get_task_codename()
+            newly_seen = {code for code in codes if code is not None} - seen
+            if newly_seen and all(code is not None for code in codes):
+                # Identified new cards prove movement. Keep unrelated click
+                # guards and the bounded page count; do not clear on repeats.
+                self.device.click_record_remove(ISLAND_SEASON_TASK_SCROLL.name)
             seen.update(code for code in codes if code is not None)
             logger.attr('Inspected season task codes', codes)
             logger.attr('Inspected completed task flags', [

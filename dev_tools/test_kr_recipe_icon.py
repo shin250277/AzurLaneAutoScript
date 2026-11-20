@@ -8,6 +8,15 @@ from module.island_handler.korean_recipe_icon import KoreanRecipeIconVerifier, l
 
 
 class RecipeIconTest(unittest.TestCase):
+    def setUp(self):
+        # These saved cards belong to the previous season. Keep their historical
+        # facility fixture explicit instead of depending on today's live table.
+        slot = dict(icons.DIC_ISLAND_SLOT[9061])
+        slot['activity_formula'] = list(slot['activity_formula']) + [9900004]
+        self.slot_patch = patch.dict(icons.DIC_ISLAND_SLOT, {9061: slot})
+        self.slot_patch.start()
+        self.addCleanup(self.slot_patch.stop)
+
     def test_independent_icon_and_long_visible_text_agree(self):
         verifier = KoreanRecipeIconVerifier()
         for key,row,text,item in [('601_9061',1,'기버섯 닭고기 스프',4010),

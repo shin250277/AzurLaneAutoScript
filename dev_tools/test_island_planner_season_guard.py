@@ -19,7 +19,10 @@ class PlannerSeasonGuardTest(unittest.TestCase):
         for day in (5, 9, 18):
             self.assertEqual(lookup(datetime(2026, 11, day, 23)),
                              [990022, 990023, 990024, 990025])
-        # No invented new-season schedule or foreign fallback after known data.
+        self.assertEqual(lookup(datetime(2026, 11, 20)), [990027, 990028, 990029, 990030])
+        # Do not invent another season beyond the verified KR winter schedule.
+        self.assertIsNone(lookup(datetime(2027, 2, 18)))
+        scope['server'].server = 'jp'
         self.assertIsNone(lookup(datetime(2026, 11, 20)))
 
     def test_task_mapping_excludes_exact_season_end(self):
