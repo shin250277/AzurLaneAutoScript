@@ -12,8 +12,9 @@ class FollowupLabelsTest(unittest.TestCase):
             reader = KoreanIslandNameOcr([])
             for item, name in ((2802, '엄선 목재'), (4049, '푸른 대추'), (4052, '푸른 대추죽'),
                                (3039, '향낭'), (3012, '다진 고기 두부볶음'), (3105, '태양의 꿀물'),
-                               (3048, '종이'), (3043, '케이블'), (4056, '겨울 꽃다발'), (3028, '딸기 샬럿')):
-                suffix = '_selected' if item in (4056, 3028) else ''
+                               (3048, '종이'), (3043, '케이블'), (4056, '겨울 꽃다발'), (3028, '딸기 샬럿'),
+                               (3046, '화약'), (3036, '가죽'), (2017, '감귤'), (3021, '라벤더 차')):
+                suffix = '_selected' if item == 4056 else ''
                 frame = load_image('assets/kr/island_item_name/%s_nov20_followup%s.png' % (item, suffix))
                 self.assertEqual(reader.ocr([frame], direct_ocr=True), [name])
                 self.assertEqual(reader.ocr([np.full_like(frame, 255)], direct_ocr=True), [''])

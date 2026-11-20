@@ -32,4 +32,4 @@ if __name__ == '__main__':
         raise ValueError('Changed frame requires visual review')
     with Image.open(str(path)) as frame:
         frame.convert('RGB').crop((304, 329, 450, 360)).save(
-            'assets/kr/island_item_name/3028_nov20_followup_selected.png')
+            'assets/kr/island_item_name/3028_nov20_followup.png')
