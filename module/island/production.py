@@ -357,6 +357,8 @@ class IslandProduction(IslandRecipe, IslandDock):
                 if self.handle_island_additional():
                     continue
                 if self.match_template_color(page_island_manage.check_button, offset=(0, 20)):
+                    if self.config.SERVER == 'kr':
+                        self.settle_korean_dispatch_return()
                     return True
         else:
             logger.warning(f'Failed to start production for slot {slot_id}')
@@ -366,6 +368,23 @@ class IslandProduction(IslandRecipe, IslandDock):
             self.ui_back(check_button=page_island_manage.check_button)
             self.ensure_island_production_page()
             return False
+
+    def settle_korean_dispatch_return(self):
+        """Do not classify other slots from the first returning animation frame."""
+        settled = Timer(1, count=3).start()
+        for _ in self.loop(timeout=6, skip_first=False):
+            if self.handle_island_additional():
+                settled.reset()
+                continue
+            if (self.match_template_color(page_island_manage.check_button, offset=(0, 20))
+                    and not self.is_enter_window_shown()):
+                if settled.reached():
+                    for key in ('production_grid', 'production_names', 'slot_grids'):
+                        del_cached_property(self, key)
+                    return True
+            else:
+                settled.reset()
+        raise RequestHumanTakeover('KR production return did not settle; preserve confirmed start')
 
     def scan_korean_dispatch_stocks(self, slot_id, audit_only):
         """Revoke only a failed identity group before any purchase/start."""
@@ -428,7 +447,8 @@ class IslandProduction(IslandRecipe, IslandDock):
             return False
         slot_grid = self.slot_grids[place_id]
         is_first = True
-        for slot_id, slot_button in zip(DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], slot_grid.buttons):
+        for index, (slot_id, slot_button) in enumerate(zip(
+                DIC_ISLAND_PRODUCTION_PLACE[place_id]['slot'], slot_grid.buttons)):
             if self.config.SERVER == 'kr' and slot_id in getattr(self, 'kr_deferred_slots', set()):
                 continue
             if (self.config.SERVER == 'kr'
@@ -438,6 +458,13 @@ class IslandProduction(IslandRecipe, IslandDock):
             if not is_first and has_cached_property(super(), 'recipe_id_sequence') and not self.recipe_id_sequence:
                 logger.info(f'No more recipe for place {place_id}, skip remaining slots')
                 break
+            if self.config.SERVER == 'kr':
+                self.device.screenshot()
+                for key in ('production_grid', 'production_names', 'slot_grids'):
+                    del_cached_property(self, key)
+                if place_id not in self.slot_grids:
+                    return False  # Revisit when visible; do not mark it dispatched.
+                slot_button = self.slot_grids[place_id].buttons[index]
             if self.is_slot_empty(slot_button):
                 self.dispatch_slot(slot_id=slot_id, slot_button=slot_button, worker='manjuu')
             if is_first:
@@ -529,8 +556,8 @@ class IslandProduction(IslandRecipe, IslandDock):
             try:
                 for place_id in self.slot_grids.keys():
                     if place_id not in dispatched_places:
-                        self.dispatch_place(place_id)
-                        dispatched_places.add(place_id)
+                        if self.dispatch_place(place_id) is not False:
+                            dispatched_places.add(place_id)
                 if not self.next_page():
                     break
             except IslandProductionRestart as e:

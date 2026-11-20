@@ -40,6 +40,7 @@ class OwnedDispatchTest(unittest.TestCase):
         ui.probe_korean_recipe_counters = Mock(return_value={401001: None})
         ui.handle_island_additional = lambda: False
         ui.match_template_color = lambda *a, **kw: True
+        ui.settle_korean_dispatch_return = Mock(return_value=True)
         ui.base_run = Mock(return_value=datetime(2026, 11, 9, 8))
         return ui
 
