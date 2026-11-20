@@ -12,7 +12,9 @@ class ShapeConsensusTest(unittest.TestCase):
                                 ([['라벤더'], ['라벤더'], []], False),
                                 ([['라벤더'], ['당근'], ['라벤더']], False)):
             with self.subTest(votes=votes), patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
-                backend.return_value.atomic_ocr_for_single_lines.side_effect = [[[]], votes]
+                # Partial contrast agreement now permits an additional read,
+                # but absent original-pixel confirmation must still reject.
+                backend.return_value.atomic_ocr_for_single_lines.side_effect = [[[]], votes, [[]] * 6]
                 actual = KoreanIslandNameOcr([]).ocr([frame], direct_ocr=True)
                 self.assertEqual(actual == ['라벤더'], accepted)
 

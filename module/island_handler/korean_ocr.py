@@ -18,6 +18,27 @@ def confirmed_contrast_name(candidate, reads, known_names):
             and not any(value in known_names and value != candidate for value in reads))
 
 
+def confirmed_multiview_name(original, contrast, localized, known_names):
+    """Exact full-name agreement across contrast and original-pixel crops.
+
+    No spelling repair, majority override of valid names, or short-label guess.
+    Localized crops retain every dark glyph; they are not substring searches.
+    """
+    names = {''.join(n.split()): n for n in known_names if n}
+    normalize = lambda value: ''.join(value.split())
+    if normalize(original) in names or len(contrast) != 3 or len(localized) != 3:
+        return None
+    contrast = [normalize(v) for v in contrast]
+    localized = [normalize(v) for v in localized]
+    votes = {v for v in contrast + localized if v in names}
+    if len(votes) != 1:
+        return None
+    name = next(iter(votes))
+    if len(name) < 3 or contrast.count(name) < 2 or name not in localized:
+        return None
+    return names[name]
+
+
 def punctuation_only_name(value, candidate):
     """Only terminal punctuation noise; never remove letters or internal marks."""
     return (isinstance(value, str) and bool(re.search(r'[!,.;:]\s*$', value))
@@ -227,6 +248,29 @@ class KoreanIslandNameOcr(Ocr):
                     value = clean
                 values[index] = value
                 if value not in known_names:
+                    # A missing/lighting-specific template must not prevent
+                    # normal OCR from reading a complete name. Require two
+                    # threshold reads AND an original-pixel crop agreement.
+                    frame = frames[index]
+                    local = self.localized_fallbacks(frame)
+                    possible_shapes = shape_candidates[index]
+                    ambiguous_shape = (len(possible_shapes) > 1 and possible_shapes[0][0] > .97
+                                       and possible_shapes[1][0] >= .94
+                                       and possible_shapes[0][0] - possible_shapes[1][0] <= .10)
+                    if (len(local) == 3
+                            and not any(score > .90 for score, _ in candidates)
+                            and (not any(score > .90 for score, _ in possible_shapes) or ambiguous_shape)):
+                        gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) if frame.ndim == 3 else frame
+                        variants = [self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                                    for level in (130, 150, 190)] + local
+                        readings = WindowsKoreanOcr().atomic_ocr_for_single_lines(variants)
+                        texts = [''.join(read) for read in readings]
+                        name = confirmed_multiview_name(value, texts[:3], texts[3:], known_names)
+                        if (name and (not ambiguous_shape or name == possible_shapes[0][1])
+                                and not any(score > .94 and candidate != name for score, candidate in candidates)):
+                            values[index] = name
+                            logger.info('KR full-name multiview OCR consensus: %s' % name)
+                            continue
                     shapes = shape_candidates[index]
                     if (shapes and shapes[0][0] > .96
                             and (len(shapes) == 1 or shapes[0][0] - shapes[1][0] > .15)
@@ -316,6 +360,21 @@ class KoreanIslandNameOcr(Ocr):
                                     logger.info('KR whole-label bright triple OCR consensus: %s' % name)
                             # No weaker retry may override this disagreement.
                             continue
+                        normalized = [''.join(''.join(read).split()) for read in reads]
+                        expected = ''.join(name.split())
+                        known_normalized = {''.join(n.split()) for n in known_names if n}
+                        if (len(expected) >= 3 and normalized.count(expected) >= 2
+                                and not any(n in known_normalized and n != expected for n in normalized)):
+                            local = self.localized_fallbacks(frame)
+                            if len(local) == 3:
+                                extra = WindowsKoreanOcr().atomic_ocr_for_single_lines([
+                                    self.prepare_fallback(np.where(gray < level, 0, 255).astype(np.uint8))
+                                    for level in (130, 150, 190)] + local)
+                                texts = [''.join(read) for read in extra]
+                                if confirmed_multiview_name(value, texts[:3], texts[3:], known_names) == name:
+                                    values[index] = name
+                                    logger.info('KR whole-label shape and multiview OCR consensus: %s' % name)
+                                    continue
                 if (value not in known_names and len(candidates) > 1
                         and candidates[0][0] > 0.94 and candidates[1][0] >= 0.94
                         and candidates[0][0] > candidates[1][0]):
