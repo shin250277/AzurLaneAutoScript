@@ -10,10 +10,13 @@ class AfternoonTitlesTest(unittest.TestCase):
         with patch('module.island_handler.korean_ocr.WindowsKoreanOcr') as backend:
             backend.return_value.atomic_ocr_for_single_lines.side_effect = lambda frames: [[] for _ in frames]
             reader = KoreanIslandNameOcr([])
-            for item, name in ((3015, '야채 샐러드'), (3114, '피시 앤 칩스'), (3035, '천'), (3115, '레몬 새우'), (3023, '옥수수 컵')):
+            for item, name in ((3015, '야채 샐러드'), (3114, '피시 앤 칩스'), (3035, '천'), (3115, '레몬 새우'), (3023, '옥수수 컵'), (3033, '두꺼운 당근 계란말이'), (3113, '프루트 트윈즈')):
                 frame = load_image('assets/kr/island_item_name/%s_nov20_afternoon_selected.png' % item)
                 self.assertEqual(reader.ocr([frame], direct_ocr=True), [name])
                 self.assertEqual(reader.ocr([np.full_like(frame,255)], direct_ocr=True), [''])
+            frame = load_image('assets/kr/island_item_name/3035_nov20_dispatch_selected.png')
+            self.assertEqual(reader.ocr([frame], direct_ocr=True), ['천'])
+            self.assertEqual(reader.ocr([np.full_like(frame,255)], direct_ocr=True), [''])
 
 
 if __name__ == '__main__':
