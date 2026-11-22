@@ -251,7 +251,7 @@ KR_GUILD_CHECK = Button(
 
 KR_EXERCISE_CHECK = Button(
     area=(116, 8, 300, 48),
-    color=(69, 77, 105),
+    color=(63, 69, 93),
     button=(116, 8, 300, 48),
     file='./assets/kr/ui/EXERCISE_CHECK.png',
     name='KR_EXERCISE_CHECK',
