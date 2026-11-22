@@ -25,7 +25,10 @@ def main(directory):
         islandmap:island_map islandseason:island_season islandtech:island_technology
         islandshop:island_shop islandmanage:island_phone islandorders:island_order
         islandstorage:island_storage islandtransport:island_transport mapagain:island_map
-        storageagain:island_storage transport2:island_transport"""
+        storageagain:island_storage transport2:island_transport
+        channelnow:channel eventlistnow:event_list gameroomlive:game_room
+        munitionslive:munitions supplypacklive:supply_pack quarters:private_quarters
+        islandassignment:island_manage"""
     pairs = [pair.split(':') for pair in pairs.split()]
     failures = []
     for frame, page in pairs:
