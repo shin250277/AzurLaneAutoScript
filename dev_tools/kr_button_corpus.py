@@ -25,7 +25,7 @@ def targets():
             yield src.as_posix(), stmt.targets[0].id, fields
 
 
-def scan(directories, report):
+def scan(directories, report, nearby=False):
     frames = []
     for directory in directories:
         for p in sorted(directory.glob('*.png')):
@@ -34,6 +34,8 @@ def scan(directories, report):
                     frames.append((p.stem, np.array(im.convert('RGB'))))
     if not frames:
         raise ValueError('No 1280x720 frames')
+    cv2.setNumThreads(1)
+    grays = [cv2.cvtColor(im, cv2.COLOR_RGB2GRAY) for _, im in frames] if nearby else []
     rows = []
     for src, name, fields in targets():
         path = fields.get('file')
@@ -58,6 +60,23 @@ def scan(directories, report):
                         if np.abs(region.astype(np.int16)-patch).mean() <= 14:
                             status, evidence = 'visual_candidate', key
                             break
+                if nearby and status == 'no_fixed_match':
+                    template = cv2.cvtColor(patch, cv2.COLOR_RGB2GRAY)
+                    left, top = max(0, x-20), max(0, y-20)
+                    if template.std() >= 10:
+                        for (key, frame), gray in zip(frames, grays):
+                            search = gray[top:b+20, left:r+20]
+                            _, sim, _, (px, py) = cv2.minMaxLoc(cv2.matchTemplate(
+                                search, template, cv2.TM_CCOEFF_NORMED))
+                            if sim < .94:
+                                continue
+                            reg = frame[top+py:top+py+b-y, left+px:left+px+r-x]
+                            if (np.abs(reg.astype(np.int16)-patch).mean() <= 14
+                                    and cv2.matchTemplate(reg, patch, cv2.TM_CCOEFF_NORMED)[0,0] >= .94):
+                                status, evidence = 'nearby_visual_candidate', key
+                                break
+                    if status == 'no_fixed_match':
+                        status = 'no_visual_evidence'
         rows.append((src, name, status, evidence))
     with report.open('w', newline='', encoding='utf-8') as out:
         writer = csv.writer(out)
@@ -70,5 +89,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('report', type=Path)
     parser.add_argument('directories', type=Path, nargs='+')
+    parser.add_argument('--nearby', action='store_true', help='also search a 20-pixel margin')
     args = parser.parse_args()
-    scan(args.directories, args.report)
+    scan(args.directories, args.report, args.nearby)

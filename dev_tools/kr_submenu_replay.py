@@ -8,7 +8,7 @@ from PIL import Image
 import module.config.server as server
 
 
-def run(directory, current, dorm):
+def run(directory, current, dorm, daily):
     server.set_server('kr')
     from module.exercise.exercise import NEW_OPPONENT, OCR_EXERCISE_REMAIN, OCR_PERIOD_REMAIN
     from module.war_archives.assets import WAR_ARCHIVES_EX_ON, WAR_ARCHIVES_SP_ON
@@ -19,6 +19,7 @@ def run(directory, current, dorm):
     from module.commission.assets import COMMISSION_DAILY, COMMISSION_URGENT
     from module.gacha.gacha_reward import OCR_BUILD_COIN_COUNT, OCR_BUILD_CUBE_COUNT
     from module.dorm.dorm import DORM_FEED_CHECK, OCR_FILL, OCR_SLOT
+    from module.daily.daily import DAILY_ENTER_CHECK, OCR_REMAIN
 
     def frame(name, source=directory):
         with Image.open(str(source / (name + '.png'))) as im:
@@ -67,10 +68,12 @@ def run(directory, current, dorm):
         im = frame(name, current)
         assert (OCR_BUILD_COIN_COUNT.ocr(im), OCR_BUILD_CUBE_COUNT.ocr(im)) == (23275, 1775)
     im = frame('dormfeed', dorm)
-    assert DORM_FEED_CHECK.appear_on(im)
+    assert DORM_FEED_CHECK.match(im, (20, 20)) and DORM_FEED_CHECK.match_template_color(im, (20, 20))
     assert OCR_FILL.ocr(im) == (0, 42000, 42000)
     assert OCR_SLOT.ocr(frame('dormok23', dorm)) == (6, 0, 6)
-    print('KR exercise OCR and refresh, archive, build, commission, nine shop selectors: OK')
+    assert OCR_REMAIN.ocr(frame('dailytoday', daily)) == 3
+    assert DAILY_ENTER_CHECK.appear_on(frame('dailydetail', daily), threshold=30)
+    print('KR exercise, archives, build, commission, shop, dorm and daily controls: OK')
 
 
 if __name__ == '__main__':
