@@ -13,6 +13,7 @@ def run(directory, current):
     from module.exercise.exercise import NEW_OPPONENT, OCR_EXERCISE_REMAIN, OCR_PERIOD_REMAIN
     from module.war_archives.assets import WAR_ARCHIVES_EX_ON, WAR_ARCHIVES_SP_ON
     from module.gacha.assets import BUILD_SUBMIT_ORDERS, BUILD_SUBMIT_WW_ORDERS
+    from module.gacha.assets import SHOP_MEDAL_CHECK, BUILD_FINISH_ORDERS
     from module.shop.assets import NAV_GENERAL, NAV_MONTHLY, TAB_GENERAL, TAB_MERIT
     from module.shop import assets as shop
     from module.commission.assets import COMMISSION_DAILY, COMMISSION_URGENT
@@ -53,6 +54,13 @@ def run(directory, current):
     im = frame('exercise23', current)
     assert NEW_OPPONENT.appear_on(im) and OCR_EXERCISE_REMAIN.ocr(im) == 10
     assert OCR_PERIOD_REMAIN.ocr(im) == timedelta(days=6, hours=2, minutes=18, seconds=23)
+    regular_build = {'build', 'build23', 'build2', 'buildlight', 'buildspecial', 'buildheavy'}
+    for source in (directory, current):
+        for p in source.glob('*.png'):
+            im = frame(p.stem, source)
+            assert BUILD_SUBMIT_ORDERS.appear_on(im) == (p.stem in regular_build), p.stem
+            assert SHOP_MEDAL_CHECK.appear_on(im) == (p.stem in ('support23', 'support2')), p.stem
+    assert BUILD_FINISH_ORDERS.appear_on(frame('queue23', current))
     print('KR exercise OCR and refresh, archive, build, commission, nine shop selectors: OK')
 
 
