@@ -7,6 +7,7 @@
 | 작전문서 E.X. / S.P. | 선택 상태와 반대쪽 비활성 상태 구분 |
 | 의뢰 일일 / 긴급 | 선택 상태와 반대쪽 비활성 상태 구분 |
 | 연습전 | 11/22 실화면 2장의 상대 변경 색상 판별 실패를 수정. 나머지 55장에서는 검출되지 않음. 11/23 별도 진입 화면에서도 상대 변경 판별 및 횟수 10, 기간 6일 02:18:23 OCR 확인 |
+| 숙소·건조 자원 표시 | 식량 창/훈련 슬롯 및 건조 풀 세 종류의 자원 숫자 OCR이 실제 표시와 일치. 식량 투입·주문 제출 없음 |
 
 건조 대열은 정상 판별했다. 지원 탭의 금색 '지원신청'을 '건조 개시'로 오인하는 오류가 재현됐다. 한국어 버튼의 판별 영역과 기준색만 분리했다. 기존 클릭 위치는 유지했다. 건조 세 종류(소형함·중형함·특형함)와 지원 화면에서 수정본을 재생해 두 판별기가 동시에 참이 되지 않음을 확인했다. 원본 계정 정보가 없는 버튼 영역만 별도 회귀 표본으로 보관한다. 건조 제출, 실제 상대 변경, 전투, 의뢰 파견, 상점 구매는 이 검사에 포함하지 않는다. 마우스가 글자를 가린 캡처는 버튼 교체의 근거로 쓰지 않았다.
 
@@ -14,7 +15,7 @@
 
 재생:
 
-    toolkit/python.exe -B -m dev_tools.kr_submenu_replay log/kr_menu_capture_20261122 log/kr_submenu_20261123
+    toolkit/python.exe -B -m dev_tools.kr_submenu_replay log/kr_menu_capture_20261122 log/kr_submenu_20261123 log/kr_dorm_replay_20261123
     toolkit/python.exe -B -m dev_tools.kr_button_corpus log/kr_submenu_20261123/buttons.csv log/kr_menu_capture_20261122 log/kr_submenu_20261123
 
 원본 전체 화면과 프레임별 비교표는 로컬 log에만 보관한다.

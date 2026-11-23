@@ -8,7 +8,7 @@ from PIL import Image
 import module.config.server as server
 
 
-def run(directory, current):
+def run(directory, current, dorm):
     server.set_server('kr')
     from module.exercise.exercise import NEW_OPPONENT, OCR_EXERCISE_REMAIN, OCR_PERIOD_REMAIN
     from module.war_archives.assets import WAR_ARCHIVES_EX_ON, WAR_ARCHIVES_SP_ON
@@ -17,6 +17,8 @@ def run(directory, current):
     from module.shop.assets import NAV_GENERAL, NAV_MONTHLY, TAB_GENERAL, TAB_MERIT
     from module.shop import assets as shop
     from module.commission.assets import COMMISSION_DAILY, COMMISSION_URGENT
+    from module.gacha.gacha_reward import OCR_BUILD_COIN_COUNT, OCR_BUILD_CUBE_COUNT
+    from module.dorm.dorm import DORM_FEED_CHECK, OCR_FILL, OCR_SLOT
 
     def frame(name, source=directory):
         with Image.open(str(source / (name + '.png'))) as im:
@@ -61,8 +63,15 @@ def run(directory, current):
             assert BUILD_SUBMIT_ORDERS.appear_on(im) == (p.stem in regular_build), p.stem
             assert SHOP_MEDAL_CHECK.appear_on(im) == (p.stem in ('support23', 'support2')), p.stem
     assert BUILD_FINISH_ORDERS.appear_on(frame('queue23', current))
+    for name in ('build23', 'buildlight', 'buildspecial'):
+        im = frame(name, current)
+        assert (OCR_BUILD_COIN_COUNT.ocr(im), OCR_BUILD_CUBE_COUNT.ocr(im)) == (23275, 1775)
+    im = frame('dormfeed', dorm)
+    assert DORM_FEED_CHECK.appear_on(im)
+    assert OCR_FILL.ocr(im) == (0, 42000, 42000)
+    assert OCR_SLOT.ocr(frame('dormok23', dorm)) == (6, 0, 6)
     print('KR exercise OCR and refresh, archive, build, commission, nine shop selectors: OK')
 
 
 if __name__ == '__main__':
-    run(Path(sys.argv[1]), Path(sys.argv[2]))
+    run(*(Path(arg) for arg in sys.argv[1:]))
