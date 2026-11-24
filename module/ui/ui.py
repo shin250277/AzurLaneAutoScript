@@ -25,6 +25,7 @@ from module.ui.assets import *
 from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_coalition,
                             page_channel, page_commission, page_dock, page_dorm, page_event, page_event_list, page_exercise, page_fleet,
                             page_guild, page_island_manage, page_main, page_main_white, page_mail, page_meowfficer, page_meta, page_mission,
+                            page_island_map, page_island_shop, page_tactical,
                             page_munitions, page_private_quarters, page_research, page_reshmenu, page_reward,
                             page_shipyard, page_shop, page_sp, page_storage, page_supply_pack)
 from module.ui_white.assets import *
@@ -374,7 +375,11 @@ class UI(InfoHandler):
                     return False
                 # The fleet card also looks white on KR's campaign menu. The
                 # bottom dock tab is present only on the actual main page.
-                return self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40)
+                if not self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40):
+                    return False
+                # These island pages also have a white panel at the dock tab.
+                return not any(self.appear(p.check_button, offset=offset)
+                               for p in (page_island_map, page_island_shop))
             if self.appear(page_main_white.check_button, offset=offset, interval=interval):
                 return True
             if self.appear(page_main.check_button, offset=(5, 5), interval=interval):
@@ -395,11 +400,16 @@ class UI(InfoHandler):
             if self.appear(KR_MUNITIONS_CHECK, offset=0, threshold=15) \
                     or self.appear(KR_SUPPLY_PACK_CHECK, offset=0, threshold=15):
                 return False
-            return self.appear(KR_SHOP_CHECK, offset=offset, interval=interval)
+            return self.appear(KR_SHOP_CHECK, offset=offset, interval=interval) and not self.appear(
+                page_island_shop.check_button, offset=offset)
         if self.config.SERVER == 'kr' and page in (page_munitions, page_supply_pack):
             # Both pages share the same localized shop menu. Detect the blue
             # background of the active tab instead of matching inactive text.
             return self.appear(KR_LOCALIZED_PAGE_CHECKS[page], offset=0, interval=interval, threshold=15)
+        if self.config.SERVER == 'kr' and page == page_academy:
+            # The tactical classroom keeps the academy header in the background.
+            return self.appear(KR_ACADEMY_CHECK, offset=offset, interval=interval) and not self.appear(
+                page_tactical.check_button, offset=offset)
         if self.config.SERVER == 'kr' and page in KR_LOCALIZED_PAGE_CHECKS:
             # These page titles keep JP's geometry, but localized glyphs need
             # dedicated templates to distinguish screens with the same header.

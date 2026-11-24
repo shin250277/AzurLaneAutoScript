@@ -35,11 +35,10 @@ def main(directory):
         with Image.open(str(directory / (frame + '.png'))) as im:
             assert im.size == (1280, 720)
             device.image = np.asarray(im.convert('RGB'))
-        if not replay.ui_page_appear(getattr(pages, 'page_' + page)):
-            failures.append(frame)
-        for other in ('exercise', 'island_map', 'island_transport', 'island_storage'):
-            if page != other and replay.ui_page_appear(getattr(pages, 'page_' + other)):
-                failures.append(frame + ':false-' + other)
+        matches = [name for name, candidate in pages.Page.all_pages.items()
+                   if candidate.check_button and replay.ui_page_appear(candidate)]
+        if matches != ['page_' + page]:
+            failures.append('{}: expected {}, got {}'.format(frame, page, matches))
     print('Expected page detected: %d/%d. Misses: %s' %
           (len(pairs)-len(failures), len(pairs), ', '.join(failures)))
     return int(bool(failures))
