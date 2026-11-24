@@ -51,11 +51,10 @@ class KoreanLocaleIntegrityTest(unittest.TestCase):
                 self.assertEqual(sorted(re.findall(r'\{[^{}]+\}', source)),
                                  sorted(re.findall(r'\{[^{}]+\}', self.locales['ko-KR'][key])))
 
-    def test_menu_and_task_text_is_not_untranslated_keys(self):
+    def test_no_display_text_is_a_raw_locale_key(self):
         for key, value in self.locales['ko-KR'].items():
-            if key[0] in ('Menu', 'Task'):
-                with self.subTest(key=key):
-                    self.assertNotEqual(value, '.'.join(key))
+            with self.subTest(key=key):
+                self.assertNotEqual(value, '.'.join(key))
 
     def test_new_island_and_event_shop_settings_are_not_keys(self):
         for key, value in self.locales['ko-KR'].items():
@@ -71,6 +70,13 @@ class KoreanLocaleIntegrityTest(unittest.TestCase):
         for key, title in expected.items():
             with self.subTest(key=key):
                 self.assertEqual(self.locales['ko-KR'][('Campaign', 'Event', key)], title)
+
+    def test_supported_archive_selector_uses_distinct_korean_card_titles(self):
+        from module.war_archives.dictionary import dic_archives_template
+        titles = [self.locales['ko-KR'][('Campaign', 'Event', key)] for key in dic_archives_template]
+        self.assertEqual(len(titles), len(set(titles)))
+        for title in titles:
+            self.assertRegex(title, r'^작전문서: .*?[가-힣]')
 
     def test_observed_october_event_title(self):
         self.assertEqual(self.locales['ko-KR'][('Campaign', 'Event', 'event_20260908_cn')],

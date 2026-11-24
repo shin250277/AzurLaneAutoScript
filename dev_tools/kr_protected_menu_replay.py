@@ -16,7 +16,9 @@ def run(root):
     server.set_server('kr')
     from module.retire.dock import Dock
     from module.guild.logistics import GuildLogistics, GUILD_EXCHANGE_LIMIT
-    from module.storage.ui import StorageUI, DISASSEMBLE, DISASSEMBLE_CANCEL
+    from module.storage.ui import StorageUI, DISASSEMBLE, DISASSEMBLE_CANCEL, EQUIPMENT_FILTER_CONFIRM
+    from module.research.rqueue import ResearchQueue
+    from module.research.project import get_research_name, get_research_finished, research_kr_detect
     from module.freebies.assets import FREE_SUPPLY_PACK
     from module.ui.assets import BATTLE_PASS_CHECK, REWARD_GOTO_BATTLE_PASS
     menu = root / 'kr_menu_capture_20261122'
@@ -50,13 +52,45 @@ def run(root):
             assert guild._guild_logistics_supply_available()
     storage = object.__new__(StorageUI)
     storage.config, storage.device = dock.config, dock.device
-    for name in ('material', 'blueprint', 'equipment'):
+    for name in ('material', 'blueprint', 'equipment', 'item_detail', 'filter'):
         storage.device.image = load(root / 'kr_inner_20261124' / ('storage_' + name + '.jpg'))
         assert storage._storage_in_material() == (name == 'material'), name
         assert storage.appear(DISASSEMBLE, offset=(20, 20)) == (name == 'equipment'), name
         assert not storage.appear(DISASSEMBLE_CANCEL, offset=(20, 20)), name
-    print('Dock: %d options x 2 frames; pass navigation: 6; paid-pack negatives: 12; OK'
-          % len(setting.settings))
+        assert storage.appear(EQUIPMENT_FILTER_CONFIRM, offset=(20, 20)) == (name == 'filter')
+        if name == 'filter':
+            setting_gear = storage.storage_filter
+            assert [k for k, b in setting_gear.settings.items() if setting_gear.is_option_active(b)] == [
+                ('rarity', 'all')]
+    research = object.__new__(ResearchQueue)
+    research.config, research.device = dock.config, dock.device
+    codes = ['E-315-MI', 'T-384-MI', 'D-486-RF', 'G-412-MI', 'E-191-MI']
+    for name in ('five', 'rotated', 'e315', 't384', 'queue_empty'):
+        im = load(root / 'kr_inner_20261124' / ('research_' + name + '.jpg'))
+        research.device.image = im
+        assert research.is_in_research() == (name in ('five', 'rotated')), name
+        assert research.is_in_queue() == (name == 'queue_empty'), name
+        if name in ('five', 'rotated'):
+            assert get_research_name(im) == (codes if name == 'five' else codes[-1:] + codes[:-1])
+            assert get_research_finished(im) == (2 if name == 'five' else 3)
+            assert research.get_queue_slot() == 5
+        if name in ('e315', 't384'):
+            project = research_kr_detect(im)
+            assert project.valid and str(project) == ('S5 E-315-MI' if name == 'e315' else 'S6-T-4')
+    # Exercise both production handlers on a mock device. The only basic
+    # confirm/cancel dialog in these captures is the tactical training prompt.
+    simulated = []
+    dock.device.click = lambda b: simulated.append(str(b))
+    frames = sorted(menu.glob('*.png')) + sorted((root / 'kr_inner_20261124').glob('*.jpg'))
+    for frame in frames:
+        dock.device.image = load(frame)
+        simulated.clear()
+        yes = dock.handle_popup_confirm('REPLAY', interval=0)
+        no = dock.handle_popup_cancel('REPLAY', interval=0)
+        expected_popup = frame.stem == 'tactical3'
+        assert (yes, no) == (expected_popup, expected_popup), frame.stem
+        assert simulated == (['POPUP_CONFIRM_REPLAY', 'POPUP_CANCEL_REPLAY'] if expected_popup else [])
+    print('Dock, supply, pass, guild, storage, research and popup replay OK (%d popup frames).' % len(frames))
 
 
 if __name__ == '__main__':
