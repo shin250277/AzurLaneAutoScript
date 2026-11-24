@@ -1214,9 +1214,9 @@ module/retire/assets.py,TEMPLATE_ENHANCE_BOGUE,Template,upstream-shared,outside_
 module/retire/assets.py,TEMPLATE_ENHANCE_HERMES,Template,upstream-shared,outside_fixed_scan,indirect
 module/retire/assets.py,TEMPLATE_ENHANCE_LANGLEY,Template,upstream-shared,outside_fixed_scan,indirect
 module/retire/assets.py,TEMPLATE_ENHANCE_RANGER,Template,upstream-shared,outside_fixed_scan,indirect
-module/retire/assets.py,TEMPLATE_FLEET_1,Template,regional-fallback-review,outside_fixed_scan,indirect|visual
-module/retire/assets.py,TEMPLATE_FLEET_2,Template,regional-fallback-review,outside_fixed_scan,indirect
-module/retire/assets.py,TEMPLATE_FLEET_3,Template,regional-fallback-review,outside_fixed_scan,indirect|visual
+module/retire/assets.py,TEMPLATE_FLEET_1,Template,kr-specific,outside_fixed_scan,indirect|visual
+module/retire/assets.py,TEMPLATE_FLEET_2,Template,kr-specific,outside_fixed_scan,indirect
+module/retire/assets.py,TEMPLATE_FLEET_3,Template,kr-specific,outside_fixed_scan,indirect|visual
 module/retire/assets.py,TEMPLATE_FLEET_4,Template,regional-fallback-review,outside_fixed_scan,indirect|visual
 module/retire/assets.py,TEMPLATE_FLEET_5,Template,regional-fallback-review,outside_fixed_scan,indirect
 module/retire/assets.py,TEMPLATE_FLEET_6,Template,regional-fallback-review,outside_fixed_scan,indirect

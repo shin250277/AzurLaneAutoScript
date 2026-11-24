@@ -17,7 +17,7 @@
 | ID | 분류 | 설정 그룹(별도 확인 범위) | 판정 | 확인한 범위 / 다음 확인 |
 |---|---|---|---|---|
 | `Alas` | Alas | Emulator, EmulatorInfo, Error, Optimization, DropRecord | 부분 실기 | 로그인·예약·오류 중단 확인. 통신/최적화/알림/통계 옵션 전 조합은 미확인 |
-| `General` | Alas | Retirement, OneClickRetire, Enhance, OldRetire | 부분 실기 | 기존 기준 일괄퇴역 10/21 통과. 강화·돌파 보존·각 희귀도 경계 별도 확인 필요 |
+| `General` | Alas | Retirement, OneClickRetire, Enhance, OldRetire | 부분 실기·화면 재생 | 기존 기준 일괄퇴역 통과. 한섭 도크 1~3함대 숫자 수정 후 서로 다른 두 화면의 함선 각 14척 판독 일치. 4~6함대·강화·돌파·각 희귀도까지 확대하지 않음 |
 | `Restart` | Alas | Scheduler | 실기 | 11/6 점검 후 로그인/08:39 정상 종료 재확인. 장애별 복구는 별도 분기 |
 | `Main` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 10/21 12-4 1회 보스/보상/종료. 모든 해역 통과 의미 아님 |
 | `Main2` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/24 12-4 1회, 도크 포화 시 기존 일괄퇴역 및 장비 보관 후 재개. 21:18:26 전투 종료, 21:18:28 횟수 0·자동 비활성, 21:18:29 작업 종료 |
@@ -51,12 +51,12 @@
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
 | `ShopFrequent` | DailyMission | Scheduler, GeneralShop | 부분 실기 | 기존 비유료 필터 실행. 미구매 품목/보호 재고 경계 확인 필요 |
 | `ShopOnce` | DailyMission | Scheduler, GuildShop, MedalShop2, MeritShop, CoreShop | 부분 실기 | 11/6 길드·훈장 거래 및 정상 종료. 공훈/코어 필터 순회는 실제 구매 통과와 구분 |
-| `Shipyard` | DailyMission | Scheduler, ShipyardDr, Shipyard | 조건·승인필요 | 신규 개발 대상 선택 금지 유지. 기존 대상 무료/할인 강화 분기 증거 대조 필요 |
+| `Shipyard` | DailyMission | Scheduler, ShipyardDr, Shipyard | 오프라인 통과·실결제 제외 | 대상 미지정(0)에서 선택 차단. PR/DR 첫 두 장 무료, 세 번째 150/600, 잔액 정확·1 부족 및 미리보기에서 잔액 유지 확인. 새 개발 대상 선택이나 실구매 없음 |
 | `Gacha` | DailyMission | Scheduler, Gacha | 실기 | 10/21 소형1회 제출/함선수령,10/22 0회 수령전용 통과. 유료 쾌속 금지 |
 | `Freebies` | DailyMission | Scheduler, BattlePass, DataKey, Mail, SupplyPack | 부분 실기 | 정상 종료. 패스/키/우편/무료패키지별 신규 수령 증거 구분 필요 |
 | `Minigame` | DailyMission | Scheduler | 실기 | 11/6 무료 코인10회/보상/정상 종료 재확인. 모든 게임 유형은 아님 |
 | `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
-| `OpsiGeneral` | Opsi | OpsiGeneral | 공통설정 | 기존 비유료 자원 상한/함대/잠수함/체력 보호 유지. 옵션별 증거 대조 필요 |
+| `OpsiGeneral` | Opsi | OpsiGeneral | 공통 보호 오프라인 통과 | 주간 행동력 구매 한도, 구매 후 연료 1000 경계, 함대 1·잠수함 미호출, 편성된 함선의 수리 기준 40% 경계를 실제 분기 함수로 검사. 보호 설정 변경 없음 |
 | `OpsiAshBeacon` | Opsi | Scheduler, OpsiAshBeacon | 부분 실기 | 10/21 본인META 1회 공격/피해/종료. 격파 보상 미확인 |
 | `OpsiAshAssist` | Opsi | Scheduler, OpsiAshAssist | 부분 실기·수정 재검증 | 11/8 지원3회/보상/잔여0,23:53:15 정상종료·메인 복귀. 11/9 지원3회 후 별도 누적 보상의 META 결정 획득 카드에서00:31:34 중단 발견. 전용 문구+카드 두 앵커 보완 및 실패 화면 양성/빈 화면·한 앵커 음성 재생 통과. 동일 보상 재출현 실기는 아직 미확인 |
 | `OpsiExplore` | Opsi | Scheduler, OpsiExplore, OpsiFleet | 부분 실기 | 10/2 다수 해역 개척 통과. 전체 개척 완료 아님 |
