@@ -82,9 +82,25 @@ def run(root):
     simulated = []
     dock.device.click = lambda b: simulated.append(str(b))
     frames = sorted(menu.glob('*.png')) + sorted((root / 'kr_inner_20261124').glob('*.jpg'))
+    from module.meowfficer.train import MeowfficerTrain, MEOWFFICER_QUEUE
+    from module.meowfficer.buy import MEOWFFICER, MEOWFFICER_COINS
+    from module.meowfficer.assets import MEOWFFICER_TRAIN_START, MEOWFFICER_TRAIN_FILL_QUEUE
+    cat = object.__new__(MeowfficerTrain)
+    cat.config, cat.device = dock.config, dock.device
+    cat.device.image = load(menu / 'cats.png')
+    assert MEOWFFICER.ocr(cat.device.image) == (15, 0, 15)
+    assert MEOWFFICER_COINS.ocr(cat.device.image) == 21600
+    cat.device.image = load(root / 'kr_meow_queue_frame.png')
+    assert MEOWFFICER_QUEUE.ocr(cat.device.image) == (0, 9, 9)
+    for button in (MEOWFFICER_TRAIN_START, MEOWFFICER_TRAIN_FILL_QUEUE):
+        assert cat.appear(button, offset=(20, 20)), button
+    assert not cat._handle_meow_train_evaluate(interval=0) and not simulated
+    cat.device.image = load(root / 'kr_meow_get_frame.png')
+    assert cat._handle_meow_train_evaluate(interval=0) and len(simulated) == 1
     for frame in frames:
         dock.device.image = load(frame)
         simulated.clear()
+        assert not cat._handle_meow_train_evaluate(interval=0) and not simulated, frame.stem
         yes = dock.handle_popup_confirm('REPLAY', interval=0)
         no = dock.handle_popup_cancel('REPLAY', interval=0)
         expected_popup = frame.stem == 'tactical3'
