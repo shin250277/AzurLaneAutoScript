@@ -65,6 +65,27 @@ def run(folder, extract=False):
         if cls is CoreShop_250814:
             assert items[0].name == 'Chip'
     print('General, guild and core: 30/30 prices and currencies; general names: 10/10.')
+    from module.shop.shop_medal import MedalShop2_250814
+    s = object.__new__(MedalShop2_250814)
+    s.config = shop.config
+    if extract:
+        icon = load(folder / 'medal_clean.png')[589:608, 450:462]
+        path = Path('assets/kr/shop/KR_MEDAL_PRICE_ICON.png')
+        if path.exists():
+            assert np.array_equal(load(path), icon)
+        else:
+            Image.fromarray(icon).save(str(path))
+    for name in ('medal_clean', 'medal'):
+        s.device = SimpleNamespace(image=load(folder / (name + '.png')))
+        assert len(s._get_medals()) == 2
+        items = s.shop_detect_items()
+        assert [i.price for i in items] == [80, 80, 80, 30, 6, 10, 60, 30, 30, 30]
+        assert all(i.cost == 'Medal' for i in items)
+    from module.shop.shop_medal import KR_MEDAL_PRICE_ICON
+    for name in ('coremonthly_clean', 'guildshop_clean', 'merit_clean', 'general_clean'):
+        area = load(folder / (name + '.png'))[317:635, 265:999]
+        assert not KR_MEDAL_PRICE_ICON.match_multi(area, similarity=0.83, threshold=5), name
+    print('Medal: both rows and all 10 prices on both captures.')
 
 
 if __name__ == '__main__':

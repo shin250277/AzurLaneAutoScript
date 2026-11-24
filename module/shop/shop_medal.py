@@ -67,6 +67,7 @@ else:
 TEMPLATE_MEDAL_ICON = Template('./assets/shop/cost/Medal.png')
 TEMPLATE_MEDAL_ICON_2 = Template('./assets/shop/cost/Medal_2.png')
 TEMPLATE_MEDAL_ICON_3 = Template('./assets/shop/cost/Medal_3.png')
+KR_MEDAL_PRICE_ICON = Template('./assets/kr/shop/KR_MEDAL_PRICE_ICON.png')
 
 
 class MedalShop2_250814(ShopClerk, ShopStatus):
@@ -88,6 +89,8 @@ class MedalShop2_250814(ShopClerk, ShopStatus):
         # copy image because we gonna paint it
         image = self.image_crop(area, copy=True)
         medals = TEMPLATE_MEDAL_ICON_3.match_multi(image, similarity=0.5, threshold=5)
+        if self.config.SERVER == 'kr':
+            medals += KR_MEDAL_PRICE_ICON.match_multi(image, similarity=0.83, threshold=5)
         medals = Points([(0., m.area[1]) for m in medals]).group(threshold=5)
         logger.attr('Medals_icon', len(medals))
         return medals
