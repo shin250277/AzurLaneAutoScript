@@ -312,7 +312,7 @@ class RewardGacha(GachaUI, Retirement):
                 confirm_timer.reset()
                 continue
 
-            if self.appear(GET_SHIP, interval=1):
+            if self.appear(GET_SHIP, offset=False if self.config.SERVER == 'kr' else (20, 20), interval=1):
                 # The KR top bar can return before the result template fades.
                 # Never fast-forward at the currency/shop shortcut coordinates.
                 self.device.click(GET_SHIP if self.config.SERVER == 'kr' else STORY_SKIP)

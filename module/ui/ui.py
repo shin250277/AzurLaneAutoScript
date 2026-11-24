@@ -416,9 +416,13 @@ class UI(InfoHandler):
             return self.appear(KR_LOCALIZED_PAGE_CHECKS[page], offset=offset, interval=interval)
         # shitty EN localization changing font width of ACADEMY title,
         # check other buttons also
-        if self.config.SERVER == 'en' and page == page_academy:
-            if self.appear(ACADEMY_GOTO_MUNITIONS, offset=offset, interval=interval):
-                return True
+        if self.config.SERVER == 'en':
+            if page == page_academy:
+                if self.appear(ACADEMY_GOTO_MUNITIONS, offset=offset, interval=interval):
+                    return True
+            if page == page_tactical:
+                if self.appear(TACTICAL_CHECK_2, offset=offset, interval=interval):
+                    return True
         return self.appear(page.check_button, offset=offset, interval=interval)
 
     def is_in_main(self, offset=(30, 30), interval=0):
@@ -917,7 +921,7 @@ class UI(InfoHandler):
         # On KR it also matches the main-page chat control, so do not use it as
         # a global popup detector until a KR-specific contextual asset exists.
         if get_ship and server.server != 'kr':
-            if self.appear_then_click(GET_SHIP, interval=5):
+            if self.appear_then_click(GET_SHIP, offset=(20, 20), interval=5):
                 return True
         if self.appear_then_click(LOGIN_RETURN_SIGN, offset=(30, 30), interval=3):
             return True
@@ -1155,6 +1159,11 @@ class UI(InfoHandler):
             self.config.task_delay(minute=30)
             self.config.task_stop('KR server maintenance')
         if self.appear_then_click(MAINTENANCE_ANNOUNCE, offset=(30, 30), interval=3):
+            return True
+        # rerun event select page
+        if self.appear(RERUN_SELECT_CHECK, offset=(30, 30), interval=3):
+            logger.info(f'UI additional: {RERUN_SELECT_CHECK} -> {SHOP_BACK_ARROW}')
+            self.device.click(SHOP_BACK_ARROW)
             return True
 
         # Mistaken click

@@ -38,13 +38,6 @@
     }
   },
   "Task": {
-    "IslandOrderTrial": {"name": "철광석 주문 1회 검증", "help": "철광석 6개를 사용하는 일반 주문 1회만 제출합니다. 구매·거절·추가 주문 없음. 시도 기록이 있으면 재실행하지 않습니다."},
-    "RaidRewardClaim": {"name": "거물 누적 보상 수령", "help": "열려 있는 개인 보상 화면에서 달성 보상만 수령합니다. 구매·전투 없음."},
-    "RaidTrial": {"name": "레이드 1회 검증", "help": "레이드 설정 난이도를 1회 실행합니다. 도전권·자동 퇴역 없음. 연료 하한 20000."},
-    "RaidInspect": {"name": "레이드 화면 검사", "help": "현재 레이드 화면만 확인합니다. 전투·구매 없음."},
-    "EventShopScan": {"name": "이벤트 상점 판독 (구매 없음)", "help": "이벤트 상점을 탐색하고 인식 결과만 기록합니다. 구매는 차단됩니다."},
-    "IslandInspect": {"name": "섬 주문·시즌 화면 검사", "help": "화면만 확인합니다. 주문 제출, 보상 수령, 생산 목표 변경은 하지 않습니다."},
-    "IslandProductionTrial": {"name": "감자 1회 검증 (씨앗 9개)", "help": "승인된 단일 생산 검증. 구매·교환 없음. 시도 기록이 있으면 추가 생산 없이 첫 완료 슬롯 수령 또는 빈 슬롯 재고 판독만 합니다."},
     "Alas": {
       "name": "ALAS",
       "help": ""
@@ -265,6 +258,10 @@
       "name": "월간 초기화 일일 작업",
       "help": "ALAS가 대형 작전 초기화 10분 전에 진입해 화면을 나가지 않고 초기화를 기다립니다. 이후 일일 임무, 비밀 해역, 심연 해역, 지휘냥 파밍을 실행해 추가 강화 부품을 획득합니다. 일일 임무에는 '대형 작전 일일 임무' 작업 설정을 사용하며 나머지 기능은 동일합니다.\n중요: ALAS가 대형 작전 초기화를 기다리는 동안 게임을 조작하지 마세요."
     },
+    "IslandGeneral": {
+      "name": "섬 설정",
+      "help": ""
+    },
     "IslandProduction": {
       "name": "섬 생산",
       "help": "먼저 섬 상점 운영에서 식당 레벨과 종업원을 설정한 다음, 도구 - 섬 생산 계획을 설정하고 실행해 생산 계획을 생성하세요.\n이후 섬 생산 작업을 정상적으로 실행할 수 있습니다.\n안내: https://github.com/LmeSzinc/AzurLaneAutoScript/wiki/Island-Planner-Auto-Farming-&-Configure"
@@ -272,6 +269,10 @@
     "IslandOrder": {
       "name": "섬 주문",
       "help": ""
+    },
+    "IslandTransport": {
+      "name": "섬 운송 의뢰",
+      "help": "완료한 운송 의뢰의 보상을 수령하고, 생산 계획에 가장 유리한 의뢰를 처리합니다. 필요하면 목록에서 더 나은 의뢰로 교체합니다. 의뢰 가치 계산을 위해 먼저 도구에서 섬 생산 계획을 실행하세요."
     },
     "IslandFreebie": {
       "name": "섬 무료 보상",
@@ -304,6 +305,34 @@
     "IslandProductionPlanner": {
       "name": "섬 생산 계획",
       "help": "지정한 일일 수익 조건에 맞춰 포인트 획득을 최적화하는 섬 생산 계획 도구입니다.\n실행 후 초기 재고와 누적할 품목 수량을 설정에 저장하므로, 이후에는 기술을 다시 스캔하지 않고 생산 계획에 사용할 수 있습니다.\n주의: 스캔 당시의 기술 상태를 기준으로 최적화합니다. 기술 상태가 바뀌면 도구를 다시 실행해 생산 계획을 갱신하는 것을 권장합니다."
+    },
+    "IslandProductionTrial": {
+      "name": "감자 1회 검증 (씨앗 9개)",
+      "help": "승인된 단일 생산 검증. 구매·교환 없음. 시도 기록이 있으면 추가 생산 없이 첫 완료 슬롯 수령 또는 빈 슬롯 재고 판독만 합니다."
+    },
+    "EventShopScan": {
+      "name": "이벤트 상점 판독 (구매 없음)",
+      "help": "이벤트 상점을 탐색하고 인식 결과만 기록합니다. 구매는 차단됩니다."
+    },
+    "IslandInspect": {
+      "name": "섬 주문·시즌 화면 검사",
+      "help": "화면만 확인합니다. 주문 제출, 보상 수령, 생산 목표 변경은 하지 않습니다."
+    },
+    "IslandOrderTrial": {
+      "name": "철광석 주문 1회 검증",
+      "help": "철광석 6개를 사용하는 일반 주문 1회만 제출합니다. 구매·거절·추가 주문 없음. 시도 기록이 있으면 재실행하지 않습니다."
+    },
+    "RaidInspect": {
+      "name": "레이드 화면 검사",
+      "help": "현재 레이드 화면만 확인합니다. 전투·구매 없음."
+    },
+    "RaidRewardClaim": {
+      "name": "거물 누적 보상 수령",
+      "help": "열려 있는 개인 보상 화면에서 달성 보상만 수령합니다. 구매·전투 없음."
+    },
+    "RaidTrial": {
+      "name": "레이드 1회 검증",
+      "help": "레이드 설정 난이도를 1회 실행합니다. 도전권·자동 퇴역 없음. 연료 하한 20000."
     },
     "Benchmark": {
       "name": "성능 테스트",
@@ -728,112 +757,112 @@
       "name": "이벤트 이름",
       "help": "최신 이벤트를 자동으로 선택합니다.",
       "campaign_main": "메인 해역",
-      "coalition_20230323": "Frostfall",
-      "coalition_20240627": "Welcome to Little Academy",
-      "coalition_20250626": "The Neon City Investigator",
+      "coalition_20230323": "星霜海嵐",
+      "coalition_20240627": "リトル学園へようこそ",
+      "coalition_20250626": "ネオンシティの探索者",
       "coalition_20251120": "DATE A LANE",
-      "coalition_20260122": "Light & Shadow Fashion Shoot!",
+      "coalition_20260122": "特集写真-撮影進行中",
       "coalition_20260723": "괴담실록",
-      "event_20200227_cn": "동절의 북해",
-      "event_20200312_cn": "솔로몬의 무사 (복각)",
-      "event_20200326_cn": "어둠을 쫓는 은익",
-      "event_20200423_cn": "청홍의 메아리 (복각)",
-      "event_20200507_cn": "어둠 속의 귀로",
-      "event_20200521_cn": "穹顶下的圣咏曲",
-      "event_20200521_en": "빛과 그림자의 아이리스 (복각)",
-      "event_20200603_cn": "피오르드 반격전 (복각)",
-      "event_20200603_en": "월하의 서곡 (복각)",
-      "event_20200611_en": "하늘 아래의 찬송가",
-      "event_20200716_en": "검게 물든 강철의 벚꽃 (복각)",
-      "event_20200723_cn": "영원한 밤의 환광",
-      "event_20200806_cn": "최고의 보물 (복각)",
-      "event_20200820_cn": "메탈 블러드 음표&맹세 (복각)",
-      "event_20200903_en": "피오르드의 별",
-      "event_20200917_cn": "접해몽화 (복각)",
-      "event_20201002_en": "피오르드 반격전",
-      "event_20201012_cn": "날카로운 해상의 날개 (복각)",
-      "event_20201029_cn": "격창의 유니버스",
-      "event_20201126_cn": "Vacation Lane Rerun",
-      "event_20201229_cn": "부상한 작전 (복각)",
-      "event_20210121_cn": "디바인 트래지코미디 (복각)",
-      "event_20210225_cn": "새벽녘에 비치는 빙화 (복각)",
+      "event_20200227_cn": "凍絶の北海",
+      "event_20200312_cn": "南洋に靡く硝煙（復刻）",
+      "event_20200326_cn": "闇靄払う銀翼",
+      "event_20200423_cn": "縹映る深緋の残響（復刻）",
+      "event_20200507_cn": "帰路は海色の陰りへと",
+      "event_20200521_cn": "神穹を衝く聖歌",
+      "event_20200521_en": "Iris of Light and Dark Rerun",
+      "event_20200603_cn": "峡湾間の反撃（復刻）",
+      "event_20200603_en": "Prelude under the Moon Rerun",
+      "event_20200611_en": "Skybound Oratorio",
+      "event_20200716_en": "Ink Stained Steel Sakura Rerun",
+      "event_20200723_cn": "極夜照らす幻光",
+      "event_20200806_cn": "The Enigma and the Shark Rerun",
+      "event_20200820_cn": "黒鉄の楽章 誓いの海（復刻）",
+      "event_20200903_en": "輝ける峡湾の星（復刻）",
+      "event_20200917_cn": "刹那觀る胡蝶の夢（復刻）",
+      "event_20201002_en": "Counterattack Within the Fjord",
+      "event_20201012_cn": "奔る彩帆の青（復刻）",
+      "event_20201029_cn": "激唱のユニバース",
+      "event_20201126_cn": "バケーションレーン（復刻）",
+      "event_20201229_cn": "虚畳なりし限象（復刻）",
+      "event_20210121_cn": "悲歎せし焔海の詩（復刻）",
+      "event_20210225_cn": "暁射す氷華の嵐（復刻）",
       "event_20210225_tw": "北境序曲",
-      "event_20210325_cn": "샌드 플레이 (복각)",
+      "event_20210325_cn": "開かれし紺碧の砂箱（復刻）",
       "event_20210415_tw": "復刻圍剿施佩伯爵",
-      "event_20210422_cn": "부흥의 찬송가 (복각)",
+      "event_20210422_cn": "讃える復興の迷路（復刻）",
       "event_20210429_tw": "復刻墨染的鋼鐵之花",
-      "event_20210527_cn": "비추는 나선의 경해 (복각)",
+      "event_20210527_cn": "照らす螺旋の鏡海（復刻）",
       "event_20210527_tw": "微層混合",
       "event_20210610_tw": "復刻夜幕下的歸途",
-      "event_20210624_cn": "빛나는 벚꽃의 그림자 (복각)",
+      "event_20210624_cn": "翳りし満ちる影の華(復刻)",
       "event_20210624_tw": "穹頂下的聖詠曲",
-      "event_20210722_cn": "Azur Anthem",
-      "event_20210819_cn": "어둠을 쫓는 은익 (복각)",
-      "event_20210916_cn": "맑고 푸른 바다 (복각)",
-      "event_20211028_cn": "하늘 아래의 찬송가 (복각)",
+      "event_20210722_cn": "海に響くアイドルの歌",
+      "event_20210819_cn": "闇靄払う銀翼（復刻）",
+      "event_20210916_cn": "駆けよ 碧海の吹き風（復刻）",
+      "event_20211028_cn": "神穹を衝く聖歌（復刻）",
       "event_20211028_tw": "復刻光與影的鳶尾之華",
-      "event_20211111_cn": "제노바의 화염 (복각)",
-      "event_20211125_cn": "World-spanning Arclight Rerun",
-      "event_20211229_cn": "역행하는 무지개 탑 (복각)",
-      "event_20220210_cn": "동절의 북해 (복각)",
-      "event_20220224_cn": "깊게 울리는 메아리 (복각)",
+      "event_20211111_cn": "復刻-燈火のシニエ",
+      "event_20211125_cn": "弧光は交わる世界にて（復刻）",
+      "event_20211229_cn": "遡望せし虹彩の塔（復刻）",
+      "event_20220210_cn": "凍絶の北海（復刻）",
+      "event_20220224_cn": "鳴動せし星霜の淵（復刻）",
       "event_20220310_tw": "復刻斯圖爾特的硝煙",
-      "event_20220324_cn": "허상의 탑 (복각)",
+      "event_20220324_cn": "幻像の塔（復刻）",
       "event_20220407_tw": "蒼紅的迴響(復刻)",
-      "event_20220414_cn": "영원한 밤의 환광 (복각)",
-      "event_20220428_cn": "레인보우 피날레 (복각)",
-      "event_20220526_cn": "빛나는 정원의 맹세 (복각)",
-      "event_20220728_cn": "독수리의 서사곡 (복각)",
-      "event_20220818_cn": "결상점 작전 (복각)",
-      "event_20220915_cn": "짙은 자줏빛의 안개 (복각)",
-      "event_20221124_cn": "The Alchemist and the Archipelago of Secrets Rerun",
-      "event_20221222_cn": "거듭되는 평행세계 (복각)",
-      "event_20230223_cn": "잿빛 폐허 (복각)",
-      "event_20230525_cn": "오엽각 교차점 (복각)",
-      "event_20230803_cn": "불타는 아이리스 회상곡 (복각)",
-      "event_20230817_cn": "The Fools Scales Rerun",
-      "event_20230914_cn": "Effulgence Before Eclipse Rerun",
-      "event_20231026_cn": "템페스타와 청춘의 샘",
-      "event_20231123_cn": "The Ninja Scrolls: Azur Flash",
-      "event_20231221_cn": "Light-Chasing Sea of Stars Rerun",
-      "event_20240229_cn": "Snowrealm Peregrination Rerun",
-      "event_20240425_cn": "Heart-Linking Harmony",
-      "event_20240521_cn": "Light of the Martyrium Rerun",
-      "event_20240725_cn": "환몽 간주곡",
-      "event_20240815_cn": "Windborne Steel Wings",
-      "event_20240829_cn": "Whence Flowers Bear No Fruit",
-      "event_20240912_cn": "Ode of Everblooming Crimson",
-      "event_20241024_cn": "Tempesta and the Sleeping Sea",
-      "event_20241121_cn": "Dangerous Inventions Incoming",
-      "event_20241219_cn": "Substellar Crepuscule",
-      "event_20250227_cn": "Paradiso of Shackled Light",
-      "event_20250424_cn": "Toward Tulipa’s Seas Rerun",
-      "event_20250520_cn": "A Rose on the High Tower",
-      "event_20250724_cn": "The Alchemist and the Tower of Horizons",
-      "event_20250814_cn": "Secrets of the Abyss",
-      "event_20250912_cn": "A Dance for Amahara Above",
-      "event_20251023_cn": "Tempesta and Islas de Libertád",
-      "event_20251218_cn": "A Note Through the Firmament",
-      "event_20260226_cn": "Springtide Inn Online",
-      "event_20260326_cn": "The Vagabond’s Recruitment Plan",
-      "event_20260417_cn": "Vacation Lane – Beachside Brilliance",
-      "event_20260520_cn": "Alliance Before the Hagiobull",
-      "event_20260625_cn": "Miracle by Midnight",
+      "event_20220414_cn": "極夜照らす幻光（復刻）",
+      "event_20220428_cn": "吟ずる瑠璃の楽章（復刻）",
+      "event_20220526_cn": "復刻诚閃の剣 搖光の城",
+      "event_20220728_cn": "鋼鷲の冒険譚（復刻）",
+      "event_20220818_cn": "結像点作戦（復刻）",
+      "event_20220915_cn": "赫の涙月 菫の暁風（復刻）",
+      "event_20221124_cn": "錬金術士と謎の遺跡群島（復刻）",
+      "event_20221222_cn": "積重なる事象の幻界（復刻）",
+      "event_20230223_cn": "黙示の遺構（復刻）",
+      "event_20230525_cn": "覆天せし万象の塵（復刻）",
+      "event_20230803_cn": "燃ゆる聖都の回想曲（復刻）",
+      "event_20230817_cn": "愚者の天秤（復刻）",
+      "event_20230914_cn": "須臾望月抄（復刻）",
+      "event_20231026_cn": "テンペスタと若返りの泉",
+      "event_20231123_cn": "蒼閃忍法帖",
+      "event_20231221_cn": "光追う星の海（復刻）",
+      "event_20240229_cn": "銀界遊廻（復刻）",
+      "event_20240425_cn": "共鳴のパッション",
+      "event_20240521_cn": "赫輝のマルティリウム（復刻）",
+      "event_20240725_cn": "夢幻の間奏曲",
+      "event_20240815_cn": "錬翼空翔（復刻）",
+      "event_20240829_cn": "徒花咲かす彼岸",
+      "event_20240912_cn": "絳染む丹華の詠歌（復刻）",
+      "event_20241024_cn": "テンペスタと眠りし海",
+      "event_20241121_cn": "危険発明接近中",
+      "event_20241219_cn": "星降る夕影の残光（復刻）",
+      "event_20250227_cn": "籠檻に囚われし神光（復刻）",
+      "event_20250424_cn": "チュリッパの海へ（復刻）",
+      "event_20250520_cn": "高い塔の薔薇（復刻）",
+      "event_20250724_cn": "錬金術士と天空邂逅の塔",
+      "event_20250814_cn": "淵層界の秘密（復刻）",
+      "event_20250912_cn": "アマハラに舞い奉れ（復刻）",
+      "event_20251023_cn": "テンペスタと自由群島",
+      "event_20251218_cn": "天穹に響く音謡",
+      "event_20260226_cn": "春色旅籠Online",
+      "event_20260326_cn": "ワンダラー募集計画",
+      "event_20260417_cn": "バケーションレーン・きらめく砂浜",
+      "event_20260520_cn": "聖印前の同盟",
+      "event_20260625_cn": "幻夢のカヴァルカード",
       "event_20260813_cn": "몽광의 아스트라리움",
       "event_20260908_cn": "유영 미성",
       "event_20261022_cn": "템페스타와 안개회랑",
-      "raid_20200624": "Air Raid Drills with Essex Rerun",
-      "raid_20210708": "Cross Wave rerun",
-      "raid_20220127": "Mystery Investigation",
-      "raid_20220630": "Angel of Iris",
-      "raid_20221027": "Fight On Royal Maids!(Part 3)",
-      "raid_20230118": "Winter Pathfinder",
-      "raid_20230629": "Reflections of the Oasis",
-      "raid_20240130": "Spring Festive Fiasco",
-      "raid_20240328": "From Zero to Hero Rerun",
-      "raid_20250116": "Spring Fashion Festa",
-      "raid_20260212": "Spring Auction Adventure",
-      "raid_20260827": "The Big Shots Proclamation",
+      "raid_20200624": "特別演習超空強襲波（復刻）",
+      "raid_20210708": "交錯する新たな波 (復刻)",
+      "raid_20220127": "秘密事件調査",
+      "raid_20220630": "アイリスの天使",
+      "raid_20221027": "戦え！ロイヤルメイド隊3rd",
+      "raid_20230118": "冬の案内人",
+      "raid_20230629": "緑地伽話",
+      "raid_20240130": "新春宴会狂騒曲",
+      "raid_20240328": "ゼロから頑張る魔王討伐（復刻）",
+      "raid_20250116": "新春華裳協奏曲",
+      "raid_20260212": "新春玉逸品会",
+      "raid_20260827": "偉いやつの予告状",
       "war_archives_20180607_cn": "작전문서: 검게 물든 강철의 벚꽃",
       "war_archives_20180726_cn": "작전문서: 빛과 그림자의 아이리스",
       "war_archives_20181020_en": "작전문서: 노력, 희망과 계획",
@@ -880,8 +909,11 @@
       "war_archives_20230223_cn": "작전문서: 잿빛 폐허",
       "war_archives_20230525_cn": "작전문서: 오엽각 교차점",
       "war_archives_20230803_cn": "작전문서: 불타는 아이리스 회상곡",
+      "war_archives_20230817_cn": "작전문서: 어리석은 자의 천칭",
       "war_archives_20231026_cn": "작전문서: 템페스타와 청춘의 샘",
-      "war_archives_20240725_cn": "작전문서: 환몽 간주곡"
+      "war_archives_20240725_cn": "작전문서: 환몽 간주곡",
+      "war_archives_20241024_cn": "작전문서: 템페스타와 잠든 바다",
+      "war_archives_20251023_cn": "작전문서: 템페스타와 자유 군도"
     },
     "Mode": {
       "name": "해역 모드",
@@ -2203,7 +2235,8 @@
       "new_jersey": "뉴저지",
       "taihou": "다이호",
       "aegir": "에기르",
-      "nakhimov": "나히모프"
+      "nakhimov": "나히모프",
+      "implacable": "implacable"
     }
   },
   "Daily": {
@@ -2659,6 +2692,21 @@
       "22": "22 | NA 해역 남서부 구역 B"
     }
   },
+  "IslandGeneral": {
+    "_info": {
+      "name": "섬 설정",
+      "help": ""
+    },
+    "Season": {
+      "name": "개발 시즌",
+      "help": "서버의 최신 개발 시즌을 자동으로 선택합니다. 모든 섬 작업과 생산 계획에서 이 설정을 함께 사용합니다.",
+      "season_20261105_cn": "겨울 개발 시즌",
+      "season_20251106_cn": "Development Season I - Lets Get Started!",
+      "season_20260205_cn": "Development Season II - Spring Merrymaking",
+      "season_20260507_cn": "Development Season Ⅲ – Summer Sojourn",
+      "season_20260806_cn": "가을 개발 시즌"
+    }
+  },
   "IslandProduction": {
     "_info": {
       "name": "섬 생산 설정",
@@ -2679,6 +2727,14 @@
     "IdleAccumulatingItems": {
       "name": "유휴 시간 비축 품목",
       "help": "생산이 쉬고 있고 재료가 충분할 때 비축할 품목입니다.\n값은 유휴 생산 우선순위 계산에 사용하는 예상 일일 비축량입니다.\n도구의 섬 생산 계획에서 자동 생성할 수 있습니다."
+    },
+    "SkipBufferSurplus": {
+      "name": "여유 재고 생산 건너뛰기",
+      "help": "켜면 여유 재고 생산 조건을 확인하지 않고 빈 슬롯에서 재고를 쌓습니다. 끄면 여유 재고 생산을 먼저 시도하고, 실패하면 빈 슬롯을 사용합니다."
+    },
+    "UseWorkerjuuByDefault": {
+      "name": "기본 작업자로 만쥬 사용",
+      "help": "켜면 작업 만쥬를 사용합니다. 끄면 해당 시설 전용 스킬, 해당 시설을 포함한 여러 시설용 스킬, 시설 제한 없는 스킬 순으로 작업자를 찾습니다. 각 그룹에서는 현재 체력이 100 이상인 대기 인원 중 작업 효율이 가장 높은 인원을 선택하며, 적임자가 없으면 만쥬를 사용합니다. 지정한 식당 직원은 항상 제외합니다. 후드, 유니콘, 시마카제, 재블린, 일선, 비운, 다이호, 아거스는 체력 상한이 150에 도달하면 식당용으로 남겨 둡니다."
     }
   },
   "IslandOrder": {
@@ -2718,7 +2774,7 @@
       "name": "Golden Koi 직원 1",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Chao_Ho": "Chao_Ho",
       "Chang_Feng": "Chang_Feng"
     },
@@ -2726,7 +2782,7 @@
       "name": "Golden Koi 직원 2",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Chao_Ho": "Chao_Ho",
       "Chang_Feng": "Chang_Feng"
     },
@@ -2746,7 +2802,7 @@
       "name": "Polar Bear 직원 1",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Cheshire": "Cheshire",
       "Chang_Feng": "Chang_Feng"
     },
@@ -2754,7 +2810,7 @@
       "name": "Polar Bear 직원 2",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Cheshire": "Cheshire",
       "Chang_Feng": "Chang_Feng"
     },
@@ -2774,7 +2830,7 @@
       "name": "Manjuu Eatery 직원 1",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Helena": "Helena",
       "Prinz_Eugen": "Prinz_Eugen",
       "Chang_Feng": "Chang_Feng"
@@ -2783,7 +2839,7 @@
       "name": "Manjuu Eatery 직원 2",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Helena": "Helena",
       "Prinz_Eugen": "Prinz_Eugen",
       "Chang_Feng": "Chang_Feng"
@@ -2804,7 +2860,7 @@
       "name": "Fin-'n'-Feather 직원 1",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "August_von_Parseval": "August_von_Parseval",
       "Prinz_Eugen": "Prinz_Eugen",
       "Chang_Feng": "Chang_Feng"
@@ -2813,7 +2869,7 @@
       "name": "Fin-'n'-Feather 직원 2",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "August_von_Parseval": "August_von_Parseval",
       "Prinz_Eugen": "Prinz_Eugen",
       "Chang_Feng": "Chang_Feng"
@@ -2834,7 +2890,7 @@
       "name": "Café Manjuu 직원 1",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Cheshire": "Cheshire",
       "Belfast": "Belfast",
       "Chang_Feng": "Chang_Feng"
@@ -2843,7 +2899,7 @@
       "name": "Café Manjuu 직원 2",
       "help": "두 직원 슬롯에는 순서가 없습니다. None은 빈 슬롯이며, 둘 다 None이면 해당 상점을 운영하지 않습니다. Any는 대기 중인 캐릭터 중 경영 능력이 가장 높은 캐릭터를 선택합니다. 이름으로 지정한 캐릭터를 먼저 배치하고 중복 지정은 해제합니다.",
       "none": "none",
-      "any": "any",
+      "business_grade": "business_grade",
       "Cheshire": "Cheshire",
       "Belfast": "Belfast",
       "Chang_Feng": "Chang_Feng"

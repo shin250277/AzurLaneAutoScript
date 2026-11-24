@@ -17,6 +17,8 @@ class KoreanStorageItemSafetyTest(unittest.TestCase):
         scope = {node.id: node.id for node in ast.walk(tree)
                  if isinstance(node, ast.Name) and node.id.isupper()}
         scope.update(logger=Mock(), RequestHumanTakeover=RuntimeError)
+        scope.update(Timer=Mock(), TEMPLATE_STORAGE_LOGGER=SimpleNamespace(name='logger'),
+                     TEMPLATE_STORAGE_LOGGER_UNLOCK=SimpleNamespace(name='unlock'))
         exec(compile(tree, str(path), 'exec'), scope)
         self.use = scope['_storage_item_use']
         self.ui = Mock()
@@ -26,7 +28,7 @@ class KoreanStorageItemSafetyTest(unittest.TestCase):
 
     def test_repeated_info_stops_before_outer_item_retry(self):
         with self.assertRaises(RuntimeError):
-            self.use(self.ui, 'logger_item')
+            self.use(self.ui, SimpleNamespace(name='logger'))
         self.assertEqual(self.ui.device.click.call_count, 3)
         self.assertTrue(all(call[0] == ('GET_MISSION',) for call in self.ui.device.click.call_args_list))
         self.ui.device.image_save.assert_called_once_with('./log/kr_storage_item_unconfirmed.png')
@@ -34,7 +36,7 @@ class KoreanStorageItemSafetyTest(unittest.TestCase):
 
     def test_other_server_keeps_existing_redetection_behavior(self):
         self.ui.config.SERVER = 'jp'
-        self.use(self.ui, 'logger_item')
+        self.use(self.ui, SimpleNamespace(name='logger'))
         self.assertEqual(self.ui.device.click.call_count, 3)
         self.ui.device.image_save.assert_not_called()
 

@@ -12,7 +12,7 @@ import re
 from pathlib import Path
 
 from dev_tools.island_extractor import (
-    IslandItem, IslandRecipe, dates_within_24_hours, island_time_to_sql_time,
+    IslandRecipeExtractor, dates_within_24_hours, island_time_to_sql_time,
 )
 from dev_tools.utils import LuaLoader
 
@@ -67,9 +67,9 @@ def extract(source, destination):
             row['name']['kr'] = '섬 개발 PT'
             continue
         raw = items[key]
-        merge_entry(row, IslandItem(raw).encode(), raw['name'])
+        merge_entry(row, {field: raw[field] for field in ('pt_num', 'manage_influence', 'order_price')}, raw['name'])
     for key, row, raw in rows('DIC_ISLAND_RECIPE', 'island_formula'):
-        merge_entry(row, IslandRecipe(raw).encode()[key], raw['name'])
+        merge_entry(row, IslandRecipeExtractor.extract_recipe(raw), raw['name'])
     commissions = load('island_production_commission')
     for key, row, raw in rows('DIC_ISLAND_PRODUCTION_PLACE', 'island_production_place'):
         slots = [commissions[i]['slot'] for i in raw['commission_slot'].values()]

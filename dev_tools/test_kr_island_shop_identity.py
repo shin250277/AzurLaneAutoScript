@@ -14,7 +14,7 @@ class KoreanShopIdentityTest(unittest.TestCase):
                 self.assertIsNone(IslandShop.item_name_to_recipe_id(None, text))
 
     def test_unknown_card_retains_its_position(self):
-        ui = SimpleNamespace(device=SimpleNamespace(image=None),
+        ui = SimpleNamespace(device=SimpleNamespace(image=None), loop=lambda **kw: range(1),
                              _island_shop_item_name_ocr=Mock())
         ui._island_shop_item_name_ocr.ocr.return_value = ['', '메기 치어', '미확인', '치패']
         ui.item_name_to_recipe_id = lambda text: IslandShop.item_name_to_recipe_id(ui, text)

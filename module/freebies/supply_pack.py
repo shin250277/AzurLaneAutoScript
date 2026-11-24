@@ -13,6 +13,30 @@ from module.ui.page import page_shop, page_supply_pack
 
 
 class SupplyPack(CampaignStatus):
+    def supply_pack_find(self, supply_pack, skip_first_screenshot=True):
+        """
+        Find a supply pack with at most 8 leftward swipes.
+
+        Returns:
+            bool: If found.
+        """
+        for attempt in range(9):
+            if skip_first_screenshot:
+                skip_first_screenshot = False
+            else:
+                self.device.screenshot()
+
+            if self.appear(BUY_CONFIRM, offset=(20, 20)):
+                raise RequestHumanTakeover('Unselected supply-pack purchase confirmation; refusing to confirm')
+            if self.appear(supply_pack, offset=(0, -20, 400, 20)):
+                return True
+            if attempt == 8 or not self.appear(page_supply_pack.check_button, offset=(20, 20)):
+                break
+            self.device.swipe_vector((-400, 0), box=(230, 200, 1060, 600))
+
+        logger.warning(f'Supply pack {supply_pack} not found after 8 swipes')
+        return False
+
     def supply_pack_buy(self, supply_pack, skip_first_screenshot=True):
         """
         Args:
@@ -23,6 +47,8 @@ class SupplyPack(CampaignStatus):
             bool: If bought.
         """
         logger.hr('Supply pack buy')
+        if not self.supply_pack_find(supply_pack, skip_first_screenshot=skip_first_screenshot):
+            return False
         [self.interval_clear(asset) for asset in [GET_ITEMS_1, GET_ITEMS_2, supply_pack, BUY_CONFIRM]]
 
         logger.info(f'Buying {supply_pack}')

@@ -54,6 +54,7 @@ class OwnedBoostTest(unittest.TestCase):
         info = namedtuple('Info', 'stock batch_size')
         update = method('module/island_handler/recipe.py', 'IslandRecipe',
                         'update_recipe_id_sequence_and_stock',
+                          format_recipe_with_product=str, item_name_with_id=str,
                         DIC_ISLAND_RECIPE={101013: dict(commission_cost={3000: 2})},
                         get_recipe_product_id=lambda key: {101013: 2601, 9: 3000}[key])
         ui = SimpleNamespace(config=SimpleNamespace(SERVER='kr'),

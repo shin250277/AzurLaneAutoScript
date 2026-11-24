@@ -22,7 +22,12 @@ class Tempesta20261022Test(unittest.TestCase):
                    if 'event 20261022 cn' in line)
         event = Event(row)
         self.assertEqual(event.kr, '템페스타와 안개회랑')
-        self.assertTrue(all(getattr(event, region) is None for region in ('cn', 'en', 'jp', 'tw')))
+        # The official calendar now also carries the CN/EN/JP release. KR
+        # localization must not replace those titles or enable TW in this row.
+        self.assertEqual(event.cn, '飓风与雾霭回廊')
+        self.assertEqual(event.en, 'Tempesta and the Corridor of Fog')
+        self.assertEqual(event.jp, 'テンペスタと霧靄回廊')
+        self.assertIsNone(event.tw)
 
     def test_ghost_template_exists_and_decodes(self):
         from module.template import assets

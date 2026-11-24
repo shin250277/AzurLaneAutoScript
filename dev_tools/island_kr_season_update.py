@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 
 from dev_tools.island_kr_extractor import merge_time
-from dev_tools.island_extractor import IslandItem, IslandRecipe, IslandProduction, IslandSeasonRequest, IslandShop, dates_within_24_hours
+from dev_tools.island_extractor import IslandRecipeExtractor, IslandSeasonRequestExtractor, dates_within_24_hours
 from dev_tools.utils import LuaLoader
 
 
@@ -67,7 +67,8 @@ def main():
     loader = LuaLoader(str(args.source), server='KR')
     for key, raw in loader.load('sharecfg/island_item_data_template.lua').items():
         if isinstance(key, int) and 1000 <= key <= 100000 and key not in tables['DIC_ISLAND_ITEM']:
-            row = IslandItem(raw).encode()
+            row = {field: raw[field] for field in ('pt_num', 'manage_influence', 'order_price')}
+            row['name'] = {}
             row['name']['kr'] = raw['name']
             tables['DIC_ISLAND_ITEM'][key] = row
     result = update(tables, args.season,
@@ -93,21 +94,23 @@ def main():
     season['activity_by_server']['kr'] = activities
     for key, raw in loader.load('sharecfg/island_order.lua').items():
         if isinstance(key, int) and raw['activity_id'] in activities:
-            row = IslandSeasonRequest(raw).encode()
+            row = IslandSeasonRequestExtractor.extract_order(raw)
             if not set(row['request']).issubset(result['DIC_ISLAND_ITEM']):
                 raise ValueError('Unknown season order item')
             result['DIC_ISLAND_SEASON_ORDER'][key] = row
     for key, raw in loader.load('sharecfg/island_formula.lua').items():
         if (isinstance(key, int) and key not in result['DIC_ISLAND_RECIPE']
                 and raw['attribute'] in (1, 2, 3, 4, 6) and (key // 10000 < 700 or key // 10000 >= 990)):
-            row = IslandRecipe(raw).encode()[key]
+            row = IslandRecipeExtractor.extract_recipe(raw)
             row['name']['kr'] = raw['name']
             if not (set(row['commission_product']) | set(row['commission_cost'])).issubset(result['DIC_ISLAND_ITEM']):
                 raise ValueError('Unknown recipe item')
             result['DIC_ISLAND_RECIPE'][key] = row
     for key, raw in loader.load('sharecfg/island_production_slot.lua').items():
         if key in result['DIC_ISLAND_SLOT']:
-            row = IslandProduction(raw).encode()[key]
+            row = dict(attribute=raw['attribute'], place=raw['place'], formula=list(raw['formula'].values()),
+                       activity_formula=[recipe for pair in raw['activity_formula'].values()
+                                         for recipe in pair[1].values()])
             old = result['DIC_ISLAND_SLOT'][key]
             if any(row[field] != old[field] for field in ('attribute', 'place', 'formula')):
                 raise ValueError('Non-season production slot changed')
@@ -137,7 +140,7 @@ def main():
         new_goods.add(key)
     for key, raw in loader.load('sharecfg/island_shop_template.lua').items():
         if key in result['DIC_ISLAND_SHOP']:
-            source = IslandShop(raw).encode()
+            source = {'goods': list(raw['goods_id'].values()) if isinstance(raw['goods_id'], dict) else []}
             old = result['DIC_ISLAND_SHOP'][key]
             for goods in source['goods']:
                 if goods in new_goods and goods not in old['goods']:

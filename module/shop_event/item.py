@@ -21,6 +21,7 @@ DELTA_PRICE = (28, 164, 128, 193)
 DELTA_TAG = (108, 30, 155, 52)
 COUNTER_COLOR = (106, 120, 131)
 COUNTER_THRESHOLD = 150
+COUNTER_TOTALS = (500, 350, 100, 50, 40, 30, 20, 15, 10, 5, 4, 2, 1)
 PRICE_THRESHOLD = 230
 PRICE_BACKGROUND_COLOR = (61, 78, 91)
 if server.server == 'kr':
@@ -66,15 +67,31 @@ class CounterOcr(Ocr):
         result = result.replace('I', '1').replace('D', '0').replace('S', '5')
         result = result.replace('B', '8')
         # fixup result like "55" -> "5/5", "2530" -> "25/30"
-        if result.isdigit():
-            for total in [100, 50, 30, 40, 20, 10, 5, 4, 2, 1]:
-                total_str = f'{total}'
-                total_sep = f'/{total}'
-                # Do not add a slash when the result is exactly the total,
-                # e.g. "50" stays "50" instead of becoming "/50"
-                if result.endswith(total_str) and result != total_str and not result.endswith(total_sep):
-                    result = result[:-len(total_str)] + total_sep
+        if result.isdigit() and result not in [str(total) for total in COUNTER_TOTALS]:
+            candidates = []
+            for total in COUNTER_TOTALS:
+                total_str = str(total)
+                current_str = result[:-len(total_str)]
+                if result.endswith(total_str) and current_str and int(current_str) <= total:
+                    candidates.append(f'{current_str}/{total_str}')
+            # For example, "1350" can be either "13/50" or "1/350".
+            # Leave ambiguous results invalid so the shop scanner retries them.
+            if len(candidates) == 1:
+                result = candidates[0]
         return result
+
+    @staticmethod
+    def parse_result(result):
+        parts = result.split('/') if result else []
+        if len(parts) != 2 or not all(part.isdigit() for part in parts):
+            logger.warning(f'Invalid counter format: {result}')
+            return [0, 0]
+
+        current, total = [int(part) for part in parts]
+        if total <= 0 or current > total:
+            logger.warning(f'Invalid counter value: {result}')
+            return [0, 0]
+        return [current, total]
 
     def ocr(self, image, direct_ocr=False):
         """
@@ -164,7 +181,9 @@ class EventShopItem(Item):
             self.cost = 'URpt'
         else:
             self.cost = 'pt'
-            if self.price == 2000:
+            if server.server != 'kr' and self.price == 135 and self.total_count == 15:
+                self.name = 'EquipSSR'
+            elif self.price == 2000:
                 if self.total_count == 10 or (self.total_count == 0 and self.name == 'SkinBox'):
                     # Invalid OCR must not turn a recognized box into equipment.
                     # Keep count=0 so it remains unavailable for purchase.
@@ -182,13 +201,11 @@ class EventShopItem(Item):
                 self.name = 'URpt'
             elif self.name.isdigit() and save_unknown:
                 logger.warning(f'Unrecognized item with price {self.price} and total count {self.total_count}, '
-                               # f'defaulting to EquipSSR')
-                               f'saving image for analysis.')
+                               f'using EquipSSR filter priority and saving image for analysis.')
                 import os
                 from module.base.utils import save_image
                 os.mkdir('assets/shop/event/new_templates/') if not os.path.exists('assets/shop/event/new_templates/') else None
                 save_image(self.image, f'assets/shop/event/new_templates/{self.name}.png')
-                # self.name = 'EquipSSR'
 
     def predict_genre(self):
         self.group, self.sub_genre, self.tier = None, None, None
@@ -196,6 +213,10 @@ class EventShopItem(Item):
         # Can use regular expression to quickly populate
         # the new attributes
         name = self.name.lower()
+        if not self.is_known_item():
+            # Unknown event rewards may be important. Keep their template names
+            # for rescanning, but give them the same filter priority as SSR equipment.
+            name = 'equipssr'
         result = re.search(FILTER_REGEX, name)
         if result:
             self.group, self.sub_genre, self.tier = \
@@ -222,7 +243,8 @@ class EventShopItemGrid(ItemGrid):
                                DELTA_AMOUNT[2] - DELTA_ITEM[0], DELTA_AMOUNT[3] - DELTA_ITEM[1]),
                  ):
         super().__init__(grids, templates, template_area, amount_area, cost_area, price_area, tag_area)
-        self.counter_ocr = CounterOcr([], letter=COUNTER_COLOR, name="CounterOcr")
+        counter_lang = 'cnocr' if server.server == 'en' else 'azur_lane'
+        self.counter_ocr = CounterOcr([], lang=counter_lang, letter=COUNTER_COLOR, name="CounterOcr")
         self.counter_area = counter_area
         self.price_ocr = PRICE_OCR
         self.kr_templates = {}
@@ -315,7 +337,8 @@ class EventShopItemGrid(ItemGrid):
                 i.scroll_pos = scroll_pos
 
         for i in self.items:
-            i.correct_name_and_cost(save_unknown=save_unknown)
+            if server.server == 'kr' or i.count or i.total_count:
+                i.correct_name_and_cost(save_unknown=save_unknown)
             if self.kr_currency is not None:
                 # Recognize actual currency pixels, never infer premium vs
                 # event points from an item's numerical price.

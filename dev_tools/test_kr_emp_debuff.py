@@ -19,4 +19,10 @@ class EmpDebuffTest(unittest.TestCase):
 
     def test_japanese_asset_is_preserved(self):
         self.assertEqual(FLEET_EMP_DEBUFF.raw_area['jp'], (137, 144, 175, 167))
-        self.assertEqual(FLEET_EMP_DEBUFF.raw_file['jp'], './assets/jp/os/FLEET_EMP_DEBUFF.png')
+        # Upstream deduplicated the identical JP and CN images; verify the
+        # original JP blob, not the spelling of its relative path.
+        import hashlib
+        from pathlib import Path
+        payload = Path(FLEET_EMP_DEBUFF.raw_file['jp']).read_bytes()
+        self.assertEqual(hashlib.sha1(b'blob %d\0' % len(payload) + payload).hexdigest(),
+                         'e2693be7744f777f03f8c32cd08a934ec3753a11')

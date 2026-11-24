@@ -46,6 +46,56 @@ HOSPITAL = ['Hospital']
 # campaign/Readme.md has no KR column. Keep verified Korean live-event names
 # here and fall back to JP/EN for entries that have not been localized yet.
 KR_EVENT_NAMES = {
+    'war_archives_20230817_cn': '작전문서: 어리석은 자의 천칭',
+    'war_archives_20241024_cn': '작전문서: 템페스타와 잠든 바다',
+    'war_archives_20251023_cn': '작전문서: 템페스타와 자유 군도',
+    'event_20260908_cn': '유영 미성',
+    'war_archives_20180607_cn': '작전문서: 검게 물든 강철의 벚꽃',
+    'war_archives_20180726_cn': '작전문서: 빛과 그림자의 아이리스',
+    'war_archives_20181020_en': '작전문서: 노력, 희망과 계획',
+    'war_archives_20181026_en': '작전문서: 어둠에 떨어진 푸른 날개',
+    'war_archives_20181227_cn': '작전문서: 청홍의 메아리',
+    'war_archives_20190221_en': '작전문서: 싸늘한 겨울의 왕관',
+    'war_archives_20190314_en': '작전문서: 월하의 서곡',
+    'war_archives_20190620_en': '작전문서: 영광스런 최종전',
+    'war_archives_20190911_cn': '작전문서: 디바인 트래지코미디',
+    'war_archives_20191010_en': '작전문서: 그라프 슈피 추격전',
+    'war_archives_20200312_cn': '작전문서: 솔로몬의 무사',
+    'war_archives_20200507_cn': '작전문서: 어둠 속의 귀로',
+    'war_archives_20200603_cn': '작전문서: 피오르드 반격전',
+    'war_archives_20200806_cn': '작전문서: 최고의 보물',
+    'war_archives_20200820_cn': '작전문서: 메탈 블러드 음표&맹세',
+    'war_archives_20200903_cn': '작전문서: 피오르드의 별',
+    'war_archives_20200917_cn': '작전문서: 접해몽화',
+    'war_archives_20201012_cn': '작전문서: 날카로운 해상의 날개',
+    'war_archives_20201029_cn': '작전문서: 격창의 유니버스',
+    'war_archives_20201229_cn': '작전문서: 부상한 작전',
+    'war_archives_20210225_cn': '작전문서: 새벽녘에 비치는 빙화',
+    'war_archives_20210325_cn': '작전문서: 샌드 플레이',
+    'war_archives_20210422_cn': '작전문서: 부흥의 찬송가',
+    'war_archives_20210527_cn': '작전문서: 비추는 나선의 경해',
+    'war_archives_20210624_cn': '작전문서: 빛나는 벚꽃의 그림자',
+    'war_archives_20210819_cn': '작전문서: 어둠을 쫓는 은익',
+    'war_archives_20210916_cn': '작전문서: 맑고 푸른 바다',
+    'war_archives_20211014_cn': '작전문서: 격주의 폴라리스',
+    'war_archives_20211028_cn': '작전문서: 하늘 아래의 찬송가',
+    'war_archives_20211111_cn': '작전문서: 제노바의 화염',
+    'war_archives_20211229_cn': '작전문서: 역행하는 무지개 탑',
+    'war_archives_20220210_cn': '작전문서: 동절의 북해',
+    'war_archives_20220224_cn': '작전문서: 깊게 울리는 메아리',
+    'war_archives_20220324_cn': '작전문서: 허상의 탑',
+    'war_archives_20220414_cn': '작전문서: 영원한 밤의 환광',
+    'war_archives_20220428_cn': '작전문서: 레인보우 피날레',
+    'war_archives_20220526_cn': '작전문서: 빛나는 정원의 맹세',
+    'war_archives_20220728_cn': '작전문서: 독수리의 서사곡',
+    'war_archives_20220818_cn': '작전문서: 결상점 작전',
+    'war_archives_20220915_cn': '작전문서: 짙은 자줏빛의 안개',
+    'war_archives_20221222_cn': '작전문서: 거듭되는 평행세계',
+    'war_archives_20230223_cn': '작전문서: 잿빛 폐허',
+    'war_archives_20230525_cn': '작전문서: 오엽각 교차점',
+    'war_archives_20230803_cn': '작전문서: 불타는 아이리스 회상곡',
+    'war_archives_20231026_cn': '작전문서: 템페스타와 청춘의 샘',
+    'war_archives_20240725_cn': '작전문서: 환몽 간주곡',
     'event_20261022_cn': '템페스타와 안개회랑',
     'war_archives_20190321_en': '작전문서: 홍염의 방문자',
     'war_archives_20191031_en': '작전문서: 거울에 비친 이색',
@@ -87,6 +137,21 @@ class Event:
 
     def __hash__(self):
         return hash(str(self))
+
+
+class IslandSeason:
+    def __init__(self, text):
+        self.start_date, self.end_date, self.namespace, self.name, cn, en, jp, tw, *regional \
+            = [cell.strip() for cell in text.strip('| \n').split('|')]
+        self.namespace = self.namespace.replace(' ', '_')
+        self.names = {
+            'cn': cn.replace('、', ''),
+            'en': en.replace(',', '').replace("'", '').replace('\\', ''),
+            'jp': jp.replace('、', ''),
+            'tw': tw.replace('、', ''),
+            'kr': regional[0] if regional else '-',
+        }
+        self.names = {server: name for server, name in self.names.items() if name != '-'}
 
 
 class ConfigGenerator:
@@ -329,6 +394,7 @@ class ConfigGenerator:
         for event in sorted(self.event):
             name = events.get(event.directory, event.directory)
             deep_set(new, keys=f'Campaign.Event.{event.directory}', value=name)
+        self.insert_island_season_names(new, lang)
         # Package names
         for package, server in VALID_PACKAGE.items():
             path = ['Emulator', 'PackageName', package]
@@ -488,6 +554,40 @@ class ConfigGenerator:
                 deep_set(self.args, keys=f'{task}.Campaign.Event.option_bold', value=options)
             deep_set(self.args, keys=f'{task}.Campaign.Event.option', value=options)
 
+    @cached_property
+    def island_season(self):
+        """Read released season namespaces and names from the island list."""
+        with open('./module/island/README.md', encoding='utf-8') as f:
+            rows = [IslandSeason(text) for text in f if re.match(r'^\|\s*\d{8}\s*\|', text)]
+        return sorted(rows, key=lambda season: season.start_date, reverse=True)
+
+    def insert_island_season(self):
+        argument = self.argument['IslandGeneral']['Season']
+        for server in SERVER_TO_LANG:
+            argument[f'option_{server}'] = [
+                season.namespace for season in self.island_season if server in season.names
+            ][:1]
+        options = sorted({
+            namespace for server in SERVER_TO_LANG
+            for namespace in argument[f'option_{server}']
+        })
+        argument['option'] = options
+        argument['option_bold'] = options
+        argument['value'] = argument['option_cn'][0]
+        deep_set(self.args, keys='IslandGeneral.IslandGeneral.Season', value=deepcopy(argument))
+
+    def insert_island_season_names(self, i18n, lang):
+        # Names come from SameLanguageServer > en > cn > jp > tw.
+        names = {}
+        for server in [LANG_TO_SERVER.get(lang), 'en', 'cn', 'jp', 'tw']:
+            for season in self.island_season:
+                name = season.names.get(server)
+                if name:
+                    names.setdefault(season.namespace, name)
+        for season in sorted(self.island_season, key=lambda season: season.namespace):
+            name = names.get(season.namespace, season.namespace)
+            deep_set(i18n, keys=f'IslandGeneral.Season.{season.namespace}', value=name)
+
     @staticmethod
     def generate_deploy_template():
         template = poor_yaml_read(DEPLOY_TEMPLATE)
@@ -558,6 +658,7 @@ class ConfigGenerator:
         _ = self.menu
         _ = self.event
         self.insert_event()
+        self.insert_island_season()
         self.insert_package()
         self.insert_server()
         write_file(filepath_args(), self.args)
@@ -614,6 +715,19 @@ class ConfigUpdater:
         # ('Coalition.Coalition.Mode', 'Coalition.Coalition.Mode', coalition_to_frostfall),
         # 2025.06.26
         # ('Coalition.Coalition.Mode', 'Coalition.Coalition.Mode', coalition_to_little_academy),
+        # ('IslandProduction.IslandProduction.UseManjuuByDefault',
+        #  'IslandProduction.IslandProduction.UseWorkerjuuByDefault'),
+        # UseManjuuByDefault never shipped, UseWorkerjuuByDefault is a new key,
+        # so there is nothing to migrate and the redirect stays disabled.
+    ]
+    redirection += [
+        (
+            f'IslandBusiness.IslandRestaurant.{restaurant}Waitress{slot}',
+            f'IslandBusiness.IslandRestaurant.{restaurant}Waitress{slot}',
+            island_waitress_redirect,
+        )
+        for restaurant in ('Koi', 'Bear', 'Eatery', 'Grill', 'Cafe')
+        for slot in (1, 2)
     ]
 
     # redirection += [
@@ -693,6 +807,13 @@ class ConfigUpdater:
             default_stage(task, 'D3')
         for task in COALITIONS:
             default_stage(task, 'area1-normal')
+
+        # Update to latest island season
+        season_path = 'IslandGeneral.IslandGeneral.Season'
+        seasons = deep_get(self.args, keys=f'{season_path}.option_{server}', default=[])
+        selected_season = deep_get(old, keys=season_path)
+        if seasons and selected_season not in seasons:
+            deep_set(new, keys=season_path, value=seasons[0])
 
         if not is_template:
             new = self.config_redirect(old, new)

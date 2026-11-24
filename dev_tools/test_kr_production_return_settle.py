@@ -48,14 +48,14 @@ class ProductionReturnSettleTest(unittest.TestCase):
             if key == 'slot_grids':
                 obj.slot_grids = {101: SimpleNamespace(buttons=['fresh'])}
         run = method('module/island/production.py', 'IslandProduction', 'dispatch_place',
-                     DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1]}},
+                     DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1]}}, production_place_name_with_id=str,
                      del_cached_property=invalidate, has_cached_property=lambda *a: False,
                      super=lambda: SimpleNamespace())
         ui.is_slot_empty.return_value = True
         run(ui, 101)
         ui.device.screenshot.assert_called_once()
         ui.is_slot_empty.assert_called_once_with('fresh')
-        ui.dispatch_slot.assert_called_once_with(slot_id=1, slot_button='fresh', worker='manjuu')
+        ui.dispatch_slot.assert_called_once_with(slot_id=1, slot_button='fresh')
 
 
 if __name__ == '__main__':

@@ -15,6 +15,7 @@ SERVER_TO_LANG = {
     'en': 'en-US',
     'jp': 'ja-JP',
     'tw': 'zh-TW',
+    'kr': 'ko-KR',
 }
 LANG_TO_SERVER = {v: k for k, v in SERVER_TO_LANG.items()}
 SERVER_TO_TIMEZONE = {

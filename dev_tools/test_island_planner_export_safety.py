@@ -16,6 +16,8 @@ class PlannerExportSafetyTest(unittest.TestCase):
                              RESTAURANT_MENU_CONFIG={})
         run = method('module/island_handler/production_planner.py',
                      'IslandProductionPlanner', 'run',
+                     create_production_calculator=lambda cfg, status: calc,
+                     load_planner_demands=lambda cfg, **kw: dict(task_target_period=None, **kw),
                      load_technology_status=lambda value: value,
                      load_hard_floor_items=lambda value: value)
         return run, ui, calc
@@ -51,11 +53,12 @@ class PlannerExportSafetyTest(unittest.TestCase):
             'IslandProduction.IslandProduction.DailyBufferItems': 'buffer',
             'IslandProduction.IslandProduction.IdleAccumulatingItems': 'idle',
             'IslandProduction.IslandProduction.HardFloorItems': 'manual-floor',
+            'IslandProduction.Storage.Storage.CheckAllEmptySlots': True,
             'IslandBusiness.Menu': 'menu',
             'IslandProductionPlanner.IslandProductionPlanner.RescanIslandTechnology': False,
         })
         calc.solve_production_plan.assert_called_once_with(
-            hard_floor_items={'wheat': 100}, task_target_items={}, stuck_season_order_id=0)
+            hard_floor_items={'wheat': 100}, task_target_items={}, stuck_season_order_id=0, task_target_period=None)
 
     def test_serialization_failure_does_not_partially_write_plan(self):
         run, ui, calc = self.run_plan(True)

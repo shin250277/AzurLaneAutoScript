@@ -25,7 +25,8 @@ class RecipeAnchorLatticeTest(unittest.TestCase):
                          [114,263,412,561])
 
     def test_foreign_server_path_unchanged(self):
-        self.assertEqual(self.grid([6,39,188,337], 'en').buttons[0].area[1],61)
+        # Official origin fitting now removes the effect of one noisy anchor.
+        self.assertEqual(self.grid([6,39,188,337], 'en').buttons[0].area[1],94)
 
     def test_missing_middle_row_does_not_authorize_lattice_filter(self):
         ys = [6, 39, 188, 486]

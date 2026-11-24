@@ -9,10 +9,11 @@ from collections import OrderedDict
 
 from module.exception import RequestHumanTakeover
 from module.island.utils import ceil_with_epsilon, load_item_mapping, normalize_item_keys
+from module.logger import logger
 
 
 WAITRESS_NONE = 'none'
-WAITRESS_ANY = 'any'
+WAITRESS_BUSINESS_GRADE = 'business_grade'
 
 
 # Keep the option/bonus data in one place.  ``waitress_effects`` values are
@@ -97,7 +98,7 @@ def get_config_key(restaurant_id, key):
 
 
 def get_waitress_options(restaurant_id):
-    return (WAITRESS_NONE, WAITRESS_ANY) + tuple(
+    return (WAITRESS_NONE, WAITRESS_BUSINESS_GRADE) + tuple(
         get_restaurant_config(restaurant_id)['waitress_options']
     )
 
@@ -106,7 +107,7 @@ def _waitress_sort_key(restaurant_id, value):
     config = get_restaurant_config(restaurant_id)
     if value == WAITRESS_NONE:
         return (2, 0)
-    if value == WAITRESS_ANY:
+    if value == WAITRESS_BUSINESS_GRADE:
         return (1, 0)
     try:
         index = config['waitress_options'].index(value)
@@ -129,21 +130,21 @@ def normalize_waitress_slots(restaurant_id, values):
         if value is None:
             value = WAITRESS_NONE
         if value not in allowed:
-            raise RequestHumanTakeover(
-                f'Invalid waitress value for restaurant {restaurant_id}: {value}'
-            )
-        if value not in (WAITRESS_NONE, WAITRESS_ANY):
+            message = f'Invalid waitress value for restaurant {restaurant_id}: {value}'
+            logger.error(message)
+            raise RequestHumanTakeover(message)
+        if value not in (WAITRESS_NONE, WAITRESS_BUSINESS_GRADE):
             if value in seen_named:
-                raise RequestHumanTakeover(
-                    f'Duplicate named waitress for restaurant {restaurant_id}: {value}'
-                )
+                message = f'Duplicate named waitress for restaurant {restaurant_id}: {value}'
+                logger.error(message)
+                raise RequestHumanTakeover(message)
             seen_named.add(value)
         cleaned.append(value)
 
     if len(cleaned) > 2:
-        raise RequestHumanTakeover(
-            f'Restaurant {restaurant_id} has more than two waitress slots'
-        )
+        message = f'Restaurant {restaurant_id} has more than two waitress slots'
+        logger.error(message)
+        raise RequestHumanTakeover(message)
 
     cleaned.sort(key=lambda value: _waitress_sort_key(restaurant_id, value))
     cleaned.extend([WAITRESS_NONE] * (2 - len(cleaned)))
@@ -166,7 +167,7 @@ def is_restaurant_enabled(slots):
 def get_selected_named_waitresses(slots):
     return {
         value for value in slots
-        if value not in (WAITRESS_NONE, WAITRESS_ANY)
+        if value not in (WAITRESS_NONE, WAITRESS_BUSINESS_GRADE)
     }
 
 

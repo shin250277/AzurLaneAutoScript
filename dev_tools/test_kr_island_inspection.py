@@ -98,7 +98,8 @@ with patch('module.island.inspect.ISLAND_SEASON_TASK_SCROLL') as scroll:
         menu = json.loads(Path('module/config/argument/menu.json').read_text(encoding='utf-8'))
         self.assertIn('IslandInspect', menu['Tool']['tasks'])
         args = json.loads(Path('module/config/argument/args.json').read_text(encoding='utf-8'))
-        self.assertEqual(args['IslandInspect'], {})
+        self.assertEqual(args['IslandInspect'], {'Storage': {'Storage': {
+            'type': 'storage', 'value': {}, 'valuetype': 'ignore', 'display': 'disabled'}}})
         for path in Path('module/config/i18n').glob('*.json'):
             data = json.loads(path.read_text(encoding='utf-8'))
             self.assertIn('IslandInspect', data['Task'], str(path))

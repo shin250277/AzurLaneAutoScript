@@ -49,8 +49,6 @@ class OsTaskStopBoundariesTest(unittest.TestCase):
 
     def test_missing_abyssal_coordinate_stops_before_combat(self):
         self.ui.storage_get_next_item.return_value = False
-        delay = method('module/os/tasks/abyssal.py', 'OpsiAbyssal', 'delay_abyssal')
-        self.ui.delay_abyssal.side_effect = lambda **kwargs: delay(self.ui, **kwargs)
         clear = method('module/os/tasks/abyssal.py', 'OpsiAbyssal', 'clear_abyssal')
         with self.assertRaises(TaskStopped):
             clear(self.ui)

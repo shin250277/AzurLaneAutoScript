@@ -22,6 +22,7 @@ class GlobeResultTest(unittest.TestCase):
         ui.is_zone_pinned.return_value = True
         ui.appear_then_click.return_value = False
         ui.appear.return_value = False
+        ui.match_template_color.return_value = False  # neither the ordinary nor fog navigation button is visible
         ui.handle_battle_status.side_effect = [results, False]
         ui.handle_exp_info.return_value = results
         ui.handle_map_event.return_value = False

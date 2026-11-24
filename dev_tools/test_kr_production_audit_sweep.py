@@ -61,7 +61,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
 
     def test_dispatch_place_skips_unverified_slots_before_any_input(self):
         run = method('module/island/production.py', 'IslandProduction', 'dispatch_place',
-                     DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1, 2]}},
+                     DIC_ISLAND_PRODUCTION_PLACE={101: {'slot': [1, 2]}}, production_place_name_with_id=str,
                      has_cached_property=lambda *args: False,
                      del_cached_property=Mock(), super=lambda: object())
         ui = Mock(kr_deferred_slots=set())
@@ -71,7 +71,7 @@ class ProductionAuditSweepTest(unittest.TestCase):
         ui.is_slot_empty.return_value = True
         run(ui, 101)
         ui.is_slot_empty.assert_called_once_with('b')
-        ui.dispatch_slot.assert_called_once_with(slot_id=2, slot_button='b', worker='manjuu')
+        ui.dispatch_slot.assert_called_once_with(slot_id=2, slot_button='b')
 
     def test_dispatch_requires_explicit_completed_audit(self):
         run = method('module/island/production.py', 'IslandProduction', 'dispatch_all',
@@ -86,5 +86,5 @@ class ProductionAuditSweepTest(unittest.TestCase):
                 run(ui)
             ui.dispatch_place.assert_not_called()
         ui.audit_korean_recipes.return_value = True
-        run(ui)
-        ui.dispatch_place.assert_called_once_with(101)
+        run(ui, check_all_empty_slots=True)
+        ui.dispatch_place.assert_called_once_with(101, slots_to_check=None)

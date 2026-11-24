@@ -26,7 +26,7 @@ class RecipeStockEvidenceTest(unittest.TestCase):
 
     def test_live_scan_stops_before_scrolling_incomplete_page(self):
         scan = method('module/island_handler/recipe.py', 'IslandRecipe',
-                      'scan_all_recipe_stocks', server=SimpleNamespace(server='kr'),
+                      'scan_all_recipe_stocks', del_cached_property=Mock(), server=SimpleNamespace(server='kr'),
                       ISLAND_RECIPE_AMOUNT_MAX=object(), ISLAND_RECIPE_DRAG_CHECK=Mock())
         ui = Mock()
         ui.loop.return_value = [None]
@@ -40,7 +40,7 @@ class RecipeStockEvidenceTest(unittest.TestCase):
 
     def test_timeout_is_not_reported_as_complete_inventory(self):
         scan = method('module/island_handler/recipe.py', 'IslandRecipe',
-                      'scan_all_recipe_stocks', server=SimpleNamespace(server='kr'),
+                      'scan_all_recipe_stocks', del_cached_property=Mock(), server=SimpleNamespace(server='kr'),
                       ISLAND_RECIPE_AMOUNT_MAX=object(), ISLAND_RECIPE_DRAG_CHECK=Mock())
         ui = Mock()
         ui.loop.return_value = [None]
@@ -54,7 +54,7 @@ class RecipeStockEvidenceTest(unittest.TestCase):
 
     def test_confirmed_bottom_returns_complete_inventory(self):
         scan = method('module/island_handler/recipe.py', 'IslandRecipe',
-                      'scan_all_recipe_stocks', server=SimpleNamespace(server='kr'),
+                      'scan_all_recipe_stocks', del_cached_property=Mock(), server=SimpleNamespace(server='kr'),
                       ISLAND_RECIPE_AMOUNT_MAX=object(), ISLAND_RECIPE_DRAG_CHECK=Mock())
         ui = Mock()
         ui.loop.return_value = [None, None]

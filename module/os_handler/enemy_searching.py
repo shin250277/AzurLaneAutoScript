@@ -21,7 +21,7 @@ class EnemySearchingHandler(EnemySearchingHandler_):
             return True
         if IN_MAP.match_luma(self.device.image, offset=(200, 5)):
             return True
-        if self.match_template_color(MAP_GOTO_GLOBE_FOG, offset=(5, 5)):
+        if self.match_template_color(MAP_GOTO_GLOBE_FOG, offset=(200, 5), threshold=40):
             return True
 
         return False

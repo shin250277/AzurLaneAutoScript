@@ -10,26 +10,28 @@ class Takeover(Exception):
     pass
 
 
-def load_buy():
+def load_buy(name='supply_pack_buy'):
     path = 'module/freebies/supply_pack.py'
     tree = ast.parse(Path(path).read_text(encoding='utf-8'))
     tree.body = [next(n for n in ast.walk(tree)
-                      if isinstance(n, ast.FunctionDef) and n.name == 'supply_pack_buy')]
+                      if isinstance(n, ast.FunctionDef) and n.name == name)]
     timer = Mock()
     timer.return_value.start.return_value.reached.return_value = True
     scope = dict(logger=Mock(), Timer=timer, RequestHumanTakeover=Takeover,
                  GET_ITEMS_1='items1', GET_ITEMS_2='items2', BUY_CONFIRM='buy',
                  page_supply_pack=SimpleNamespace(check_button='page'))
     exec(compile(tree, path, 'exec'), scope)
-    return scope['supply_pack_buy']
+    return scope[name]
 
 
 class SupplyPackConfirmationSafetyTest(unittest.TestCase):
     def harness(self):
-        return SimpleNamespace(
+        ui = SimpleNamespace(
             device=Mock(), interval_clear=Mock(), interval_reset=Mock(),
             appear=Mock(return_value=False), appear_then_click=Mock(return_value=False),
             handle_popup_confirm=Mock(return_value=False))
+        ui.supply_pack_find = load_buy('supply_pack_find').__get__(ui)
+        return ui
 
     def test_unknown_purchase_confirmation_stops_without_confirming(self):
         ui = self.harness()
