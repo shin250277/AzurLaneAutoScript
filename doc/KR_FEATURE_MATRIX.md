@@ -73,7 +73,7 @@
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
 | `IslandProduction` | Island | Scheduler, IslandProduction | 대표 실기·화면 재생 | 11/20 전체 빈 시설 감사 후 쌀/감귤/찻잎/아이스커피 배정 및15:12 정상 종료. 물밤 케이크 시작→수령→보유1 확인. 과거 이름/행 전환 실패 보완, 저장 화면33개 전체 재생 통과. 점유 시설·모든 생산식별 전체 주기는 실기 범위와 구분. 보호/식당 예약분 유지 |
 | `IslandGeneral` | Island | 시즌 설정 | 설정 생성 검사 | 한국 출시일로 선택하며 게임을 실행하는 작업이 아님 |
-| `IslandTransport` | Island | Scheduler | 대표 실기 통과 | 11/24 기존 P3 보상 수령, 목록 01~06 양 탭, 어육 2종 가공 및 재고 증가, P1←03·P2←06 교체 후 재판독, P1~3 제출·운송 시작·차기 예약 후 21:32:50 정상 종료. 이번에 출발한 3건의 만기 재수령과 목록 전체 새로고침은 별도 |
+| `IslandTransport` | Island | Scheduler | 제출→만기 수령 실기 | 11/24 목록 01~06 양 탭, 어육 2종 가공 및 재고 증가, P1←03·P2←06 교체 후 세 칸 제출. 11/25 03:12:12~18 P1·P2·P3 보상 각각 수령, 03:12:25 세 칸 모두 `ready` 재판독. 개별 의뢰 교체와 목록 전체 새로고침은 별개 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |
