@@ -1,4 +1,4 @@
-"""Replay four KR shops without purchasing; optional extraction saves labelled icons only."""
+"""Replay five KR shops without purchasing; optional extraction saves labelled icons only."""
 import argparse
 from pathlib import Path
 from types import SimpleNamespace
@@ -11,6 +11,19 @@ from module.config import server
 
 def run(folder, extract=False):
     server.set_server('kr')
+    if extract:
+        rows = []
+        for frame, cells in [('coremonthly_clean', [0, 2, 6]), ('guildshop_clean', [5, 9])]:
+            im = load(folder / (frame + '.png'))
+            for cell in cells:
+                x, y = 265 + 169 * (cell % 5), 238 + 223 * (cell // 5)
+                rows.append(im[y+115:y+155, x-12:x+85])
+        strip = np.concatenate(rows, axis=0)
+        fp = Path('dev_tools/fixtures/kr_shop_price_strips.png')
+        if fp.exists():
+            assert np.array_equal(load(fp), strip)
+        else:
+            Image.fromarray(strip).save(str(fp))
     from module.shop.shop_merit import MeritShop_250814
     shop = object.__new__(MeritShop_250814)
     shop.config = SimpleNamespace(SERVER='kr', SHOP_EXTRACT_TEMPLATE=False, MeritShop_BuyUnobtainedShip=False)
@@ -64,6 +77,20 @@ def run(folder, extract=False):
                 'BoxT3 BoxT4 BoxT3 BookYellowT2 BoxT2 PlateTorpedoT2 PlateAntiAirT1 BoxT3 FoodT2 BoxT3').split()
         if cls is CoreShop_250814:
             assert items[0].name == 'Chip'
+            s.config.CoreShop_Filter = 'Chip'
+            s._currency = 34
+            assert s.shop_get_item_to_buy(items) is None
+            s._currency = 35
+            assert s.shop_get_item_to_buy(items) is items[0]
+        if cls is GeneralShop_250814:
+            s.config.GeneralShop_Filter = 'FoodT2'
+            s.config.GeneralShop_UseGems = False
+            s.config.GeneralShop_ConsumeCoins = False
+            s.config.GeneralShop_BuySkinBox = False
+            s._currency = 900
+            assert s.shop_get_item_to_buy(items) is items[8]
+            items[8].cost = 'Gems'  # Mock a different price currency, not an account setting.
+            assert s.shop_get_item_to_buy(items) is None
     print('General, guild and core: 30/30 prices and currencies; general names: 10/10.')
     from module.shop.shop_medal import MedalShop2_250814
     s = object.__new__(MedalShop2_250814)
