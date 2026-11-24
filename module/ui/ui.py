@@ -327,6 +327,15 @@ KR_UI_SHIP_CARD = Button(
     button=(980, 650, 1030, 680),
     file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png', name='KR_UI_SHIP_CARD')
 
+# Registered-ship acquisition animation. The bottom-right checkbox is a
+# preference; only read its caption. Dismiss on the ship portrait instead.
+KR_CARD_CAPTION = Button(area=(1057, 672, 1240, 694), color=(0, 0, 0),
+                         button=(780, 420, 820, 455), name='KR_CARD_CAPTION',
+                         file='./assets/kr/ui/KR_CARD_CAPTION.png')
+KR_CARD_ZOOM = Button(area=(30, 462, 56, 496), color=(0, 0, 0),
+                      button=(780, 420, 820, 455), name='KR_CARD_ZOOM',
+                      file='./assets/kr/ui/KR_CARD_ZOOM.png')
+
 
 class UI(InfoHandler):
     ui_current: Page
@@ -636,6 +645,8 @@ class UI(InfoHandler):
                 break
 
             # Known pages
+            if self._handle_kr_registered_ship():
+                continue
             if self.ui_close_kr_dock_full():
                 continue
             if self._handle_kr_island_character_back():
@@ -742,6 +753,8 @@ class UI(InfoHandler):
                 self.device.screenshot()
 
             # Destination page
+            if get_ship and self._handle_kr_registered_ship():
+                continue
             if self.ui_page_appear(page=destination, offset=offset):
                 logger.info(f'Page arrive: {destination}')
                 self.ui_current = destination
@@ -1026,6 +1039,16 @@ class UI(InfoHandler):
                 KR_AUTOMATION_NOTICE, offset=(5, 5), interval=2):
             return True
         return False
+
+    def _handle_kr_registered_ship(self):
+        if self.config.SERVER != 'kr' or not self.appear(
+                KR_CARD_CAPTION, offset=(3, 3), similarity=.88):
+            return False
+        if not self.appear(KR_CARD_ZOOM, offset=(3, 3), similarity=.86):
+            return False
+        if self.appear(KR_CARD_CAPTION, offset=(3, 3), similarity=.88, interval=2):
+            self.device.click(KR_CARD_CAPTION)
+        return True
 
     def ui_handle_kr_ship_card(self):
         # Reuse the contextual card detector already used in combat/gacha,

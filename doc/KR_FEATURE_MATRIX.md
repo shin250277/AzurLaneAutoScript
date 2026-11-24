@@ -49,11 +49,11 @@
 | `Daily` | DailyMission | Scheduler, Daily | 부분 실기 | 11/8 잘린 KR 버튼의 이중 크롭/목록 오탐 수정 후 빠른 완료·보상·23:42 정상 종료. 미해금 유형 및 수동전투 미검증 |
 | `Hard` | DailyMission | Scheduler, Hard | 실기 | 11/8 11-4 3회 잔여0/23:48 정상종료 재확인 |
 | `Exercise` | DailyMission | Scheduler, Exercise | 실기 | 10/21 10회 전투/보상/잔여 처리 |
-| `ShopFrequent` | DailyMission | Scheduler, GeneralShop | 부분 실기 | 기존 비유료 필터 실행. 미구매 품목/보호 재고 경계 확인 필요 |
+| `ShopFrequent` | DailyMission | Scheduler, GeneralShop | 기존 필터 실기·통화 경계 회귀 | 한섭 금화 소진 옵션의 필터 우회 경로에서도 55만 진입 하한, 0원 거부, 잔액 정확/1 초과, 다이아 비허용·미식별 통화 거부 검사. 옵션을 켜거나 해당 상품을 실구매하지 않음 |
 | `ShopOnce` | DailyMission | Scheduler, GuildShop, MedalShop2, MeritShop, CoreShop | 부분 실기 | 11/6 길드·훈장 거래 및 정상 종료. 공훈/코어 필터 순회는 실제 구매 통과와 구분 |
 | `Shipyard` | DailyMission | Scheduler, ShipyardDr, Shipyard | 오프라인 통과·실결제 제외 | 대상 미지정(0)에서 선택 차단. PR/DR 첫 두 장 무료, 세 번째 150/600, 잔액 정확·1 부족 및 미리보기에서 잔액 유지 확인. 새 개발 대상 선택이나 실구매 없음 |
 | `Gacha` | DailyMission | Scheduler, Gacha | 실기 | 10/21 소형1회 제출/함선수령,10/22 0회 수령전용 통과. 유료 쾌속 금지 |
-| `Freebies` | DailyMission | Scheduler, BattlePass, DataKey, Mail, SupplyPack | 부분 실기 | 정상 종료. 패스/키/우편/무료패키지별 신규 수령 증거 구분 필요 |
+| `Freebies` | DailyMission | Scheduler, BattlePass, DataKey, Mail, SupplyPack | 부분 실기 | 11/24 작전문서 키 보관 여유 없음으로 중단, 주간 무료팩 연료 상한으로 건너뜀. 한섭 연료 판독 시간초과를 0으로 오해하지 않도록 수정. 미판독·21000·21001 차단, 20999에서 무료팩만 전달하는 경계 회귀. 수령 없는 종료를 구매 성공으로 세지 않음 |
 | `Minigame` | DailyMission | Scheduler | 실기 | 11/6 무료 코인10회/보상/정상 종료 재확인. 모든 게임 유형은 아님 |
 | `PrivateQuarters` | DailyMission | Scheduler, PrivateQuarters | 부분 실기 | 11/6 기존 금화 선물 및 잔여3/3에서 상호작용3회/정상종료. 다른 대상·유료 선물은 미검증 |
 | `OpsiGeneral` | Opsi | OpsiGeneral | 공통 보호 오프라인 통과 | 주간 행동력 구매 한도, 구매 후 연료 1000 경계, 함대 1·잠수함 미호출, 편성된 함선의 수리 기준 40% 경계를 실제 분기 함수로 검사. 보호 설정 변경 없음 |

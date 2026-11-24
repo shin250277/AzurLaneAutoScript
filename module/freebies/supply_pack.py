@@ -113,7 +113,11 @@ class SupplyPack(CampaignStatus):
         """
         self.ui_ensure(page_shop)
         self.goto_supply_pack()
-        if self.get_oil() < 21000:
+        oil = self.get_oil()
+        if oil is None:
+            logger.warning('Cannot verify oil balance; skip free weekly supply pack')
+            return
+        if oil < 21000:
             server_today = get_server_weekday()
             target = self.config.SupplyPack_DayOfWeek
             target_name = day_name[target]
@@ -124,7 +128,7 @@ class SupplyPack(CampaignStatus):
             else:
                 logger.info(f'Delaying free week supply pack to {target_name}')
         else:
-            logger.info('Oil > 21000, unable to buy free weekly supply pack')
+            logger.info('Oil >= 21000, unable to buy free weekly supply pack')
 
 
 class SupplyPack_250814(SupplyPack):
@@ -143,6 +147,8 @@ class SupplyPack_250814(SupplyPack):
 
             if timeout.reached():
                 logger.warning('Get oil timeout')
+                if self.config.SERVER == 'kr':
+                    return None
                 break
 
             if not self.appear(SHOP_OCR_OIL_CHECK, offset=(10, 2)):
