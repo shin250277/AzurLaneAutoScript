@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from module.combat.assets import GET_SHIP
 from module.dorm.assets import *
 from module.exercise.assets import EXERCISE_PREPARATION
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.ui.assets import DORM_CHECK
@@ -198,6 +199,10 @@ class BuyFurniture(UI):
 
         self.furniture_payment_enter(buy_button, skip_first_screenshot=True)
         price = OCR_FURNITURE_PRICE.ocr(self.device.image)
+
+        if self.config.SERVER == 'kr' and not (coin >= price > 0):
+            # The payment dialog is still open: never use confirm to dismiss it.
+            raise RequestHumanTakeover('KR furniture: unreadable or unaffordable price; no confirmation sent')
 
         # Successful or failed buy will have popup and back to furniture details page,
         # produce the result from furniture coin compare to furniture price.

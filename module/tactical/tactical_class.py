@@ -13,7 +13,7 @@ from module.logger import logger
 from module.map.map_grids import SelectedGrids
 from module.ocr.ocr import DigitCounter, Duration, Ocr
 from module.retire.assets import DOCK_CHECK, DOCK_EMPTY, SHIP_CONFIRM
-from module.retire.dock import CARD_GRIDS, CARD_LEVEL_GRIDS, Dock
+from module.retire.dock import CARD_GRIDS, CARD_LEVEL_GRIDS, DOCK_FAVOURITE, Dock
 from module.tactical.assets import *
 from module.ui.assets import BACK_ARROW, REWARD_CHECK, REWARD_GOTO_TACTICAL, TACTICAL_CHECK, TACTICAL_CHECK_2
 from module.ui.page import page_dock, page_reward, page_tactical
@@ -736,6 +736,12 @@ class RewardTacticalClass(Dock):
         logger.hr(f'Select suitable ship')
 
         if self.config.SERVER == 'kr':
+            if self.config.AddNewStudent_Favorite:
+                self.dock_favourite_set(enable=True)
+                self.device.screenshot()
+                if DOCK_FAVOURITE.get(main=self) != 'on':
+                    logger.warning('Favourite-only dock not confirmed; no student selected')
+                    return False
             # The localized dock filter button does not match the inherited
             # assets. The list is already level-sorted; META skills are
             # rejected later by the existing TACTICAL_META handler.

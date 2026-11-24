@@ -39,9 +39,9 @@
 | `RaidDaily` | EventDaily | Scheduler, RaidDaily, Campaign, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `CoalitionSp` | EventDaily | Scheduler, Campaign, Coalition, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Commission` | Reward | Scheduler, Commission | 실기 | 11/6 08:40 수령·재출항/4칸/정상 종료 재확인. 신규 의뢰 이름/기름 의뢰 보호는 별도 분기 |
-| `Tactical` | Reward | Scheduler, Tactical, ControlExpOverflow, AddNewStudent | 부분 실기 | 10/21 16:44 기존 필터 교재 사용/2칸 재시작. 새 학생/경험치 경계는 미확인 |
+| `Tactical` | Reward | Scheduler, Tactical, ControlExpOverflow, AddNewStudent | 새 학생 실기·경계 회귀 | 10/2 14:22 최소 Lv50 도크 선택→스킬 선택→작업 종료. 11/20 1700/5800 필터 실기. 11/24 두 칸 수업 진행, 다음 완료 11/25 08:25:56·08:26:00. T1~4 허용치와 +1 차단은 오프라인. 즐겨찾기 전용 설정일 때 한섭 토글이 실제 켜졌는지 확인하도록 보완 |
 | `Research` | Reward | Scheduler, Research | 실기 | 10/21~22 수령·대기열 보충. 연구 종류별 지출 경계 별도 |
-| `Dorm` | Reward | Scheduler, Dorm, BuyFurniture | 부분 실기 | 11/8 보유음식 보급/빠른 수집/21:58 정상 종료 재확인, 11/6 수집 시간초과 경고 미재발. 가구 구매 미확인 |
+| `Dorm` | Reward | Scheduler, Dorm, BuyFurniture | 보급·수집 실기 / 구매 조건부 | 가구 자동구매 꺼짐 유지. ALAS 구매 대상은 첫 테마의 기간 한정 표시가 있는 경우뿐. 모험자 길드 판매는 11/18 종료, 팰리스는 상시 판매. 잔액 부족·가격 OCR 0에서 구매 확인을 누르던 KR 경로 차단·음성 회귀. 실구매 및 결제 통화 식별은 확인하지 않음 |
 | `Meowfficer` | Reward | Scheduler, Meowfficer, MeowfficerTrain | 부분 실기·육성 대상 필요 | 11/6 기존 구매계획 1회 처리/bought=1/15/추가계획0/작업 종료. 훈련 비활성 유지; 훈련·강화 대상 미확정 |
 | `Guild` | Reward | Scheduler, GuildLogistics, GuildOperation | 부분 실기·승인필요 | 로비/임무 보상 통과. 기부0; 공유 작전·새 임무 선택 별도 승인 유지 |
 | `Reward` | Reward | Scheduler, Reward | 실기 | 10/22 자원·임무 수령/메인 복귀. 일시적 시간초과 이력 별도 |
@@ -107,6 +107,10 @@
 | `c124_large_leveling` | 동일 `CampaignRun.run` 경로 | 공통 엔진 진입점 확인. 별도 레벨링 실기 통과 아님 |
 
 ## 공통 분기 — 별도 완료 판정 필요
+
+11/24 재대조: [77개 메뉴의 로컬 실행 종료 집계](KR_TASK_END_EVIDENCE.csv). 한섭으로 식별되고 동일 작업 시작·종료 사이 오류가 없는 경우만 집계했다. 43개 메뉴에 기록이 있다. 설정 전용·독립 도구·미개방 작업 등이 있어 나머지 34개가 실패라는 뜻은 아니다. 반대로 정상 종료는 상품 구매나 개별 옵션 발동의 증거가 아니다.
+
+이벤트 개방: 저장된 한국 이벤트 목록에 바야르 강화 유닛(11/19~12/17), 월드 투어, 특장원형, 월간 출석이 표시된다. 현재 저장된 T6는 11/19 종료한 템페스타 해역이다. Raid/Hospital/Coalition 전투가 이 목록에 표시된 것은 아니며, 종료한 해역을 강제 실행하지 않았다. [11/5 공지 전재](https://m.ruliweb.com/mobile/board/184527/read/175231)·[11/19 공지 전재](https://gall.dcinside.com/mgallery/board/view/?id=blhx&no=890993).
 
 ### 이미지 등록 정적 감사 (10/22)
 
