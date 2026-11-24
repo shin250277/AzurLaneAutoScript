@@ -12,6 +12,7 @@ class IslandCharacterRecoveryTest(unittest.TestCase):
         ui = Mock()
         ui.config.SERVER = 'kr'
         ui.ui_page_appear.side_effect = [False, True]
+        ui._handle_kr_registered_ship.return_value = False
         ui._handle_kr_island_character_back.return_value = True
         with patch('module.ui.ui.Page.iter_pages', return_value=[]):
             UI.ui_goto(ui, page_research)

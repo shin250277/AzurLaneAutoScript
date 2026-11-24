@@ -228,6 +228,8 @@ class Minigame(UI):
         self.go_to_main_page()
         coin_collected = False
         play_count = 0
+        last_play_balance = None
+        unchanged_plays = 0
 
         # choose game
         specific_game_name = "new_year_challenge"
@@ -252,9 +254,18 @@ class Minigame(UI):
             if coin_count == 0:
                 logger.info(f"coin count : {coin_count}, finished")
                 break
+            if self.config.SERVER == 'kr' and last_play_balance is not None:
+                unchanged_plays = unchanged_plays + 1 if coin_count == last_play_balance else 0
+                if unchanged_plays >= 2:
+                    fresh = self.get_coin_amount(skip_first_screenshot=False)
+                    if fresh <= 0 or fresh == coin_count:
+                        logger.warning('KR arcade balance exhausted or unchanged after two completed games; stop for today')
+                        break
+                    coin_count, unchanged_plays = fresh, 0
             logger.info(f"coin count > 0, spend")
             # specific game logic
             if minigame_instance is not None and minigame_instance.minigame_run():
+                last_play_balance = coin_count
                 play_count += 1
                 continue
             elif minigame_instance is None:
