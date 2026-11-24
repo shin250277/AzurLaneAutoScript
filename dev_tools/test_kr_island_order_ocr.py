@@ -5,6 +5,17 @@ import unittest
 
 
 class KoreanOrderOcrTest(unittest.TestCase):
+    def test_kr_long_label_fits_without_including_item_icon(self):
+        from module.config import server
+        from module.island.order import IslandOrder
+        from unittest.mock import patch
+        with patch.object(server, 'server', 'kr'):
+            ui = object.__new__(IslandOrder)
+            for row, button in enumerate(ui.requirement_name_grid.buttons):
+                x1, y1, x2, y2 = button.area
+                self.assertTrue(956 < x1 <= 997 and x2 >= 1207)
+                self.assertTrue(y1 <= 257 + row * 79 and y2 >= 277 + row * 79)
+
     def test_incomplete_requirement_scan_fails_closed(self):
         code = '''
 from unittest.mock import Mock

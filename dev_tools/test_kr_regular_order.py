@@ -77,6 +77,7 @@ from module.island.korean_order import safe_order_target
 order = Button(area=(748, 28, 852, 132), color=(), button=(756, 36, 844, 124), name='Lisa')
 target = safe_order_target(order)
 assert target.button == (792, 72, 808, 88)
+assert target.area == order.area
 for box in ((900, 600, 1200, 680), (10, 0, 98, 60), (0, 680, 88, 720)):
     assert safe_order_target(Button(area=box, color=(), button=box, name='unsafe')) is None
 ''')
@@ -104,6 +105,11 @@ ui.reject_order.assert_not_called()
 ui.update_stuck_season_order.assert_not_called()
 ui.config.cross_set.assert_not_called()
 ui.config.task_delay.assert_called_once_with(minute=30, server_update=True)
+ui.loop.return_value = iter(range(3))
+ui.click_order.return_value = False
+with patch('module.island.korean_order.submit_regular') as submit:
+    run_regular_orders(ui)
+    submit.assert_not_called()
 ''')
 
     def run_code(self, code):

@@ -21,7 +21,9 @@ class IslandInspect(IslandSeasonTask, IslandOrder):
             if target is None:
                 logger.warning('Order inspection ignored out-of-map detection')
                 continue
-            self.click_order(target, is_urgent=urgent)
+            if not self.click_order(target, is_urgent=urgent):
+                logger.warning('Order inspection skipped an unconfirmed portrait')
+                continue
             self.device.screenshot()
             self.device.image_save('./log/kr_island_inspect_order_%02d.png' % index)
             logger.attr('Inspected order requirements', self.scan_current_order_requirements())

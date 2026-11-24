@@ -15,7 +15,9 @@ def safe_order_target(order):
             and 16 <= x <= 825 and 70 <= y <= 630):
         return None
     box = (x - 8, y - 8, x + 8, y + 8)
-    return Button(area=box, color=(), button=box, name=str(order.name))
+    # is_order_selected reads the bracket at the outer portrait corner.
+    # Narrow only the tap target, not the visual reference rectangle.
+    return Button(area=order.area, color=(), button=box, name=str(order.name))
 
 
 def parse_quota(value):
@@ -122,7 +124,8 @@ def run_regular_orders(ui):
             target = safe_order_target(order)
             if target is None:
                 continue
-            ui.click_order(target)
+            if not ui.click_order(target):
+                continue  # The visible panel may still belong to the previous portrait.
             if submit_regular(ui):
                 completed += 1
                 progressed = True
