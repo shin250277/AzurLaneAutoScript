@@ -626,7 +626,7 @@ module/island_handler/assets.py,ISLAND_DOCK_CHECK,Button,kr-specific,visual_cand
 module/island_handler/assets.py,ISLAND_DOCK_SORTING_CLICK,Button,regional-fallback-review,no_visual_evidence,indirect
 module/island_handler/assets.py,ISLAND_DOCK_SORT_ASC,Button,regional-fallback-review,no_visual_evidence,indirect
 module/island_handler/assets.py,ISLAND_DOCK_SORT_DESC,Button,regional-fallback-review,no_visual_evidence,indirect
-module/island_handler/assets.py,ISLAND_EXCHANGE_CONFIRM,Button,regional-fallback-review,no_visual_evidence,visual
+module/island_handler/assets.py,ISLAND_EXCHANGE_CONFIRM,Button,kr-specific,visual_candidate,visual
 module/island_handler/assets.py,ISLAND_EXCHANGE_SELECT_ALL,Button,upstream-shared,not_scanned,color|visual
 module/island_handler/assets.py,ISLAND_EXCHANGE_TOTAL_AMOUNT,Button,upstream-shared,no_visual_evidence,ocr
 module/island_handler/assets.py,ISLAND_INFO_GOTO_SHOP,Button,kr-specific,visual_candidate,visual

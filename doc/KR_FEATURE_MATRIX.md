@@ -4,7 +4,7 @@
 
 77개 메뉴의 목록·진입점 대조는 완료했다. 목적은 기존 ALAS의 한국 서버 호환이며, 모든 재료를 소비하거나 모든 생산 시간을 기다리는 것이 완료 기준은 아니다. **공통 처리 경로 확인 + 한국 화면 재생 + 대표 실기**와 개별 옵션 실기 이력을 구분한다. 아래 ‘조건부족/미확인’은 그 자체로 기능 결함 판정이 아니다. 반대로 알려진 실행 차단·인식 실패를 장기 검증만 남은 것처럼 표시하지 않는다.
 
-최신 보완·현재 제한은 [11/20 호환성 마감 기록](KR_COMPATIBILITY_2026-11-20.md), 실제 사용 순서는 [사용 인계](KR_READY_TO_USE.md)를 우선한다.
+최신 보완·현재 제한은 [11/24 업데이트 및 검증 기록](KR_UPSTREAM_2026-11-24.md), 실제 사용 순서는 [사용 인계](KR_READY_TO_USE.md)를 우선한다.
 
 근거: [11/9 수정·실기 기록](KR_VALIDATION_2026-11-09.md), [11/8 재개 기록](KR_VALIDATION_2026-11-08.md), [11/6 재개 기록](KR_VALIDATION_2026-11-06.md), [10/21 기록](KR_VALIDATION_2026-10-21.md), [10/22 기록](KR_VALIDATION_2026-10-22.md), [10/2 기록](KR_VALIDATION_2026-10-02.md). 과거 문서의 범위를 현재 완료로 확대하지 않는다. 원시 계정 로그·설정·화면은 첨부하지 않는다.
 
@@ -20,7 +20,7 @@
 | `General` | Alas | Retirement, OneClickRetire, Enhance, OldRetire | 부분 실기 | 기존 기준 일괄퇴역 10/21 통과. 강화·돌파 보존·각 희귀도 경계 별도 확인 필요 |
 | `Restart` | Alas | Scheduler | 실기 | 11/6 점검 후 로그인/08:39 정상 종료 재확인. 장애별 복구는 별도 분기 |
 | `Main` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 10/21 12-4 1회 보스/보상/종료. 모든 해역 통과 의미 아님 |
-| `Main2` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 오프라인·공통경로 | 10/22 합성 설정으로 Main/Main2/Main3 해역·횟수·스케줄러 바인딩 및 쓰기 경로 격리 통과. 별도 슬롯 실기 완료는 아님 |
+| `Main2` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/24 12-4 1회, 도크 포화 시 기존 일괄퇴역 및 장비 보관 후 재개. 21:18:26 전투 종료, 21:18:28 횟수 0·자동 비활성, 21:18:29 작업 종료 |
 | `Main3` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 오프라인·공통경로 | 10/22 합성 설정으로 Main/Main2/Main3 해역·횟수·스케줄러 바인딩 및 쓰기 경로 격리 통과. 별도 슬롯 실기 완료는 아님 |
 | `GemsFarming` | Farm | Scheduler, GemsFarming, EquipmentCode, Campaign, StopCondition, Fleet, Submarine, Emotion | 미확인·범위제한 | 함선 확보/퇴역 반복과 별도 육성 동작. 현재 비활성 유지; 일반 일괄퇴역 승인으로 확대하지 않음 |
 | `EventGeneral` | Event | EventGeneral, TaskBalancer | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
@@ -73,7 +73,7 @@
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
 | `IslandProduction` | Island | Scheduler, IslandProduction | 대표 실기·화면 재생 | 11/20 전체 빈 시설 감사 후 쌀/감귤/찻잎/아이스커피 배정 및15:12 정상 종료. 물밤 케이크 시작→수령→보유1 확인. 과거 이름/행 전환 실패 보완, 저장 화면33개 전체 재생 통과. 점유 시설·모든 생산식별 전체 주기는 실기 범위와 구분. 보호/식당 예약분 유지 |
 | `IslandGeneral` | Island | 시즌 설정 | 설정 생성 검사 | 한국 출시일로 선택하며 게임을 실행하는 작업이 아님 |
-| `IslandTransport` | Island | Scheduler | 부분 실기 | 11/24 20:54 P3 보상 수령 후 새 품목을 판독하고 내용↔보상 양방향 전환. P1~3 재고·요구량·보상 판독. 의뢰 목록 진입 확인 실패로 교체·제출은 통과 아님 |
+| `IslandTransport` | Island | Scheduler | 부분 실기 | 11/24 P3 보상 수령·신규 의뢰 전환, P1~3 재고·요구량·보상 판독, 목록 01~06 양 탭 및 닫기 확인. 21:19 별도 실행에서 보상 탭 상단 2행 미수집 시 제출하지 않음. 보상 수령과 신규 제출은 별도 판정 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |

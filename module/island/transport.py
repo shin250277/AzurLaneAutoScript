@@ -787,7 +787,11 @@ class IslandTransport(IslandExchange):
             first = rows[0].index
             rows = self.transport_list_drag(down=False)
             if rows and rows[0].index == first:
-                break
+                # KR: the first drag after switching tabs can leave rows 03-06
+                # in place. Keep the existing three-drag bound, never select
+                # or submit a row while trying to reach the top.
+                if self.config.SERVER != 'kr':
+                    break
         return rows
 
     def transport_list_select(self, index, skip_first_screenshot=True):

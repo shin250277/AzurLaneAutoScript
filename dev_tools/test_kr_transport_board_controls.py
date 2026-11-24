@@ -10,6 +10,15 @@ from module.island.transport import IslandTransport, SLOT_DELTA
 
 
 class KoreanTransportBoardTest(unittest.TestCase):
+    def test_top_retries_one_unmoved_drag_on_kr(self):
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        bottom, top = [Mock(index=3)], [Mock(index=1)]
+        ui.transport_list_wait_rows.return_value = bottom
+        ui.transport_list_drag.side_effect = [bottom, top]
+        self.assertEqual(IslandTransport.transport_list_top(ui), top)
+        self.assertEqual(ui.transport_list_drag.call_count, 2)
+
     def test_list_modal_is_not_the_primary_board(self):
         ui = Mock()
         ui.config.SERVER = 'kr'
