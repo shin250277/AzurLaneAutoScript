@@ -72,6 +72,8 @@
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 공통 경로·오프라인 | 코인 하한 도달 시 전투 전 종료, 한 해역 후 중단, AP 부족 지연 검사 통과. 원본 동작에 일반 AP 구매필터 및 지휘냥 파밍 연계가 있으므로 무소비 도구가 아님 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
 | `IslandProduction` | Island | Scheduler, IslandProduction | 대표 실기·화면 재생 | 11/20 전체 빈 시설 감사 후 쌀/감귤/찻잎/아이스커피 배정 및15:12 정상 종료. 물밤 케이크 시작→수령→보유1 확인. 과거 이름/행 전환 실패 보완, 저장 화면33개 전체 재생 통과. 점유 시설·모든 생산식별 전체 주기는 실기 범위와 구분. 보호/식당 예약분 유지 |
+| `IslandGeneral` | Island | 시즌 설정 | 설정 생성 검사 | 한국 출시일로 선택하며 게임을 실행하는 작업이 아님 |
+| `IslandTransport` | Island | Scheduler | 한섭 화면 재생 | 안정된 화면에서 슬롯 3개 모두 1/1·준비 상태. 판독 불가 화면은 미확인으로 분류. 실제 의뢰 교체·제출·수령은 이 검사 범위 밖 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |
@@ -133,5 +135,3 @@
 3. 현 계정·기존 보호 범위에서 가능한 미검증 항목을 제한된 1회 실기로 확인.
 4. 실패하면 반복 방치하지 않고 중지→원인 재현→수정→오프라인 회귀→같은 분기 실기.
 5. 승인/기간/대상 조건이 없는 항목은 정확한 조건을 명시. 전체 완료로 표시하지 않음.
-| `IslandGeneral` | Island | 시즌 설정 | 설정 생성 검사 | 한국 출시일로 선택하며 게임을 실행하는 작업이 아님 |
-| `IslandTransport` | Island | Scheduler | 공식판 진입점 확인 | 생산 계획을 이용하는 운송 의뢰. 한국 화면에서 의뢰 교체·수령은 별도 검증 대상 |

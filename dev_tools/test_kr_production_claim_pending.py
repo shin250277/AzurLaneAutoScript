@@ -14,6 +14,7 @@ class PendingClaimTest(unittest.TestCase):
         return slot, SimpleNamespace(
             config=SimpleNamespace(SERVER=server, cross_set=Mock()),
             slot_grids={102: SimpleNamespace(buttons=['slot'])},
+            claimed_slots=set(), has_empty_fishery_slot=False,
             slot_finish_time={slot: stamp},
             is_slot_finished=Mock(return_value=finished),
             confirm_korean_empty_slot=Mock(return_value=False),
