@@ -15,6 +15,13 @@ from module.island_handler.shop_ui import IslandShopUI
 from module.logger import logger
 from module.ocr.ocr import Digit
 
+KR_FISH_PROCESS_QUESTION = Button(
+    area=(516, 315, 762, 349), color=(219, 219, 218), button=(516, 315, 762, 349),
+    file='./assets/kr/island_handler/KR_FISH_PROCESS_QUESTION.png', name='KR_FISH_PROCESS_QUESTION')
+KR_ISLAND_ACTION_ACCEPT = Button(
+    area=(763, 490, 822, 526), color=(81, 197, 255), button=(763, 490, 822, 526),
+    file='./assets/kr/island_handler/KR_FISH_PROCESS_ACCEPT.png', name='KR_ISLAND_ACTION_ACCEPT')
+
 # {fish meat id: {fish id: fish meat per fish}}, every exchange consumes one fish
 FISH_MEAT_SOURCES = {
     meat_id: {
@@ -290,6 +297,7 @@ class IslandExchange(IslandShopUI):
             int: Fish meat owned after the exchange, None if completion is not seen.
         """
         popup_confirmed = False
+        requested = False
         items_received = False
         owned = before
         for _ in self.loop(timeout=10):
@@ -298,7 +306,14 @@ class IslandExchange(IslandShopUI):
                 continue
             if self.handle_island_level_up():
                 continue
-            if self.handle_island_popup_confirm('EXCHANGE'):
+            if self.config.SERVER == 'kr':
+                if (requested and not popup_confirmed
+                        and self.match_template_color(KR_FISH_PROCESS_QUESTION, offset=(4, 4))
+                        and self.match_template_color(KR_ISLAND_ACTION_ACCEPT, offset=(4, 4))):
+                    self.device.click(KR_ISLAND_ACTION_ACCEPT)
+                    popup_confirmed = True
+                    continue
+            elif self.handle_island_popup_confirm('EXCHANGE'):
                 popup_confirmed = True
                 continue
             owned, gain = read_fish_meat(self.device.image)
@@ -307,8 +322,11 @@ class IslandExchange(IslandShopUI):
             if items_received and gain == 0 and owned == before + expected:
                 return owned
             # The page takes a while to update after the popup is confirmed
+            if self.config.SERVER == 'kr' and (requested or expected <= 0 or owned != before or gain != expected):
+                continue
             if not popup_confirmed and not items_received and self.appear_then_click(
                     ISLAND_EXCHANGE_CONFIRM, offset=(20, 20), interval=2):
+                requested = True
                 continue
         logger.warning(f'Exchange expected {expected} {item_name_with_id(meat_id)}, '
                        f'but owned {owned} from {before}, item popup handled: {items_received}')

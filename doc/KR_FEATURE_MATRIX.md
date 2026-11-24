@@ -21,7 +21,7 @@
 | `Restart` | Alas | Scheduler | 실기 | 11/6 점검 후 로그인/08:39 정상 종료 재확인. 장애별 복구는 별도 분기 |
 | `Main` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 10/21 12-4 1회 보스/보상/종료. 모든 해역 통과 의미 아님 |
 | `Main2` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/24 12-4 1회, 도크 포화 시 기존 일괄퇴역 및 장비 보관 후 재개. 21:18:26 전투 종료, 21:18:28 횟수 0·자동 비활성, 21:18:29 작업 종료 |
-| `Main3` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 오프라인·공통경로 | 10/22 합성 설정으로 Main/Main2/Main3 해역·횟수·스케줄러 바인딩 및 쓰기 경로 격리 통과. 별도 슬롯 실기 완료는 아님 |
+| `Main3` | Farm | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/24 12-4 1회, 7전 후 21:27:23 횟수 0·자동 비활성, 21:27:24 작업 종료 및 21:27:26 메인 복귀 |
 | `GemsFarming` | Farm | Scheduler, GemsFarming, EquipmentCode, Campaign, StopCondition, Fleet, Submarine, Emotion | 미확인·범위제한 | 함선 확보/퇴역 반복과 별도 육성 동작. 현재 비활성 유지; 일반 일괄퇴역 승인으로 확대하지 않음 |
 | `EventGeneral` | Event | EventGeneral, TaskBalancer | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Event` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/9 템페스타와 안개회랑 T1~T6 개방 및 T6 연속2회/횟수0 자동 종료/메인 복귀. 긴급 의뢰 팝업 보완의 동일 화면 실기는 별도 |
@@ -73,7 +73,7 @@
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
 | `IslandProduction` | Island | Scheduler, IslandProduction | 대표 실기·화면 재생 | 11/20 전체 빈 시설 감사 후 쌀/감귤/찻잎/아이스커피 배정 및15:12 정상 종료. 물밤 케이크 시작→수령→보유1 확인. 과거 이름/행 전환 실패 보완, 저장 화면33개 전체 재생 통과. 점유 시설·모든 생산식별 전체 주기는 실기 범위와 구분. 보호/식당 예약분 유지 |
 | `IslandGeneral` | Island | 시즌 설정 | 설정 생성 검사 | 한국 출시일로 선택하며 게임을 실행하는 작업이 아님 |
-| `IslandTransport` | Island | Scheduler | 부분 실기 | 11/24 P3 보상 수령·신규 의뢰 전환, P1~3 재고·요구량·보상 판독, 목록 01~06 양 탭 및 닫기 확인. 21:19 별도 실행에서 보상 탭 상단 2행 미수집 시 제출하지 않음. 보상 수령과 신규 제출은 별도 판정 |
+| `IslandTransport` | Island | Scheduler | 대표 실기 통과 | 11/24 기존 P3 보상 수령, 목록 01~06 양 탭, 어육 2종 가공 및 재고 증가, P1←03·P2←06 교체 후 재판독, P1~3 제출·운송 시작·차기 예약 후 21:32:50 정상 종료. 이번에 출발한 3건의 만기 재수령과 목록 전체 새로고침은 별도 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |

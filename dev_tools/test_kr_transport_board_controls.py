@@ -1,15 +1,39 @@
 import unittest
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import numpy as np
 from PIL import Image
 
 import module.config.server as server
 from module.island import assets
-from module.island.transport import IslandTransport, SLOT_DELTA
+from module.island.transport import IslandTransport, KR_TRANSPORT_SWAP_QUESTION, SLOT_DELTA
+from module.island_handler.exchange import (
+    IslandExchange, KR_ISLAND_ACTION_ACCEPT, KR_FISH_PROCESS_QUESTION,
+)
 
 
 class KoreanTransportBoardTest(unittest.TestCase):
+    def test_action_questions_do_not_match_each_other(self):
+        questions = (KR_TRANSPORT_SWAP_QUESTION, KR_FISH_PROCESS_QUESTION)
+        for question in questions:
+            with Image.open(question.file) as mask:
+                frame = np.array(mask.convert('RGB'))
+            for candidate in questions:
+                self.assertEqual(candidate.match_template_color(frame, offset=(4, 4)), candidate is question)
+
+    def test_exchange_needs_expected_quantity_and_specific_question(self):
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.loop.return_value = range(4)
+        ui.handle_island_get_items.return_value = ui.handle_island_level_up.return_value = False
+        ui.appear_then_click.return_value = True
+        ui.match_template_color.side_effect = lambda button, **kw: button is KR_ISLAND_ACTION_ACCEPT
+        with patch('module.island_handler.exchange.read_fish_meat', side_effect=[(28, 0), (28, 60), (28, 60), (28, 60)]):
+            self.assertIsNone(IslandExchange._exchange_confirm(ui, 2521, 28, 60))
+        ui.appear_then_click.assert_called_once()
+        ui.handle_island_popup_confirm.assert_not_called()
+        ui.device.click.assert_not_called()
+
     def test_top_retries_one_unmoved_drag_on_kr(self):
         ui = Mock()
         ui.config.SERVER = 'kr'
