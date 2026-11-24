@@ -63,17 +63,17 @@
 | `OpsiShop` | Opsi | Scheduler, OpsiShop | 실기 | 10/21 기존 비유료 물품15종 구매/정상종료 |
 | `OpsiVoucher` | Opsi | Scheduler, OpsiVoucher | 부분 실기 | 11/6 교환권 상점 순회/보유 기록 사용/정상 종료/다음 월 예약. 빈 품목 시간초과 경고가 있어 품목별 구매 통과로 확대하지 않음 |
 | `OpsiDaily` | Opsi | Scheduler, OpsiDaily, OpsiFleet | 실기 | 10/21 16:37 남은임무 없음/정상종료. 과거 카리브 좌표순환 재현은 별도 |
-| `OpsiObscure` | Opsi | Scheduler, OpsiObscure, OpsiFleet | 조건부족 | 10/21 좌표없음 종료. 현재 좌표 전투 미검증; 일괄좌표사용 연계 범위 확인 |
-| `OpsiAbyssal` | Opsi | Scheduler, OpsiAbyssal, OpsiFleetFilter | 조건부족 | 현재 대상/전투력 확인 필요. 기존 함대·체력 보호 유지 |
+| `OpsiObscure` | Opsi | Scheduler, OpsiObscure, OpsiFleet | 과거 실기 | 9/14 08:46:20 작업 진입→08:52:10 자동탐색 완료→지도 이탈 확인→08:52:27 정상 종료. 10/21의 좌표 없음은 별도 분기. 11/24판 재출격을 뜻하지 않음. |
+| `OpsiAbyssal` | Opsi | Scheduler, OpsiAbyssal, OpsiFleetFilter | 과거 실기 | 9/14 08:40:56 심연 선택→08:45:25 보스 격파 판정→08:45:50 정상 종료. 현재 함대·체력 조건에서의 재현 여부와 구분. |
 | `OpsiArchive` | Opsi | Scheduler, OpsiFleet | 실기 | 10/21 장치7회 구매→연속임무→보상→구매재고없음→정상종료 |
-| `OpsiStronghold` | Opsi | Scheduler, OpsiStronghold, OpsiFleetFilter | 조건부족 | 기존 전투력 부족 실패. 같은 조건 무리 재시도 금지 |
+| `OpsiStronghold` | Opsi | Scheduler, OpsiStronghold, OpsiFleetFilter | 과거 실기·전력 조건부 | 9/12 07:13:09 보스 격파 판정→07:13:39 정상 종료. 다른 전력 조건에서 실패한 기록도 있어 현재 함대의 승리를 보장하지 않음. |
 | `OpsiMonthBoss` | Opsi | Scheduler, OpsiMonthBoss, OpsiFleetFilter | 조건부족 | 적응도 보호 유지. 강제 실행 금지; 현재 수치 읽기 확인 가능 |
 | `OpsiMeowfficerFarming` | Opsi | Scheduler, OpsiMeowfficerFarming, OpsiFleet | 공통 경로·오프라인 | AP 보존/구매한도0/잠수함false/한 해역 후 스케줄러 중단 및 AP 부족 시 재출격 없는 지연 검사 통과. 전용 반복 실기는 별도 |
 | `OpsiHazard1Leveling` | Opsi | Scheduler, OpsiHazard1Leveling, OpsiFleet | 공통 경로·오프라인 | 코인 하한 도달 시 전투 전 종료, 한 해역 후 중단, AP 부족 지연 검사 통과. 원본 동작에 일반 AP 구매필터 및 지휘냥 파밍 연계가 있으므로 무소비 도구가 아님 |
 | `OpsiCrossMonth` | Opsi | Scheduler | 발생조건 | 월말 전환 전용. 날짜변조/보호우회 없이 오프라인 경계 검사 |
 | `IslandProduction` | Island | Scheduler, IslandProduction | 대표 실기·화면 재생 | 11/20 전체 빈 시설 감사 후 쌀/감귤/찻잎/아이스커피 배정 및15:12 정상 종료. 물밤 케이크 시작→수령→보유1 확인. 과거 이름/행 전환 실패 보완, 저장 화면33개 전체 재생 통과. 점유 시설·모든 생산식별 전체 주기는 실기 범위와 구분. 보호/식당 예약분 유지 |
 | `IslandGeneral` | Island | 시즌 설정 | 설정 생성 검사 | 한국 출시일로 선택하며 게임을 실행하는 작업이 아님 |
-| `IslandTransport` | Island | Scheduler | 한섭 화면 재생 | 안정된 화면에서 슬롯 3개 모두 1/1·준비 상태. 판독 불가 화면은 미확인으로 분류. 실제 의뢰 교체·제출·수령은 이 검사 범위 밖 |
+| `IslandTransport` | Island | Scheduler | 부분 실기 | 11/24 20:54 P3 보상 수령 후 새 품목을 판독하고 내용↔보상 양방향 전환. P1~3 재고·요구량·보상 판독. 의뢰 목록 진입 확인 실패로 교체·제출은 통과 아님 |
 | `IslandOrder` | Island | Scheduler, IslandOrder | 일반 주문 실기 통과·나머지 미검증 | 10/22 일반 주문 14건 제출/보상/횟수 감소, 재고 부족 1건 보호 건너뛰기, 정상 종료/메인 복귀/임시 활성 해제. 긴급·시즌·포기는 실행하지 않음 |
 | `IslandFreebie` | Island | Scheduler, IslandFreebie | 실기 | 11/9 19:31:45 지급 연출 종료→19:31:47 수령→19:31:53 Received freebie/정상 종료. 공유false 유지, 임시 활성false 복원 |
 | `IslandCollect` | Island | Scheduler | 실기 | 11/9 19:32:17 Collect successfully/작업 정상 종료,19:32:22 메인 복귀. 임시false 복원. 일부 캐릭터 OCR None 경고는 전체 성공과 별도 기록 |

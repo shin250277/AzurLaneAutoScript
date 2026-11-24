@@ -662,6 +662,7 @@ class IslandTransport(IslandExchange):
         Args:
             slot (int): Open this slot's swap list, or the commission list if None.
         """
+        entered = False
         for _ in self.loop(skip_first=skip_first_screenshot, timeout=15):
             if self.appear(ISLAND_TRANSPORT_LIST_CHECK, offset=(20, 20)):
                 return True
@@ -670,7 +671,12 @@ class IslandTransport(IslandExchange):
             if not self.is_in_transport_main():
                 continue
             if slot is None:
+                if entered and self.config.SERVER == 'kr':
+                    # The list can overlay the primary page. Do not keep
+                    # clicking through an unrecognised secondary screen.
+                    continue
                 if self.appear_then_click(ISLAND_TRANSPORT_LIST_ENTER, offset=(20, 20), interval=2):
+                    entered = True
                     continue
             elif self.slot_empty(slot):
                 self.device.click(BAR_GRID[0, slot])
@@ -678,6 +684,8 @@ class IslandTransport(IslandExchange):
                 self.device.click(ISLAND_TRANSPORT_SWAP)
                 continue
         logger.warning('Failed to open transport list')
+        if entered and self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_transport_list_unconfirmed.png')
         return False
 
     def transport_list_close(self, skip_first_screenshot=True):

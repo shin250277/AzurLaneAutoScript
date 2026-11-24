@@ -654,6 +654,14 @@ class UI(InfoHandler):
 
             # Unknown page but able to handle
             logger.info("Unknown ui page")
+            if self.config.SERVER == 'kr':
+                # Resume after a manual stop inside the daily stage selector.
+                # Dismiss outside the dialog; never choose a battle on recovery.
+                from module.daily.daily import KR_DAILY_DISMISS, KR_DAILY_NORMAL_RUN, KR_DAILY_SKIP
+                if (self.match_template_color(KR_DAILY_NORMAL_RUN, offset=(5, 5))
+                        and self.match_template_color(KR_DAILY_SKIP, offset=(5, 5), interval=2)):
+                    self.device.click(KR_DAILY_DISMISS)
+                    continue
             if self.appear_then_click(GOTO_MAIN, offset=(30, 30), interval=2):
                 timeout.reset()
                 continue
