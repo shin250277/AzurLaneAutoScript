@@ -737,6 +737,8 @@ class RewardCommission(UI, InfoHandler):
             except OilMaxed:
                 if self.config.SERVER == 'kr':
                     logger.warning('KR oil storage is full; defer commission without buying food')
+                    from module.commission.kr_oil_delay import defer
+                    defer(self.config.config_name)
                     self.config.task_delay(minute=30)
                     self.config.task_stop()
                 logger.info("Oil maxed, buy food to consume oil")

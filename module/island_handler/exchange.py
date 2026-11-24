@@ -312,6 +312,8 @@ class IslandExchange(IslandShopUI):
                 continue
         logger.warning(f'Exchange expected {expected} {item_name_with_id(meat_id)}, '
                        f'but owned {owned} from {before}, item popup handled: {items_received}')
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_fish_exchange_unconfirmed.png')
         return None
 
     def island_shop_exchange(self, require_dict={}, keep=None):

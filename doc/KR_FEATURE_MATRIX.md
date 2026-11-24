@@ -25,7 +25,7 @@
 | `GemsFarming` | Farm | Scheduler, GemsFarming, EquipmentCode, Campaign, StopCondition, Fleet, Submarine, Emotion | 미확인·범위제한 | 함선 확보/퇴역 반복과 별도 육성 동작. 현재 비활성 유지; 일반 일괄퇴역 승인으로 확대하지 않음 |
 | `EventGeneral` | Event | EventGeneral, TaskBalancer | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Event` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 실기 | 11/9 템페스타와 안개회랑 T1~T6 개방 및 T6 연속2회/횟수0 자동 종료/메인 복귀. 긴급 의뢰 팝업 보완의 동일 화면 실기는 별도 |
-| `Event2` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
+| `Event2` | Event | Scheduler, Campaign, StopCondition, Fleet, Submarine, Emotion, HpControl, EnemyPriority | 과거 실기 | 10/2 D3 1회 후 16:49:04 횟수 0 저장, 16:49:07 작업 종료, 16:49:09 메인 복귀. 다른 이벤트 해역의 검증을 뜻하지 않음 |
 | `Raid` | Event | Scheduler, Raid, Campaign, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Hospital` | Event | Scheduler, Hospital, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |
 | `Coalition` | Event | Scheduler, Campaign, Coalition, StopCondition, Emotion | 발생조건·미확인 | 이벤트/특수 도구. 현재 개방·보상·종료 조건을 먼저 확인; 과거 이벤트 통과를 현재 통과로 대체하지 않음 |

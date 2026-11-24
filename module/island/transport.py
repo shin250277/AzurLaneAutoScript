@@ -492,6 +492,9 @@ class IslandTransport(IslandExchange):
         return states
 
     def is_in_transport_main(self):
+        if self.config.SERVER == 'kr' and self.appear(ISLAND_TRANSPORT_LIST_CHECK, offset=(10, 10)):
+            # The Korean list is a modal; the underlying board header stays visible.
+            return False
         return self.ui_page_appear(page_island_transport, offset=(20, 20))
 
     def handle_transport_popup(self):

@@ -5,6 +5,17 @@ import unittest
 
 
 class KoreanCommissionOilMaxedTest(unittest.TestCase):
+    def test_deferral_is_profile_specific_and_expires(self):
+        from unittest.mock import patch
+        from module.commission import kr_oil_delay as delay
+        with patch.object(delay, '_deadline', {}), patch.object(delay, 'monotonic') as clock:
+            clock.return_value = 1
+            delay.defer('one')
+            self.assertTrue(delay.active('one'))
+            self.assertFalse(delay.active('two'))
+            clock.return_value = 1801
+            self.assertFalse(delay.active('one'))
+
     def test_notice_checked_before_receiving_and_deferred_without_purchase(self):
         code = '''
 from unittest.mock import Mock, MagicMock, patch

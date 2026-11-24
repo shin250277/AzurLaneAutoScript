@@ -405,6 +405,11 @@ class CampaignRun(CampaignEvent):
             in: page_campaign
         """
         if self.campaign.commission_notice_show_at_campaign():
+            if self.config.SERVER == 'kr':
+                from module.commission.kr_oil_delay import active
+                if active(self.config.config_name):
+                    logger.info('Keep commission deferred after full KR oil storage')
+                    return
             logger.info('Commission notice found')
             self.config.task_call('Commission', force_call=True)
             self.config.task_stop('Commission notice found')

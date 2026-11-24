@@ -10,6 +10,14 @@ from module.island.transport import IslandTransport, SLOT_DELTA
 
 
 class KoreanTransportBoardTest(unittest.TestCase):
+    def test_list_modal_is_not_the_primary_board(self):
+        ui = Mock()
+        ui.config.SERVER = 'kr'
+        ui.appear.return_value = True
+        self.assertFalse(IslandTransport.is_in_transport_main(ui))
+        ui.appear.assert_called_once_with(assets.ISLAND_TRANSPORT_LIST_CHECK, offset=(10, 10))
+        ui.ui_page_appear.assert_not_called()
+
     def test_claim_click_follows_matched_row(self):
         previous = server.server
         try:
