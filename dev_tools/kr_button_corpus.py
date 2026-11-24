@@ -25,19 +25,20 @@ def targets():
             yield src.as_posix(), stmt.targets[0].id, fields
 
 
-def scan(directories, report, nearby=False):
+def scan_batch(files, nearby=False, resolved=()):
     frames = []
-    for directory in directories:
-        for p in sorted(directory.glob('*.png')):
-            with Image.open(str(p)) as im:
-                if im.size == (1280, 720):
-                    frames.append((p.stem, np.array(im.convert('RGB'))))
+    for p in files:
+        with Image.open(str(p)) as im:
+            if im.size == (1280, 720):
+                frames.append((str(p), np.array(im.convert('RGB'))))
     if not frames:
-        raise ValueError('No 1280x720 frames')
+        return 0, []
     cv2.setNumThreads(1)
     grays = [cv2.cvtColor(im, cv2.COLOR_RGB2GRAY) for _, im in frames] if nearby else []
     rows = []
     for src, name, fields in targets():
+        if (src, name) in resolved:
+            continue
         path = fields.get('file')
         area = fields.get('area')
         status, evidence = 'not_scanned', ''
@@ -78,11 +79,29 @@ def scan(directories, report, nearby=False):
                     if status == 'no_fixed_match':
                         status = 'no_visual_evidence'
         rows.append((src, name, status, evidence))
+    return len(frames), rows
+
+
+def scan(directories, report, nearby=False, recursive=False):
+    files = sorted({p for d in directories for p in (d.rglob('*') if recursive else d.iterdir())
+                    if p.suffix.lower() in ('.jpg', '.jpeg', '.png') and p.is_file()})
+    evidence, resolved, count = {}, set(), 0
+    for start in range(0, len(files), 32):
+        size, rows = scan_batch(files[start:start+32], nearby, resolved)
+        count += size
+        for row in rows:
+            key = row[:2]
+            evidence[key] = row
+            if row[2] in ('visual_candidate', 'nearby_visual_candidate', 'not_scanned'):
+                resolved.add(key)
+    if not count:
+        raise ValueError('No 1280x720 frames')
+    rows = [evidence[key] for key in sorted(evidence)]
     with report.open('w', newline='', encoding='utf-8') as out:
         writer = csv.writer(out)
         writer.writerow(('module', 'button', 'status', 'frame'))
         writer.writerows(rows)
-    print(len(frames), 'frames;', len(rows), 'definitions;', dict(Counter(r[2] for r in rows)))
+    print(count, 'frames;', len(rows), 'definitions;', dict(Counter(r[2] for r in rows)))
 
 
 if __name__ == '__main__':
@@ -90,5 +109,6 @@ if __name__ == '__main__':
     parser.add_argument('report', type=Path)
     parser.add_argument('directories', type=Path, nargs='+')
     parser.add_argument('--nearby', action='store_true', help='also search a 20-pixel margin')
+    parser.add_argument('--recursive', action='store_true', help='include nested local capture directories')
     args = parser.parse_args()
-    scan(args.directories, args.report, args.nearby)
+    scan(args.directories, args.report, args.nearby, args.recursive)

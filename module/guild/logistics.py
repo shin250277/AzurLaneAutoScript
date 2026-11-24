@@ -30,12 +30,14 @@ class ExchangeLimitOcr(Digit):
         Returns:
             np.ndarray: Shape (width, height)
         """
-        # The Korean client renders the counter as light text on a dark bar.
-        # The generic Digit preprocessing isolates that glyph cleanly, while
-        # the legacy grayscale inversion used by the other clients turns its
-        # zero into a different digit.
+        # KR uses subdued text on a translucent bar; absolute white misses
+        # valid digits. The KR crop excludes the trailing Hangul unit.
         if server.server == 'kr':
-            return super().pre_process(image)
+            gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+            if int(gray.max()) - int(gray.min()) < 30:
+                return np.full((gray.shape[0]+4, gray.shape[1]+6), 255, np.uint8)
+            glyph = 255 - cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+            return cv2.copyMakeBorder(glyph, 2, 2, 3, 3, cv2.BORDER_CONSTANT, value=255)
         return 255 - color_mapping(rgb2gray(image), max_multiply=2.5)
 
 
