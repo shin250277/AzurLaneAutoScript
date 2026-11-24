@@ -1,11 +1,23 @@
 from module.base.decorator import cached_property
 from module.base.timer import Timer
+from module.base.template import Template
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2
 from module.freebies.assets import *
 from module.logger import logger
 from module.ui.page import GOTO_MAIN_WHITE, page_mail, page_main, page_main_white
 from module.ui.setting import Setting
 from module.ui.ui import UI
+
+
+_KR_EMPTY_FILTER_TEXT = Template(file='./assets/kr/freebies/KR_MAIL_NO_ELIGIBLE_TEXT.png')
+_KR_EMPTY_FILTER_CLOSE = Template(file='./assets/kr/freebies/KR_MAIL_NO_ELIGIBLE_CLOSE.png')
+_KR_EMPTY_FILTER_X = Button(area=(887, 166, 930, 207), color=(255, 255, 255),
+                            button=(898, 176, 917, 196), name='KR_MAIL_NO_ELIGIBLE_CLOSE')
+
+
+def kr_mail_no_eligible(image):
+    return (_KR_EMPTY_FILTER_TEXT.match(image[316:359, 484:797], similarity=.95)
+            and _KR_EMPTY_FILTER_CLOSE.match(image[163:210, 884:933], similarity=.95))
 
 
 class MailSelectSetting(Setting):
@@ -155,6 +167,10 @@ class MailWhite(UI):
                 self.device.screenshot()
 
             # End
+            if self.config.SERVER == 'kr' and kr_mail_no_eligible(self.device.image):
+                logger.info('KR mail filter: no eligible mail; close without claiming')
+                self.device.click(_KR_EMPTY_FILTER_X)
+                return False
             if claimed and self.appear(MAIL_BATCH_CLAIM, offset=(30, 30)):
                 break
             # Click

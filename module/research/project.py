@@ -408,6 +408,14 @@ def research_kr_detect(image):
         known = ResearchProject(code, series=int(series[1:]))
         if known.valid:
             return known
+    # KR live panels: these two six-hour E projects consume tech packs but
+    # have no dismantling requirement. Never let fuzzy code recovery assign
+    # an equipment quota or accept a different series / duration.
+    if ((series, code) in (('S6', 'E-171-MI'), ('S5', 'E-189-MI'))
+            and get_research_duration_jp(image) == 21600):
+        known = ResearchProject(code, series=int(series[1:]))
+        if known.valid and known.name == code and known.duration == '6' and not known.task:
+            return known
     project = ResearchProjectJp()
     project.series = series
     project.duration = removesuffix(str(get_research_duration_jp(image) / 3600), '.0')

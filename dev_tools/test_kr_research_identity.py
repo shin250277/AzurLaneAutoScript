@@ -7,6 +7,20 @@ from dev_tools.test_os_task_stop_boundaries import method
 
 
 class KrResearchIdentityTest(unittest.TestCase):
+    def test_kr_tech_pack_ids_require_exact_series_and_duration_and_never_scrap(self):
+        for series, code, duration, valid in (
+                ('S6', 'E-171-MI', 21600, True), ('S5', 'E-189-MI', 21600, True),
+                ('S5', 'E-171-MI', 21600, False), ('S5', 'E-189-MI', 7200, False)):
+            with self.subTest(series=series, code=code, duration=duration), \
+                    patch.object(detection, 'get_research_series_jp', return_value=series), \
+                    patch.object(detection.OCR_RESEARCH_DETAIL_KR, 'ocr', return_value=code), \
+                    patch.object(detection, 'get_research_duration_jp', return_value=duration), \
+                    patch.object(detection, 'get_research_cost_jp', return_value={}):
+                project = detection.research_kr_detect(None)
+            self.assertEqual(project.valid, valid)
+            if valid:
+                self.assertEqual(project.equipment_amount, 0)
+
     def test_uncertain_requirement_code_is_not_given_japanese_quota(self):
         with patch.object(detection, 'get_research_series_jp', return_value='S8'), \
                 patch.object(detection.OCR_RESEARCH_DETAIL_KR, 'ocr', return_value='E-999-MI'), \
