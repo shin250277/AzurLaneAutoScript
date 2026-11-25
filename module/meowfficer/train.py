@@ -2,6 +2,7 @@ from copy import deepcopy
 
 from module.base.button import ButtonGrid
 from module.base.timer import Timer
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.meowfficer.assets import *
 from module.meowfficer.collect import MeowfficerCollect
@@ -52,6 +53,9 @@ class MeowfficerTrain(MeowfficerCollect, MeowfficerEnhance):
                     self.device.click(MEOWFFICER_TRAIN_START)
                     timeout_count -= 1
                 else:
+                    if self.config.SERVER == 'kr':
+                        self.device.image_save('./log/kr_meow_queue_unrecognized.png')
+                        raise RequestHumanTakeover('Korean meow training queue did not open; training not confirmed')
                     return False
 
             # End
@@ -211,6 +215,8 @@ class MeowfficerTrain(MeowfficerCollect, MeowfficerEnhance):
             # Collect
             if remain > 0:
                 collected = self.meow_collect(collect_all=True)
+            if self.config.SERVER == 'kr':
+                self.meow_enter(MEOWFFICER_TRAIN_ENTER, check_button=MEOWFFICER_TRAIN_START)
             # Queue
             self.meow_queue(ascending=False)
             # Exit
@@ -221,6 +227,8 @@ class MeowfficerTrain(MeowfficerCollect, MeowfficerEnhance):
             # Collect
             if remain > 0:
                 collected = self.meow_collect(collect_all=self.meow_is_sunday())
+            if self.config.SERVER == 'kr':
+                self.meow_enter(MEOWFFICER_TRAIN_ENTER, check_button=MEOWFFICER_TRAIN_START)
             # Queue
             self.meow_queue(ascending=False)
             # Exit

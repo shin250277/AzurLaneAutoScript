@@ -214,7 +214,7 @@ class IslandRestaurant(IslandDock):
 
     def receive_revenue(self):
         confirm_timer = Timer(1, count=3)
-        for _ in self.loop():
+        for _ in self.loop(timeout=15 if self.config.SERVER == 'kr' else None):
             if self.appear_then_click(ISLAND_RESTAURANT_RECEIVE, offset=self._restaurant_offset, interval=2):
                 confirm_timer.reset()
                 continue
@@ -230,6 +230,10 @@ class IslandRestaurant(IslandDock):
                     or self.restaurant_resting()):
                 if confirm_timer.reached():
                     return True
+        if self.config.SERVER == 'kr':
+            from module.exception import RequestHumanTakeover
+            self.device.image_save('./log/kr_restaurant_revenue_unknown.png')
+            raise RequestHumanTakeover('KR restaurant revenue/ready state not identified; no staff or start actions')
 
     @cached_property
     def restaurant_grid(self):
@@ -406,21 +410,21 @@ class IslandRestaurant(IslandDock):
         ]
         if not active_waitresses or len(active_waitresses) > 2:
             return False
-
         blacklist = set(self.unavailable_waitress_list())
-        required = {waitress for waitress in active_waitresses if waitress != WAITRESS_BUSINESS_GRADE}
-        if blacklist:
-            logger.warning(f"Unavailable waitress list: {sorted(blacklist)}")
+        required = {w for w in active_waitresses if w != WAITRESS_BUSINESS_GRADE}
         if required & blacklist:
             logger.warning(f"Required waitresses are blacklisted: {sorted(required & blacklist)}")
             return False
-
         for _ in self.loop(timeout=10):
             if self.is_in_island_dock():
                 break
             if self.appear_then_click(ISLAND_RESTAURANT_SELECT_CHARACTER, offset=self._restaurant_offset, interval=2):
                 continue
         else:
+            if self.config.SERVER == 'kr':
+                from module.exception import RequestHumanTakeover
+                self.device.image_save('./log/kr_restaurant_staff_entry_unknown.png')
+                raise RequestHumanTakeover('KR restaurant staff entry not identified; no selection or start')
             logger.warning('Failed to enter restaurant character selection')
             return False
 
@@ -542,17 +546,29 @@ class IslandRestaurant(IslandDock):
         return not plan
 
     def restaurant_start(self):
-        for _ in self.loop():
+        for _ in self.loop(timeout=15 if self.config.SERVER == 'kr' else None):
             if self.handle_island_additional():
                 continue
             if self.appear_then_click(ISLAND_RESTAURANT_START, offset=self._restaurant_offset, interval=2):
                 continue
             if self.restaurant_running():
                 return True
+        if self.config.SERVER == 'kr':
+            from module.exception import RequestHumanTakeover
+            self.device.image_save('./log/kr_restaurant_start_unknown.png')
+            raise RequestHumanTakeover('KR restaurant start outcome not identified; inspect before retry')
+
+    def is_korean_menu_empty(self):
+        from module.base.template import Template
+        template = Template('./assets/kr/island_handler/KR_RESTAURANT_EMPTY.png')
+        return template.match(self.image_crop((565, 190, 1065, 420), copy=True), similarity=0.9)
 
     def run(self):
         if self.restaurant_running():
             logger.info("Restaurant is already running, skip this round")
+            return False
+        if self.config.SERVER == 'kr' and self.is_korean_menu_empty():
+            logger.info('Korean restaurant has no dishes available; do not assign staff or start')
             return False
         self.receive_revenue()
         if self.restaurant_resting():

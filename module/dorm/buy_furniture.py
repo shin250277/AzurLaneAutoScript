@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from module.combat.assets import GET_SHIP
 from module.dorm.assets import *
 from module.exercise.assets import EXERCISE_PREPARATION
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.ui.assets import DORM_CHECK
@@ -17,9 +18,40 @@ FURNITURE_BUY_BUTTON = {
     "all": DORM_FURNITURE_BUY_ALL,
     "set": DORM_FURNITURE_BUY_SET
 }
+KR_FURNITURE_DETAILS_ENTER = Button(
+    area=(1003, 444, 1259, 496), color=(255, 199, 61),
+    button=(1003, 444, 1259, 496), name='KR_FURNITURE_DETAILS_ENTER')
+KR_FURNITURE_DETAILS_QUIT = Button(
+    area=(81, 105, 134, 158), color=(255, 194, 47),
+    button=(81, 105, 134, 158), name='KR_FURNITURE_DETAILS_QUIT')
+KR_FURNITURE_BUY_CONFIRM = Button(
+    area=(644, 464, 972, 517), color=(255, 199, 61),
+    button=(644, 464, 972, 517), name='KR_FURNITURE_BUY_CONFIRM')
+
+
+KR_THEME_OVERVIEW_LABELS = tuple(
+    Button(area=box, color=(0, 0, 0), button=box, name='KR_THEME_SHOP_' + name,
+           file='./assets/kr/dorm/KR_THEME_SHOP_' + name + '.png')
+    for name, box in [('TITLE', (91, 19, 208, 63)), ('ENTER', (1097, 452, 1169, 488))])
 
 
 class BuyFurniture(UI):
+    def _kr_theme_overview(self):
+        return self.config.SERVER == 'kr' and all(
+            self.appear(label, offset=(1, 1), similarity=0.94)
+            for label in KR_THEME_OVERVIEW_LABELS)
+
+    def _furniture_button_appear(self, button, kr_button, interval=0):
+        if kr_button is KR_FURNITURE_DETAILS_QUIT and self._kr_theme_overview():
+            return False  # The yellow Set category is not the modal back arrow.
+        if self.appear(button, offset=(20, 20), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                kr_button, color=kr_button.color,
+                threshold=45, count=1200):
+            return True
+        return False
+
     def enter_first_furniture_details_page(self, skip_first_screenshot=False):
         """
         Pages:
@@ -28,6 +60,7 @@ class BuyFurniture(UI):
         """
         self.interval_clear((DORM_CHECK, DORM_FURNITURE_DETAILS_ENTER,
                              DORM_FURNITURE_SHOP_FIRST,))
+        waiting_for_theme = False
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
@@ -36,15 +69,25 @@ class BuyFurniture(UI):
 
             # Enter furniture shop page from page_dorm, only need to enter once
             if self.appear(DORM_CHECK, offset=(20, 20), interval=3):
+                waiting_for_theme = self.config.SERVER == 'kr'
                 self.device.click(DORM_FURNITURE_SHOP_ENTER)
                 self.interval_reset([GET_SHIP, EXERCISE_PREPARATION])
                 continue
 
-            if self.appear(DORM_FURNITURE_SHOP_FIRST_SELECTED, offset=(20, 20)):
+            if self.appear(DORM_FURNITURE_SHOP_FIRST_SELECTED, offset=(20, 20)) or (
+                    self._kr_theme_overview() and self.image_color_count(
+                        (280, 519, 316, 526), color=(255, 200, 68), threshold=12, count=180)):
                 self.interval_reset([GET_SHIP, EXERCISE_PREPARATION])
                 # Enter furniture details page from furniture shop page
-                if self.appear(DORM_FURNITURE_DETAILS_ENTER, offset=(20, 20), interval=3):
+                if self._furniture_button_appear(
+                        DORM_FURNITURE_DETAILS_ENTER,
+                        KR_FURNITURE_DETAILS_ENTER, interval=3):
                     self.device.click(DORM_FURNITURE_DETAILS_ENTER)
+                    waiting_for_theme = False
+                    if self.config.SERVER == 'kr':
+                        # Let the details sheet open; the outgoing yellow
+                        # button stays visible during its transition.
+                        self.device.sleep(1.5)
                     continue
             # After buy furniture, current furniture in store not first on list below.
             # Re select the first piece of furniture on left side of furniture list below.
@@ -53,7 +96,9 @@ class BuyFurniture(UI):
                 self.interval_reset([GET_SHIP, EXERCISE_PREPARATION])
                 continue
 
-            if self.appear(DORM_FURNITURE_DETAILS_QUIT, offset=(20, 20)):
+            if not waiting_for_theme and self._furniture_button_appear(
+                    DORM_FURNITURE_DETAILS_QUIT,
+                    KR_FURNITURE_DETAILS_QUIT):
                 break
 
             if self.ui_additional(get_ship=False):
@@ -77,7 +122,9 @@ class BuyFurniture(UI):
             if self.appear(DORM_CHECK, offset=(20, 20)):
                 break
 
-            if self.appear(DORM_FURNITURE_DETAILS_ENTER, offset=(20, 20), interval=3):
+            if self._furniture_button_appear(
+                    DORM_FURNITURE_DETAILS_ENTER,
+                    KR_FURNITURE_DETAILS_ENTER, interval=3):
                 self.device.click(DORM_FURNITURE_SHOP_QUIT)
                 continue
 
@@ -95,10 +142,14 @@ class BuyFurniture(UI):
                 self.device.screenshot()
 
             # End
-            if self.appear(DORM_FURNITURE_DETAILS_ENTER, offset=(20, 20)):
+            if self._furniture_button_appear(
+                    DORM_FURNITURE_DETAILS_ENTER,
+                    KR_FURNITURE_DETAILS_ENTER):
                 break
 
-            if self.appear(DORM_FURNITURE_DETAILS_QUIT, offset=(20, 20), interval=3):
+            if self._furniture_button_appear(
+                    DORM_FURNITURE_DETAILS_QUIT,
+                    KR_FURNITURE_DETAILS_QUIT, interval=3):
                 self.device.click(DORM_FURNITURE_DETAILS_QUIT)
                 continue
 
@@ -119,10 +170,14 @@ class BuyFurniture(UI):
             else:
                 self.device.screenshot()
 
-            if self.appear(DORM_FURNITURE_BUY_CONFIRM):
+            if self._furniture_button_appear(
+                    DORM_FURNITURE_BUY_CONFIRM,
+                    KR_FURNITURE_BUY_CONFIRM):
                 break
 
-            if self.appear(DORM_FURNITURE_DETAILS_QUIT, interval=3):
+            if self._furniture_button_appear(
+                    DORM_FURNITURE_DETAILS_QUIT,
+                    KR_FURNITURE_DETAILS_QUIT, interval=3):
                 self.device.click(buy_button)
 
     def buy_furniture_confirm(self, skip_first_screenshot=False):
@@ -140,10 +195,14 @@ class BuyFurniture(UI):
             else:
                 self.device.screenshot()
 
-            if self.appear(DORM_FURNITURE_DETAILS_QUIT):
+            if self._furniture_button_appear(
+                    DORM_FURNITURE_DETAILS_QUIT,
+                    KR_FURNITURE_DETAILS_QUIT):
                 break
 
-            if self.appear(DORM_FURNITURE_BUY_CONFIRM, offset=(20, 20), interval=3):
+            if self._furniture_button_appear(
+                    DORM_FURNITURE_BUY_CONFIRM,
+                    KR_FURNITURE_BUY_CONFIRM, interval=3):
                 self.device.click(DORM_FURNITURE_BUY_CONFIRM)
 
     def buy_furniture_once(self, buy_option: str):
@@ -162,6 +221,10 @@ class BuyFurniture(UI):
 
         self.furniture_payment_enter(buy_button, skip_first_screenshot=True)
         price = OCR_FURNITURE_PRICE.ocr(self.device.image)
+
+        if self.config.SERVER == 'kr' and not (coin >= price > 0):
+            # The payment dialog is still open: never use confirm to dismiss it.
+            raise RequestHumanTakeover('KR furniture: unreadable or unaffordable price; no confirmation sent')
 
         # Successful or failed buy will have popup and back to furniture details page,
         # produce the result from furniture coin compare to furniture price.

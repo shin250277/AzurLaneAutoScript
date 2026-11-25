@@ -306,6 +306,34 @@
       "name": "島嶼生產規劃器",
       "help": "將根據用戶設定的參數使用線性規劃優化島嶼的生產計劃，並生成島嶼生產模組的配置"
     },
+    "IslandProductionTrial": {
+      "name": "KR potato trial (9 seeds)",
+      "help": "Approved one-batch trial. No purchases or exchanges. With an attempt receipt, only collect the first finished slot or inspect stock from an empty slot; never start another batch."
+    },
+    "EventShopScan": {
+      "name": "活動商店辨識（不購買）",
+      "help": "僅辨識活動商店，禁止購買。"
+    },
+    "IslandInspect": {
+      "name": "Island page inspection (read only)",
+      "help": "Inspect KR order and season pages without submissions or target changes."
+    },
+    "IslandOrderTrial": {
+      "name": "鐵礦石訂單單次驗證",
+      "help": "僅提交一次消耗6個鐵礦石的韓服普通訂單。不購買、不拒絕、不重複嘗試。"
+    },
+    "RaidInspect": {
+      "name": "Raid inspection",
+      "help": "Inspect current raid page only. No combat or purchases."
+    },
+    "RaidRewardClaim": {
+      "name": "Bigshot reward claim",
+      "help": "Claim earned rewards from the open personal rewards dialog. No purchases or combat."
+    },
+    "RaidTrial": {
+      "name": "Raid one-run trial",
+      "help": "Run configured raid difficulty once. No tickets or retirement. Oil floor 20000."
+    },
     "Benchmark": {
       "name": "性能測試",
       "help": ""
@@ -368,6 +396,7 @@
       "com.YoStarEN.AzurLane": "國際服",
       "com.YoStarJP.AzurLane": "日服",
       "com.hkmanjuu.azurlane.gp": "台服",
+      "kr.txwy.and.blhx": "KR",
       "com.bilibili.blhx.huawei": "國服 com.bilibili.blhx.huawei",
       "com.bilibili.blhx.honor": "國服 com.bilibili.blhx.honor",
       "com.bilibili.blhx.mi": "國服 com.bilibili.blhx.mi",
@@ -460,7 +489,11 @@
       "jp-14": "[JP] キール",
       "jp-15": "[JP] 若松",
       "jp-16": "[JP] オデッサ",
-      "jp-17": "[JP] スイートバン"
+      "jp-17": "[JP] スイートバン",
+      "kr-0": "[KR] 명량",
+      "kr-1": "[KR] 노량",
+      "kr-2": "[KR] 한산도",
+      "kr-3": "[KR] 옥계"
     },
     "ScreenshotMethod": {
       "name": "模擬器截圖方案",
@@ -2078,6 +2111,7 @@
     "Amount": {
       "name": "建造數量",
       "help": "",
+      "0": "0",
       "1": "1",
       "2": "2",
       "3": "3",

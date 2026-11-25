@@ -186,6 +186,10 @@ class Combat(Combat_, MapEventHandler):
                 continue
 
     def handle_auto_search_battle_status(self, drop=None):
+        # KR can leave even an S-rank result waiting for touch-to-continue.
+        # Reuse the normal result recognition instead of assuming auto-dismiss.
+        if self.config.SERVER == 'kr' and self.handle_battle_status(drop=drop):
+            return True
         if self.appear(BATTLE_STATUS_C, interval=self.battle_status_click_interval):
             logger.warning('Battle Status C')
             # raise GameStuckError('Battle status C')

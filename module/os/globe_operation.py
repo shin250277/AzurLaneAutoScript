@@ -1,11 +1,22 @@
+import module.config.server as server
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import *
 from module.logger import logger
+from module.exception import GamePageUnknownError, RequestHumanTakeover
 from module.os.assets import *
 from module.os_handler.action_point import ActionPointHandler
 from module.os_handler.assets import AUTO_SEARCH_REWARD
 from module.os_handler.port import PORT_CHECK
 from module.ui.assets import BACK_ARROW
+
+if server.server == 'kr':
+    ZONE_SWITCH = Button(
+        area=(91, 336, 169, 355), color=(150, 150, 150), button=(91, 336, 169, 355),
+        file='./assets/kr/os/ZONE_STRONGHOLD.png', name='ZONE_SWITCH')
+    SELECT_DANGEROUS = Button(
+        area=(87, 315, 170, 337), color=(130, 130, 130), button=(87, 315, 170, 337),
+        file='./assets/kr/os/SELECT_DANGEROUS.png', name='SELECT_DANGEROUS')
 
 ZONE_TYPES = [ZONE_DANGEROUS, ZONE_SAFE, ZONE_OBSCURE, ZONE_ABYSSAL, ZONE_STRONGHOLD, ZONE_ARCHIVE]
 ZONE_SELECT = [SELECT_DANGEROUS, SELECT_SAFE, SELECT_OBSCURE, SELECT_ABYSSAL, SELECT_STRONGHOLD, SELECT_ARCHIVE]
@@ -14,6 +25,10 @@ ASSETS_PINNED_ZONE = ZONE_TYPES + [ZONE_ENTRANCE, ZONE_SWITCH, ZONE_PINNED]
 
 class OSExploreError(Exception):
     pass
+
+
+class OSZoneLockedError(OSExploreError):
+    """The game positively identified a locked zone, not a navigation timeout."""
 
 
 class RewardUncollectedError(Exception):
@@ -32,6 +47,14 @@ class GlobeOperation(ActionPointHandler):
             Button:
         """
         for zone in ZONE_TYPES:
+            if (zone is ZONE_DANGEROUS and self.config.SERVER == 'kr'
+                    and self.appear(ZONE_ABYSSAL, offset=(20, 20))):
+                zone = ZONE_ABYSSAL
+            # KR keeps the English DANGEROUS subtitle even on an obscure
+            # zone. Prefer the specific Korean heading over that subtitle.
+            if (zone is ZONE_DANGEROUS and self.config.SERVER == 'kr'
+                    and self.appear(ZONE_OBSCURE, offset=(20, 20))):
+                zone = ZONE_OBSCURE
             if self.appear(zone, offset=(20, 20)):
                 for button in ASSETS_PINNED_ZONE:
                     button.load_offset(zone)
@@ -130,7 +153,10 @@ class GlobeOperation(ActionPointHandler):
         return self.appear(ZONE_SWITCH, offset=(5, 5))
 
     _zone_select_offset = (20, 200)
-    _zone_select_similarity = 0.75
+    @property
+    def _zone_select_similarity(self):
+        # Korean abyssal/obscure labels share a suffix; 0.75 confused them.
+        return 0.85 if self.config.SERVER == 'kr' else 0.75
 
     def get_zone_select(self):
         """
@@ -172,6 +198,14 @@ class GlobeOperation(ActionPointHandler):
             in: is_zone_pinned
             out: is_in_zone_select
         """
+        if self.config.SERVER == 'kr':
+            for _ in self.loop(timeout=5):
+                if self.is_in_zone_select():
+                    return
+                if self.appear(ZONE_SWITCH, offset=(5, 5), interval=3):
+                    self.device.click(ZONE_SWITCH)
+            raise GamePageUnknownError('Cannot recognize KR zone selection menu')
+
         self.ui_click(ZONE_SWITCH, appear_button=self.is_zone_pinned, check_button=self.is_in_zone_select,
                       skip_first_screenshot=True)
 
@@ -187,7 +221,7 @@ class GlobeOperation(ActionPointHandler):
         logger.info(f'Zone select: {button}')
         for _ in self.loop():
             # End
-            if self.is_zone_pinned():
+            if self.is_zone_pinned() and (self.config.SERVER != 'kr' or not self.is_in_zone_select()):
                 break
             if self.appear_then_click(
                     button, offset=self._zone_select_offset, similarity=self._zone_select_similarity, interval=5):
@@ -208,12 +242,17 @@ class GlobeOperation(ActionPointHandler):
             in: is_zone_pinned
             out: is_zone_pinned
         """
-        if not self.zone_has_switch():
-            logger.info('Zone has no type to select, skip')
-            return True
-
         if isinstance(types, str):
             types = [types]
+
+        if not self.zone_has_switch():
+            pinned = self.get_zone_pinned_name()
+            if self.config.SERVER == 'kr' and pinned not in types:
+                logger.error(f'KR zone type mismatch: expected={types}, detected={pinned!r}')
+                raise RequestHumanTakeover(
+                    f'Cannot verify requested KR zone type: expected={types}, detected={pinned!r}')
+            logger.info('Zone has no type to select, skip')
+            return True
 
         def get_button(selection_):
             for typ in types:
@@ -235,6 +274,9 @@ class GlobeOperation(ActionPointHandler):
 
             button = get_button(selection)
             if button is None:
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_zone_type_unconfirmed.png')
+                    raise RequestHumanTakeover(f'Requested KR zone types are unavailable: {types}')
                 logger.warning('No such zone type to select, fallback to default')
                 types = ('SAFE', 'DANGEROUS')
                 button = get_button(selection)
@@ -244,6 +286,10 @@ class GlobeOperation(ActionPointHandler):
                 return True
 
         logger.warning('Failed to select zone type after 3 trial')
+        if self.config.SERVER == 'kr':
+            # Callers proceed to globe_enter without checking a False result.
+            self.device.image_save('./log/kr_zone_type_unconfirmed.png')
+            raise RequestHumanTakeover(f'KR zone type selection was not confirmed: {types}')
         return False
 
     def zone_has_safe(self):
@@ -294,6 +340,14 @@ class GlobeOperation(ActionPointHandler):
             if self.is_in_globe():
                 break
 
+            # KR zone-name fallback can race an immediate battle on entry.
+            # Only consume recognized results before retrying map navigation.
+            if self.config.SERVER == 'kr':
+                if self.handle_battle_status():
+                    continue
+                if self.handle_exp_info():
+                    continue
+
             if self.appear_then_click(MAP_GOTO_GLOBE, offset=(200, 5), interval=5):
                 self.get_interval_timer(MAP_GOTO_GLOBE_FOG, interval=5, renew=True).reset()
                 click_count += 1
@@ -338,13 +392,15 @@ class GlobeOperation(ActionPointHandler):
                 if self.is_zone_pinned():
                     break
 
-    def globe_enter(self, zone):
+    def globe_enter(self, zone, zone_label=None):
         """
         Args:
             zone (Zone): Zone to enter.
+            zone_label (str): Display label when zone is only an AP-cost placeholder.
 
         Raises:
-            OSExploreError: If zone locked.
+            OSZoneLockedError: If the game shows a locked zone.
+            OSExploreError: If entry fails without a verified lock.
 
         Pages:
             in: is_zone_pinned
@@ -353,6 +409,7 @@ class GlobeOperation(ActionPointHandler):
         click_timer = Timer(10)
         click_count = 0
         pinned = None
+        label = str(zone) if zone_label is None else zone_label
         for _ in self.loop():
             if pinned is None:
                 pinned = self.get_zone_pinned_name()
@@ -363,10 +420,13 @@ class GlobeOperation(ActionPointHandler):
 
             if self.is_zone_pinned():
                 if self.appear(ZONE_LOCKED, offset=(20, 20)):
-                    logger.warning(f'Zone {zone} locked, neighbouring zones may not have been explored')
-                    raise OSExploreError
+                    message = f'Zone {label} locked, neighbouring zones may not have been explored'
+                    logger.warning(message)
+                    if self.config.SERVER == 'kr':
+                        self.device.image_save('./log/kr_os_zone_locked.png')
+                    raise OSZoneLockedError(message)
                 if click_count > 5:
-                    logger.warning(f'Unable to enter zone {zone}, neighbouring zones may not have been explored')
+                    logger.warning(f'Unable to enter zone {label}, neighbouring zones may not have been explored')
                     raise OSExploreError
                 if click_timer.reached():
                     self.device.click(ZONE_ENTRANCE)

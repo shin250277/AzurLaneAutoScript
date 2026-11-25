@@ -1,7 +1,7 @@
 from module.base.timer import Timer
 from module.base.utils import rgb2gray
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2
-from module.exception import ScriptError
+from module.exception import RequestHumanTakeover, ScriptError
 from module.handler.assets import GET_MISSION
 from module.logger import logger
 from module.os.globe_operation import GlobeOperation
@@ -31,9 +31,19 @@ class StorageHandler(GlobeOperation, ZoneManager):
 
             if self.appear_then_click(STORAGE_ENTER, offset=(200, 5), interval=3):
                 continue
+            if self.config.SERVER == 'kr' and self.appear_then_click(
+                    STORAGE_ENTER_PORT, offset=(20, 5), interval=3):
+                continue
             # A game bug that AUTO_SEARCH_REWARD from the last cleared zone popups
             if self.appear_then_click(AUTO_SEARCH_REWARD, offset=(50, 50), interval=3):
                 continue
+            # KR can surface a completed battle while entering a new zone.
+            # Reuse confirmed result handlers; do not tap an unknown overlay.
+            if self.config.SERVER == 'kr':
+                if self.handle_battle_status():
+                    continue
+                if self.handle_exp_info():
+                    continue
             if self.handle_map_event():
                 continue
 
@@ -82,6 +92,11 @@ class StorageHandler(GlobeOperation, ZoneManager):
                 self.interval_reset(STORAGE_CHECK)
                 get_mission_counter += 1
                 if get_mission_counter >= 3:
+                    if self.config.SERVER == 'kr':
+                        # Returning normally makes the outer logger/sample loop
+                        # select the same misidentified item again indefinitely.
+                        self.device.image_save('./log/kr_storage_item_unconfirmed.png')
+                        raise RequestHumanTakeover('KR storage item use is unconfirmed after repeated info screens')
                     logger.warning('Possibly stuck on energy storage device, redetecting logger items.')
                     break
                 continue

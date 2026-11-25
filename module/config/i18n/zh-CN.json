@@ -306,6 +306,34 @@
       "name": "岛屿生产规划器",
       "help": "将根据用户设置的参数使用线性规划优化岛屿的生产计划，并生成岛屿生产模块的配置"
     },
+    "IslandProductionTrial": {
+      "name": "KR potato trial (9 seeds)",
+      "help": "Approved one-batch trial. No purchases or exchanges. With an attempt receipt, only collect the first finished slot or inspect stock from an empty slot; never start another batch."
+    },
+    "EventShopScan": {
+      "name": "活动商店识别（不购买）",
+      "help": "仅识别活动商店，禁止购买。"
+    },
+    "IslandInspect": {
+      "name": "Island page inspection (read only)",
+      "help": "Inspect KR order and season pages without submissions or target changes."
+    },
+    "IslandOrderTrial": {
+      "name": "铁矿石订单单次验证",
+      "help": "仅提交一次消耗6个铁矿石的韩服普通订单。不购买、不拒绝、不重复尝试。"
+    },
+    "RaidInspect": {
+      "name": "Raid inspection",
+      "help": "Inspect current raid page only. No combat or purchases."
+    },
+    "RaidRewardClaim": {
+      "name": "Bigshot reward claim",
+      "help": "Claim earned rewards from the open personal rewards dialog. No purchases or combat."
+    },
+    "RaidTrial": {
+      "name": "Raid one-run trial",
+      "help": "Run configured raid difficulty once. No tickets or retirement. Oil floor 20000."
+    },
     "Benchmark": {
       "name": "性能测试",
       "help": ""
@@ -368,6 +396,7 @@
       "com.YoStarEN.AzurLane": "国际服",
       "com.YoStarJP.AzurLane": "日服",
       "com.hkmanjuu.azurlane.gp": "台服",
+      "kr.txwy.and.blhx": "KR",
       "com.bilibili.blhx.huawei": "国服 华为渠道服 com.bilibili.blhx.huawei",
       "com.bilibili.blhx.honor": "国服 荣耀渠道服 com.bilibili.blhx.honor",
       "com.bilibili.blhx.mi": "国服 小米渠道服 com.bilibili.blhx.mi",
@@ -460,7 +489,11 @@
       "jp-14": "[JP] キール",
       "jp-15": "[JP] 若松",
       "jp-16": "[JP] オデッサ",
-      "jp-17": "[JP] スイートバン"
+      "jp-17": "[JP] スイートバン",
+      "kr-0": "[KR] 명량",
+      "kr-1": "[KR] 노량",
+      "kr-2": "[KR] 한산도",
+      "kr-3": "[KR] 옥계"
     },
     "ScreenshotMethod": {
       "name": "模拟器截图方案",
@@ -2078,6 +2111,7 @@
     "Amount": {
       "name": "抽卡数量",
       "help": "",
+      "0": "0",
       "1": "1",
       "2": "2",
       "3": "3",

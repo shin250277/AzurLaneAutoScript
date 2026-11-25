@@ -1,4 +1,5 @@
 import module.config.server as server
+from module.base.button import Button
 from module.combat.assets import GET_ITEMS_1
 from module.logger import logger
 from module.minigame.assets import *
@@ -19,6 +20,11 @@ else:
                     letter=(211, 196, 95),
                     threshold=128)
 MINIGAME_SCROLL = Scroll(MINIGAME_SCROLL_AREA, color=(247, 247, 247), name='MINIGAME_SCROLL')
+KR_SHOOTING_GAME_CHECK = Button(
+    area=(109, 19, 270, 61), color=(210, 170, 85),
+    button=(27, 18, 68, 60),
+    file='./assets/kr/minigame/KR_SHOOTING_GAME_CHECK.png',
+    name='KR_SHOOTING_GAME_CHECK')
 
 class MinigameRun(UI):
 
@@ -46,6 +52,10 @@ class MinigameRun(UI):
                     break
             # unable to get more ticket popup
             if self.deal_popup():
+                continue
+            # Recover a game-room exit using a positively identified page.
+            if self.ui_page_appear(page_academy, interval=3):
+                self.device.click(ACADEMY_GOTO_GAME_ROOM)
                 continue
             if self.appear_then_click(GOTO_CHOOSE_GAME, offset=(5, 5), interval=3):
                 # note: GOTO_CHOOSE_GAME is some where safe to click
@@ -110,6 +120,15 @@ class MinigameRun(UI):
 
 class Minigame(UI):
 
+    def ui_additional(self, get_ship=True):
+        # Recover from the shooting game wrongly selected by older KR builds.
+        # Its title is distinct; never use an unverified fixed-position back click.
+        if self.config.SERVER == 'kr' and self.appear(
+                KR_SHOOTING_GAME_CHECK, offset=(3, 3), interval=3):
+            self.device.click(KR_SHOOTING_GAME_CHECK)
+            return True
+        return super().ui_additional(get_ship=get_ship)
+
     def get_coin_amount(self, skip_first_screenshot=True):
         """
         Pages:
@@ -142,7 +161,8 @@ class Minigame(UI):
             if self.appear_then_click(COIN_POPUP, offset=(5, 5), interval=2):
                 continue
             if self.appear(GAME_ROOM_CHECK, offset=(5, 5)) \
-                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)):
+                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)) \
+                    and MINIGAME_SCROLL.appear(main=self):
                 self.appear_then_click(BACK, offset=(5, 5), interval=2)
                 continue
             if self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)):
@@ -165,8 +185,11 @@ class Minigame(UI):
             if self.appear_then_click(COIN_POPUP, offset=(5, 5), interval=3):
                 continue
             # game room and choose game have same header, go to game room first
+            # Reward dismissal can briefly hide GOTO_CHOOSE_GAME. Only go
+            # back when the list scrollbar confirms that this is the list.
             if self.appear(GAME_ROOM_CHECK, offset=(5, 5)) \
-                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)):
+                    and not self.appear(GOTO_CHOOSE_GAME, offset=(5, 5)) \
+                    and MINIGAME_SCROLL.appear(main=self):
                 self.appear_then_click(BACK, offset=(5, 5), interval=3)
                 continue
             # collect coins
@@ -205,6 +228,8 @@ class Minigame(UI):
         self.go_to_main_page()
         coin_collected = False
         play_count = 0
+        last_play_balance = None
+        unchanged_plays = 0
 
         # choose game
         specific_game_name = "new_year_challenge"
@@ -229,9 +254,18 @@ class Minigame(UI):
             if coin_count == 0:
                 logger.info(f"coin count : {coin_count}, finished")
                 break
+            if self.config.SERVER == 'kr' and last_play_balance is not None:
+                unchanged_plays = unchanged_plays + 1 if coin_count == last_play_balance else 0
+                if unchanged_plays >= 2:
+                    fresh = self.get_coin_amount(skip_first_screenshot=False)
+                    if fresh <= 0 or fresh == coin_count:
+                        logger.warning('KR arcade balance exhausted or unchanged after two completed games; stop for today')
+                        break
+                    coin_count, unchanged_plays = fresh, 0
             logger.info(f"coin count > 0, spend")
             # specific game logic
             if minigame_instance is not None and minigame_instance.minigame_run():
+                last_play_balance = coin_count
                 play_count += 1
                 continue
             elif minigame_instance is None:

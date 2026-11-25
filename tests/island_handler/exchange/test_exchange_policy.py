@@ -109,6 +109,7 @@ class TestExchangeConfirm:
             monkeypatch, frames, popup_frames={1}, white_band_frames={2, 3})
         assert exchange._exchange_confirm(2522, 0, 24) == 24
         exchange.ui_click = lambda click_button, **kwargs: exchange.device.click(click_button)
+        exchange.config = SimpleNamespace(SERVER='cn')
         exchange.ui_back(check_button=object())
         assert [frame for frame, _ in exchange.clicks] == [2, 3, 4]
         assert exchange.clicks[-1][1] is BACK_ARROW_WHITE

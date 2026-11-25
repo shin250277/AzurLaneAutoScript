@@ -5,6 +5,7 @@ from module.base.button import ButtonGrid
 from module.base.timer import Timer
 from module.base.utils import *
 from module.config.utils import get_server_next_update
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.ocr.ocr import Digit, DigitCounter
 from module.os_handler.assets import *
@@ -35,7 +36,11 @@ class ActionPointBuyCounter(DigitCounter):
         return result
 
 
-if server.server != 'jp':
+if server.server == 'kr':
+    # Korean wording places the complete green counter left of the JP region.
+    OCR_ACTION_POINT_BUY_REMAIN = ActionPointBuyCounter(
+        (862, 456, 899, 483), letter=(148, 247, 99), lang='cnocr', name='OCR_ACTION_POINT_BUY_REMAIN')
+elif server.server != 'jp':
     # Letters in ACTION_POINT_BUY_REMAIN are not the numeric fonts usually used in azur lane.
     OCR_ACTION_POINT_BUY_REMAIN = ActionPointBuyCounter(
         ACTION_POINT_BUY_REMAIN, letter=(148, 247, 99), lang='cnocr', name='OCR_ACTION_POINT_BUY_REMAIN')
@@ -228,6 +233,7 @@ class ActionPointHandler(UI, MapEventHandler):
         """
         Returns:
             int: 0 to 3. 0 for oil, 1 for 20 ap box, 2 for 50 ap box, 3 for 100 ap box.
+                KR returns -1 when no active selection can be verified.
         """
         for index, item in enumerate(ACTION_POINT_GRID.buttons):
             area = item.area
@@ -238,6 +244,8 @@ class ActionPointHandler(UI, MapEventHandler):
                 return index
 
         logger.warning('Unable to find an active action point box button')
+        if self.config.SERVER == 'kr':
+            return -1
         return 1
 
     def action_point_set_button(self, index):
@@ -272,12 +280,13 @@ class ActionPointHandler(UI, MapEventHandler):
             current, _, total = OCR_ACTION_POINT_BUY_REMAIN.ocr(self.device.image)
 
             # Possible result: 0/5, 05
-            if total == 0:
+            if total != 5 or not 0 <= current <= total:
                 continue
 
             break
         else:
             logger.warning('Get action points buy remain timeout')
+            raise RequestHumanTakeover('Cannot verify remaining action point purchases')
 
         return current
 
@@ -294,7 +303,10 @@ class ActionPointHandler(UI, MapEventHandler):
         Pages:
             in: ACTION_POINT_USE
         """
-        self.action_point_set_button(0)
+        selected = self.action_point_set_button(0)
+        if self.config.SERVER == 'kr' and not selected:
+            self.device.image_save('./log/kr_action_point_selection_unconfirmed.png')
+            raise RequestHumanTakeover('KR oil purchase selection was not confirmed; refusing item use')
         current = self.action_point_get_buy_remain()
         buy_max = 5  # In current version of AL, players can buy 5 times of AP in a week.
         buy_count = buy_max - current
@@ -412,7 +424,10 @@ class ActionPointHandler(UI, MapEventHandler):
             # Use action point boxes
             if len(box):
                 if self._action_point_total > self.config.OS_ACTION_POINT_PRESERVE:
-                    self.action_point_set_button(box[0])
+                    selected = self.action_point_set_button(box[0])
+                    if self.config.SERVER == 'kr' and not selected:
+                        self.device.image_save('./log/kr_action_point_selection_unconfirmed.png')
+                        raise RequestHumanTakeover('KR AP box selection was not confirmed; refusing item use')
                     self.action_point_use()
                     continue
                 else:

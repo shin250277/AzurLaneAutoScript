@@ -1,3 +1,4 @@
+from module.base.button import Button
 from module.combat.assets import GET_ITEMS_1
 from module.freebies.assets import *
 from module.logger import logger
@@ -8,6 +9,22 @@ from module.ui.ui import UI
 
 
 DATA_KEY = DigitCounter(OCR_DATA_KEY, letter=(255, 247, 247), threshold=64)
+
+KR_DATA_KEY_COLLECT = Button(
+    # KR keeps the button geometry but localizes its label, so the inherited
+    # JP template cannot match. Use the stable brown button fill instead.
+    area=(260, 40, 335, 71),
+    color=(140, 108, 68),
+    button=(251, 38, 339, 73),
+    name='KR_DATA_KEY_COLLECT',
+)
+
+KR_DATA_KEY_COLLECTED = Button(
+    area=(260, 40, 335, 71),
+    color=(102, 103, 103),
+    button=(251, 38, 339, 73),
+    name='KR_DATA_KEY_COLLECTED',
+)
 
 
 class DataKey(UI):
@@ -24,10 +41,17 @@ class DataKey(UI):
             else:
                 self.device.screenshot()
 
-            if self.appear_then_click(DATA_KEY_COLLECT, offset=(20, 20), interval=3):
+            collect = KR_DATA_KEY_COLLECT if self.config.SERVER == 'kr' else DATA_KEY_COLLECT
+            collected = KR_DATA_KEY_COLLECTED if self.config.SERVER == 'kr' else DATA_KEY_COLLECTED
+
+            if self.appear_then_click(
+                    collect,
+                    offset=0 if self.config.SERVER == 'kr' else (20, 20),
+                    threshold=25,
+                    interval=3):
                 continue
             if self.appear(GET_ITEMS_1, offset=20, interval=3):
-                self.device.click(DATA_KEY_COLLECT)
+                self.device.click(collect)
                 continue
             if self.handle_popup_confirm('DATA_KEY_LIMIT'):
                 # If it's in 29/30 means user is not doing war achieves frequently,
@@ -38,7 +62,10 @@ class DataKey(UI):
                 continue
 
             # End
-            if self.appear(WAR_ARCHIVES_CHECK, offset=(20, 20)) and self.appear(DATA_KEY_COLLECTED, offset=(20, 20)):
+            if self.appear(WAR_ARCHIVES_CHECK, offset=(20, 20)) and self.appear(
+                    collected,
+                    offset=0 if self.config.SERVER == 'kr' else (20, 20),
+                    threshold=25):
                 logger.info('Data key collect finished')
                 break
 
@@ -52,7 +79,11 @@ class DataKey(UI):
         Pages:
             in: page_archives
         """
-        if self.appear(DATA_KEY_COLLECTED, offset=(20, 20)):
+        collected = KR_DATA_KEY_COLLECTED if self.config.SERVER == 'kr' else DATA_KEY_COLLECTED
+        if self.appear(
+                collected,
+                offset=0 if self.config.SERVER == 'kr' else (20, 20),
+                threshold=25):
             logger.info('Data key has been collected')
             return False
 

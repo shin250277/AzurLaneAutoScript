@@ -1,3 +1,4 @@
+from module.base.button import Button
 from module.base.decorator import Config
 from module.base.timer import Timer
 from module.base.utils import *
@@ -13,6 +14,10 @@ from module.os_handler.mission import MissionHandler
 from module.os_handler.port import PortHandler
 from module.os_handler.storage import StorageHandler
 from module.ui.assets import BACK_ARROW, OS_CHECK
+
+KR_MAP_EXIT_CONFIRM = Button(
+    area=(702, 481, 878, 543), color=(90, 137, 195),
+    button=(760, 500, 820, 525), name='KR_MAP_EXIT_CONFIRM')
 
 
 class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandler, OSFleetSelector):
@@ -118,6 +123,30 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         name = name.rstrip('安全隱秘塞壬要塞深淵海域一')
         return name
 
+    @Config.when(SERVER='kr')
+    def get_zone_name(self):
+        # The bundled OCR models do not recognize Hangul reliably, but the
+        # Korean client keeps the latin direction prefix/suffix in zone names
+        # (for example, "NA해역 사우스웨스트C"). Resolve those stable parts
+        # against the existing zone table.
+        ocr = Ocr(MAP_NAME, lang='azur_lane', letter=(206, 223, 247), threshold=96,
+                  name='OCR_OS_MAP_NAME')
+        name = ''.join(ocr.ocr(self.device.image).upper().split())
+        # Exact readings verified against KR west B/E map titles. Do not
+        # infer a compass region from a shared final sector letter alone.
+        west_names = {'NASH-STIIB': 'NA Ocean W Sector B',
+                      'NASH-STIIE': 'NA Ocean W Sector E'}
+        if name in west_names:
+            return west_names[name]
+        suffix = name[-1] if name and name[-1] in 'ABCDEFGH' else ''
+        # The azur_lane model renders 사우스웨스트 consistently as an
+        # AFTATIIA-like sequence. Require that distinctive sequence instead
+        # of guessing from the final sector letter; other compass regions use
+        # the same A-E suffixes and must fall back to globe detection.
+        if name.startswith('NA') and suffix and 'AFTATIIA' in name:
+            return f'NA Ocean SW Sector {suffix}'
+        return name
+
     @Config.when(SERVER=None)
     def get_zone_name(self):
         # For CN only
@@ -177,6 +206,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
         self.wait_os_map_buttons()
         logger.info('Get zone name')
         timeout = Timer(1.5, count=5).start()
+        kr_name_failures = 0
         for _ in self.loop():
             # Handle popups
             if self.handle_map_event():
@@ -196,7 +226,7 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 continue
             # Handle mission complete header, can block
             # map name or mis-read OCR due to extra text
-            if self.is_in_map() and \
+            if self.config.SERVER != 'kr' and self.is_in_map() and \
                     not self.appear(OS_CHECK, offset=(20, 20)):
                 self.wait_until_appear(OS_CHECK)
                 timeout.reset()
@@ -209,6 +239,11 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 try:
                     return self.get_current_zone()
                 except MapDetectionError:
+                    if self.config.SERVER == 'kr' and fallback_init:
+                        kr_name_failures += 1
+                        if kr_name_failures >= 2 and hasattr(self, 'get_current_zone_from_globe'):
+                            logger.info('KR zone name failed twice; use observed globe position')
+                            break
                     continue
             else:
                 timeout.reset()
@@ -257,6 +292,14 @@ class OSMapOperation(MapOrderHandler, MissionHandler, PortHandler, StorageHandle
                 continue
             if self.handle_popup_confirm('MAP_EXIT'):
                 self.interval_reset(MAP_EXIT)
+                continue
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_MAP_EXIT_CONFIRM, color=KR_MAP_EXIT_CONFIRM.color,
+                    threshold=20, count=5000) and self.get_interval_timer(
+                        KR_MAP_EXIT_CONFIRM, interval=3, renew=True).reached():
+                self.device.click(KR_MAP_EXIT_CONFIRM)
+                self.interval_reset(MAP_EXIT)
+                self.interval_reset(KR_MAP_EXIT_CONFIRM)
                 continue
             if self.appear_then_click(AUTO_SEARCH_REWARD, offset=(50, 50)):
                 # Sometimes appeared

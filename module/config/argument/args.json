@@ -15,6 +15,7 @@
           "com.YoStarEN.AzurLane",
           "com.YoStarJP.AzurLane",
           "com.hkmanjuu.azurlane.gp",
+          "kr.txwy.and.blhx",
           "com.bilibili.blhx.huawei",
           "com.bilibili.blhx.honor",
           "com.bilibili.blhx.mi",
@@ -109,7 +110,11 @@
           "jp-14",
           "jp-15",
           "jp-16",
-          "jp-17"
+          "jp-17",
+          "kr-0",
+          "kr-1",
+          "kr-2",
+          "kr-3"
         ]
       },
       "ScreenshotMethod": {
@@ -1678,6 +1683,9 @@
         "option_tw": [
           "event_20261022_cn"
         ],
+        "option_kr": [
+          "event_20261022_cn"
+        ],
         "option_bold": [
           "event_20261022_cn"
         ]
@@ -2083,6 +2091,9 @@
         "option_tw": [
           "event_20261022_cn"
         ],
+        "option_kr": [
+          "event_20261022_cn"
+        ],
         "option_bold": [
           "event_20261022_cn"
         ]
@@ -2476,6 +2487,9 @@
           "event_20261022_cn"
         ],
         "option_tw": [
+          "event_20261022_cn"
+        ],
+        "option_kr": [
           "event_20261022_cn"
         ],
         "option_bold": [
@@ -2890,6 +2904,9 @@
         "option_tw": [
           "raid_20260827"
         ],
+        "option_kr": [
+          "raid_20260827"
+        ],
         "option_bold": [
           "raid_20260827"
         ]
@@ -3287,6 +3304,9 @@
           "coalition_20260723"
         ],
         "option_tw": [
+          "coalition_20260723"
+        ],
+        "option_kr": [
           "coalition_20260723"
         ],
         "option_bold": [
@@ -3855,6 +3875,59 @@
           "war_archives_20190321_en",
           "war_archives_20191031_en",
           "war_archives_20181020_en"
+        ],
+        "option_kr": [
+          "war_archives_20230817_cn",
+          "war_archives_20251023_cn",
+          "war_archives_20241024_cn",
+          "war_archives_20240725_cn",
+          "war_archives_20230525_cn",
+          "war_archives_20230803_cn",
+          "war_archives_20220818_cn",
+          "war_archives_20230223_cn",
+          "war_archives_20221222_cn",
+          "war_archives_20220915_cn",
+          "war_archives_20231026_cn",
+          "war_archives_20220428_cn",
+          "war_archives_20220728_cn",
+          "war_archives_20220526_cn",
+          "war_archives_20220324_cn",
+          "war_archives_20220224_cn",
+          "war_archives_20211229_cn",
+          "war_archives_20210422_cn",
+          "war_archives_20210916_cn",
+          "war_archives_20211111_cn",
+          "war_archives_20201012_cn",
+          "war_archives_20210225_cn",
+          "war_archives_20210527_cn",
+          "war_archives_20200917_cn",
+          "war_archives_20201229_cn",
+          "war_archives_20200603_cn",
+          "war_archives_20220414_cn",
+          "war_archives_20220210_cn",
+          "war_archives_20200507_cn",
+          "war_archives_20211028_cn",
+          "war_archives_20210819_cn",
+          "war_archives_20200903_cn",
+          "war_archives_20201029_cn",
+          "war_archives_20200806_cn",
+          "war_archives_20210624_cn",
+          "war_archives_20210325_cn",
+          "war_archives_20190911_cn",
+          "war_archives_20211014_cn",
+          "war_archives_20200820_cn",
+          "war_archives_20181227_cn",
+          "war_archives_20200312_cn",
+          "war_archives_20180726_cn",
+          "war_archives_20190314_en",
+          "war_archives_20180607_cn",
+          "war_archives_20190221_en",
+          "war_archives_20191010_en",
+          "war_archives_20181026_en",
+          "war_archives_20190620_en",
+          "war_archives_20190321_en",
+          "war_archives_20191031_en",
+          "war_archives_20181020_en"
         ]
       },
       "Mode": {
@@ -4257,6 +4330,9 @@
           "event_20261022_cn"
         ],
         "option_tw": [
+          "event_20261022_cn"
+        ],
+        "option_kr": [
           "event_20261022_cn"
         ],
         "option_bold": [
@@ -4671,6 +4747,9 @@
         "option_tw": [
           "event_20261022_cn"
         ],
+        "option_kr": [
+          "event_20261022_cn"
+        ],
         "option_bold": [
           "event_20261022_cn"
         ]
@@ -5081,6 +5160,9 @@
           "event_20261022_cn"
         ],
         "option_tw": [
+          "event_20261022_cn"
+        ],
+        "option_kr": [
           "event_20261022_cn"
         ],
         "option_bold": [
@@ -5495,6 +5577,9 @@
         "option_tw": [
           "event_20261022_cn"
         ],
+        "option_kr": [
+          "event_20261022_cn"
+        ],
         "option_bold": [
           "event_20261022_cn"
         ]
@@ -5895,6 +5980,9 @@
           "event_20261022_cn"
         ],
         "option_tw": [
+          "event_20261022_cn"
+        ],
+        "option_kr": [
           "event_20261022_cn"
         ],
         "option_bold": [
@@ -6306,6 +6394,9 @@
         "option_tw": [
           "raid_20260827"
         ],
+        "option_kr": [
+          "raid_20260827"
+        ],
         "option_bold": [
           "raid_20260827"
         ]
@@ -6531,6 +6622,9 @@
           "coalition_20260723"
         ],
         "option_tw": [
+          "coalition_20260723"
+        ],
+        "option_kr": [
           "coalition_20260723"
         ],
         "option_bold": [
@@ -8229,6 +8323,7 @@
         "type": "select",
         "value": 1,
         "option": [
+          0,
           1,
           2,
           3,
@@ -9431,6 +9526,9 @@
         "option_tw": [
           "season_20261105_cn"
         ],
+        "option_kr": [
+          "season_20261105_cn"
+        ],
         "option_bold": [
           "season_20261105_cn"
         ]
@@ -10082,6 +10180,76 @@
         ]
       }
     },
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "IslandProductionTrial": {
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "EventShopScan": {
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "IslandInspect": {
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "IslandOrderTrial": {
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "RaidInspect": {
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "RaidRewardClaim": {
+    "Storage": {
+      "Storage": {
+        "type": "storage",
+        "value": {},
+        "valuetype": "ignore",
+        "display": "disabled"
+      }
+    }
+  },
+  "RaidTrial": {
     "Storage": {
       "Storage": {
         "type": "storage",

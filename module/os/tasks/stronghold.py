@@ -1,3 +1,4 @@
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.os.fleet import BossFleet
 from module.os.map import OSMap
@@ -29,7 +30,8 @@ class OpsiStronghold(OSMap):
         self.globe_enter(zone)
         self.zone_init()
         self.os_order_execute(recon_scan=True, submarine_call=False)
-        self.run_stronghold()
+        if not self.run_stronghold():
+            raise RequestHumanTakeover('Unable to clear stronghold, fleets exhausted')
 
         self.fleet_repair(revert=False)
         self.handle_fleet_resolve(revert=False)

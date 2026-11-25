@@ -28,7 +28,11 @@ ARCHIVES_PREFIX = {
     'cn': '档案 ',
     'en': 'archives ',
     'jp': '檔案 ',
-    'tw': '檔案 '
+    'tw': '檔案 ',
+    # The KR release follows JP most closely, with EN as a secondary source.
+    # Event rows do not have a dedicated KR column, so generate KR options
+    # from those two schedules instead of leaving option_kr empty.
+    'kr': '기록보관소 '
 }
 MAINS = ['Main', 'Main2', 'Main3']
 EVENTS = ['Event', 'Event2', 'EventA', 'EventB', 'EventC', 'EventD', 'EventSp']
@@ -39,6 +43,66 @@ COALITIONS = ['Coalition', 'CoalitionSp']
 MARITIME_ESCORTS = ['MaritimeEscort']
 HOSPITAL = ['Hospital']
 
+# campaign/Readme.md has no KR column. Keep verified Korean live-event names
+# here and fall back to JP/EN for entries that have not been localized yet.
+KR_EVENT_NAMES = {
+    'war_archives_20230817_cn': '작전문서: 어리석은 자의 천칭',
+    'war_archives_20241024_cn': '작전문서: 템페스타와 잠든 바다',
+    'war_archives_20251023_cn': '작전문서: 템페스타와 자유 군도',
+    'event_20260908_cn': '유영 미성',
+    'war_archives_20180607_cn': '작전문서: 검게 물든 강철의 벚꽃',
+    'war_archives_20180726_cn': '작전문서: 빛과 그림자의 아이리스',
+    'war_archives_20181020_en': '작전문서: 노력, 희망과 계획',
+    'war_archives_20181026_en': '작전문서: 어둠에 떨어진 푸른 날개',
+    'war_archives_20181227_cn': '작전문서: 청홍의 메아리',
+    'war_archives_20190221_en': '작전문서: 싸늘한 겨울의 왕관',
+    'war_archives_20190314_en': '작전문서: 월하의 서곡',
+    'war_archives_20190620_en': '작전문서: 영광스런 최종전',
+    'war_archives_20190911_cn': '작전문서: 디바인 트래지코미디',
+    'war_archives_20191010_en': '작전문서: 그라프 슈피 추격전',
+    'war_archives_20200312_cn': '작전문서: 솔로몬의 무사',
+    'war_archives_20200507_cn': '작전문서: 어둠 속의 귀로',
+    'war_archives_20200603_cn': '작전문서: 피오르드 반격전',
+    'war_archives_20200806_cn': '작전문서: 최고의 보물',
+    'war_archives_20200820_cn': '작전문서: 메탈 블러드 음표&맹세',
+    'war_archives_20200903_cn': '작전문서: 피오르드의 별',
+    'war_archives_20200917_cn': '작전문서: 접해몽화',
+    'war_archives_20201012_cn': '작전문서: 날카로운 해상의 날개',
+    'war_archives_20201029_cn': '작전문서: 격창의 유니버스',
+    'war_archives_20201229_cn': '작전문서: 부상한 작전',
+    'war_archives_20210225_cn': '작전문서: 새벽녘에 비치는 빙화',
+    'war_archives_20210325_cn': '작전문서: 샌드 플레이',
+    'war_archives_20210422_cn': '작전문서: 부흥의 찬송가',
+    'war_archives_20210527_cn': '작전문서: 비추는 나선의 경해',
+    'war_archives_20210624_cn': '작전문서: 빛나는 벚꽃의 그림자',
+    'war_archives_20210819_cn': '작전문서: 어둠을 쫓는 은익',
+    'war_archives_20210916_cn': '작전문서: 맑고 푸른 바다',
+    'war_archives_20211014_cn': '작전문서: 격주의 폴라리스',
+    'war_archives_20211028_cn': '작전문서: 하늘 아래의 찬송가',
+    'war_archives_20211111_cn': '작전문서: 제노바의 화염',
+    'war_archives_20211229_cn': '작전문서: 역행하는 무지개 탑',
+    'war_archives_20220210_cn': '작전문서: 동절의 북해',
+    'war_archives_20220224_cn': '작전문서: 깊게 울리는 메아리',
+    'war_archives_20220324_cn': '작전문서: 허상의 탑',
+    'war_archives_20220414_cn': '작전문서: 영원한 밤의 환광',
+    'war_archives_20220428_cn': '작전문서: 레인보우 피날레',
+    'war_archives_20220526_cn': '작전문서: 빛나는 정원의 맹세',
+    'war_archives_20220728_cn': '작전문서: 독수리의 서사곡',
+    'war_archives_20220818_cn': '작전문서: 결상점 작전',
+    'war_archives_20220915_cn': '작전문서: 짙은 자줏빛의 안개',
+    'war_archives_20221222_cn': '작전문서: 거듭되는 평행세계',
+    'war_archives_20230223_cn': '작전문서: 잿빛 폐허',
+    'war_archives_20230525_cn': '작전문서: 오엽각 교차점',
+    'war_archives_20230803_cn': '작전문서: 불타는 아이리스 회상곡',
+    'war_archives_20231026_cn': '작전문서: 템페스타와 청춘의 샘',
+    'war_archives_20240725_cn': '작전문서: 환몽 간주곡',
+    'event_20261022_cn': '템페스타와 안개회랑',
+    'war_archives_20190321_en': '작전문서: 홍염의 방문자',
+    'war_archives_20191031_en': '작전문서: 거울에 비친 이색',
+    'event_20260813_cn': '몽광의 아스트라리움',
+    'coalition_20260723': '\uad34\ub2f4\uc2e4\ub85d',
+}
+
 
 class Event:
     def __init__(self, text):
@@ -46,6 +110,8 @@ class Event:
             = [x.strip() for x in text.strip('| \n').split('|')]
 
         self.directory = self.directory.replace(' ', '_')
+        self.kr = KR_EVENT_NAMES.get(self.directory, self.jp if self.jp != '-' else self.en)
+
         self.cn = self.cn.replace('、', '')
         self.en = self.en.replace(',', '').replace('\'', '').replace('\\', '')
         self.jp = self.jp.replace('、', '')
@@ -75,7 +141,7 @@ class Event:
 
 class IslandSeason:
     def __init__(self, text):
-        self.start_date, self.end_date, self.namespace, self.name, cn, en, jp, tw \
+        self.start_date, self.end_date, self.namespace, self.name, cn, en, jp, tw, *regional \
             = [cell.strip() for cell in text.strip('| \n').split('|')]
         self.namespace = self.namespace.replace(' ', '_')
         self.names = {
@@ -83,6 +149,7 @@ class IslandSeason:
             'en': en.replace(',', '').replace("'", '').replace('\\', ''),
             'jp': jp.replace('、', ''),
             'tw': tw.replace('、', ''),
+            'kr': regional[0] if regional else '-',
         }
         self.names = {server: name for server, name in self.names.items() if name != '-'}
 
@@ -313,6 +380,8 @@ class ConfigGenerator:
         # Names come from SameLanguageServer > en > cn > jp > tw
         events = {}
         for event in self.event:
+            if lang == 'ko-KR' and event.directory in KR_EVENT_NAMES:
+                deep_default(events, keys=event.directory, value=KR_EVENT_NAMES[event.directory])
             if lang in LANG_TO_SERVER:
                 name = event.__getattribute__(LANG_TO_SERVER[lang])
                 if name:
@@ -648,6 +717,8 @@ class ConfigUpdater:
         # ('Coalition.Coalition.Mode', 'Coalition.Coalition.Mode', coalition_to_little_academy),
         # ('IslandProduction.IslandProduction.UseManjuuByDefault',
         #  'IslandProduction.IslandProduction.UseWorkerjuuByDefault'),
+        # UseManjuuByDefault never shipped, UseWorkerjuuByDefault is a new key,
+        # so there is nothing to migrate and the redirect stays disabled.
     ]
     redirection += [
         (

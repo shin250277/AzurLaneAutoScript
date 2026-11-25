@@ -1,6 +1,8 @@
 import re
 
+import cv2
 import numpy as np
+from module.config import server
 
 from module.base.button import ButtonGrid
 from module.base.decorator import Config, cached_property
@@ -56,6 +58,11 @@ class ShopItem_250814(Item):
         mean = np.mean(np.max(self.image, axis=2) > 139)
         return mean > 0.3
 
+    def crop(self, area):
+        if area == getattr(self, '_kr_price_area', None):
+            area = (max(area[0], self._kr_currency_end),) + tuple(area[1:])
+        return super().crop(area)
+
 
 class ShopItemGrid(ItemGrid):
     def predict(self, image, name=True, amount=True, cost=False, price=False, tag=False):
@@ -101,6 +108,19 @@ class ShopItemGrid(ItemGrid):
 
 class ShopItemGrid_250814(ShopItemGrid):
     item_class = ShopItem_250814
+
+    def match_cost_template(self, item):
+        name = super().match_cost_template(item)
+        # These KR prices move horizontally with their currency icon. A static
+        # crop can read the edge of the ticket/coin as a leading digit (35 -> 735).
+        if server.server == 'kr' and name in ('Core_4', 'GuildCoins_6', 'GuildCoins_7'):
+            icon = self.cost_templates[name]
+            score = cv2.matchTemplate(item.crop(self.cost_area), icon, cv2.TM_CCOEFF_NORMED)
+            x = cv2.minMaxLoc(score)[3][0] + self.cost_area[0] + icon.shape[1]
+            if self.price_area[0] < x < self.price_area[2]:
+                item._kr_currency_end = x
+                item._kr_price_area = self.price_area
+        return name
 
     def get_soldout_count(self, image):
         count = 0

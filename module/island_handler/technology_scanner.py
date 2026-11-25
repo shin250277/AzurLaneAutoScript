@@ -6,6 +6,8 @@ from module.base.button import ButtonGrid
 from module.base.decorator import cached_property
 from module.base.mask import Mask
 from module.base.utils import color_mask, rgb2luma, load_image, random_rectangle_vector, area_offset, crop
+from module.exception import RequestHumanTakeover
+from module.logger import logger
 from module.island_handler.assets import *
 from module.island.data import DIC_ISLAND_TECHNOLOGY
 from module.island.ui import IslandUI
@@ -100,7 +102,12 @@ class IslandTechnologyScanner(IslandUI):
         extracted_flowchart = extract_flowchart(self.device.image)
         result = cv2.matchTemplate(globe_view, extracted_flowchart, cv2.TM_CCOEFF_NORMED)
         _, similarity, _, loca = cv2.minMaxLoc(result)
-        # print(similarity)
+        if self.config.SERVER == 'kr':
+            logger.attr('KR technology chart similarity', round(similarity, 3))
+            if not np.isfinite(similarity) or similarity < 0.6:
+                self.device.image_save('./log/kr_island_technology_chart_mismatch.png')
+                raise RequestHumanTakeover(
+                    'KR technology chart does not match; production plan was not exported')
         return loca[0]
 
     def _island_technology_swipe(self, forward=True):
@@ -171,5 +178,4 @@ class IslandTechnologyScanner(IslandUI):
             value = safe_dump(result)
             self.config.cross_set(keys=dump_key, value=value)
         return result
-
 

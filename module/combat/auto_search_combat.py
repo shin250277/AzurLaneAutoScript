@@ -263,6 +263,8 @@ class AutoSearchCombat(MapOperation, Combat, CampaignStatus):
             # bunch of popup handlers
             if self.handle_popup_confirm('AUTO_SEARCH_COMBAT_EXECUTE'):
                 continue
+            if self.handle_connection_lost():
+                continue
             if self.handle_urgent_commission():
                 continue
             if self.handle_story_skip():
@@ -311,6 +313,11 @@ class AutoSearchCombat(MapOperation, Combat, CampaignStatus):
                 raise CampaignEnd
 
             # Combat status
+            # The inherited GET_SHIP sample is only a tiny white patch. On KR
+            # it also matches combat skill effects and repeatedly taps the
+            # bottom-right skill buttons while the battle is still running.
+            if self.config.SERVER == 'kr' and self.is_combat_executing():
+                continue
             if self.handle_get_ship():
                 continue
             if self.handle_auto_search_map_option():
@@ -318,6 +325,8 @@ class AutoSearchCombat(MapOperation, Combat, CampaignStatus):
                 continue
             # bunch of popup handlers
             if self.handle_popup_confirm('AUTO_SEARCH_COMBAT_STATUS'):
+                continue
+            if self.handle_connection_lost():
                 continue
             if self.handle_urgent_commission():
                 continue

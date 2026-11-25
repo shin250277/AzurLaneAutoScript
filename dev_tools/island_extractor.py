@@ -94,7 +94,8 @@ class IslandRecipeExtractor:
         }
         localize_names(self.recipe, 'island_formula')
 
-    def extract_recipe(self, item):
+    @staticmethod
+    def extract_recipe(item):
         return {
             'name': dict.fromkeys(SERVERS, ''),
             'attribute': item['attribute'],
@@ -259,7 +260,8 @@ class IslandSeasonRequestExtractor:
             for index, item in load_island_table(LOADER, 'island_order').items()
         }
 
-    def extract_order(self, item):
+    @staticmethod
+    def extract_order(item):
         return {
             'activity_id': item['activity_id'],
             'group_id': item.get('group_id', item.get('groud_id', item['activity_id'])),
@@ -412,7 +414,7 @@ def read_season_namespaces():
     with open('module/island/README.md', encoding='utf-8') as f:
         for line in f:
             if re.match(r'^\|\s*\d{8}\s*\|', line):
-                date, _, namespace, _, cn, _, _, _ = [cell.strip() for cell in line.strip('| \n').split('|')]
+                date, _, namespace, _, cn, *_ = [cell.strip() for cell in line.strip('| \n').split('|')]
                 if cn != '-':
                     namespaces[date] = namespace.replace(' ', '_')
     return namespaces

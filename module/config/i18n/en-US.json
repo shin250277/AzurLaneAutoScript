@@ -306,6 +306,34 @@
       "name": "Island Production Planner",
       "help": "Use linear programming to optimize the island production plan from your settings and generate the configuration for Island Production."
     },
+    "IslandProductionTrial": {
+      "name": "KR potato trial (9 seeds)",
+      "help": "Approved one-batch trial. No purchases or exchanges. With an attempt receipt, only collect the first finished slot or inspect stock from an empty slot; never start another batch."
+    },
+    "EventShopScan": {
+      "name": "Event shop scan (no purchases)",
+      "help": "Inspect event shop items without purchases."
+    },
+    "IslandInspect": {
+      "name": "Island page inspection (read only)",
+      "help": "Inspect order and season pages without submissions or target changes."
+    },
+    "IslandOrderTrial": {
+      "name": "One iron-ore order trial",
+      "help": "Submit one KR regular order costing six iron ore. No purchases, rejections or repeat attempts."
+    },
+    "RaidInspect": {
+      "name": "Raid inspection",
+      "help": "Inspect current raid page only. No combat or purchases."
+    },
+    "RaidRewardClaim": {
+      "name": "Bigshot reward claim",
+      "help": "Claim earned rewards from the open personal rewards dialog. No purchases or combat."
+    },
+    "RaidTrial": {
+      "name": "Raid one-run trial",
+      "help": "Run configured raid difficulty once. No tickets or retirement. Oil floor 20000."
+    },
     "Benchmark": {
       "name": "Performance Test",
       "help": ""
@@ -368,6 +396,7 @@
       "com.YoStarEN.AzurLane": "EN",
       "com.YoStarJP.AzurLane": "JP",
       "com.hkmanjuu.azurlane.gp": "TW",
+      "kr.txwy.and.blhx": "KR",
       "com.bilibili.blhx.huawei": "CN com.bilibili.blhx.huawei",
       "com.bilibili.blhx.honor": "CN com.bilibili.blhx.honor",
       "com.bilibili.blhx.mi": "CN com.bilibili.blhx.mi",
@@ -460,7 +489,11 @@
       "jp-14": "[JP] キール",
       "jp-15": "[JP] 若松",
       "jp-16": "[JP] オデッサ",
-      "jp-17": "[JP] スイートバン"
+      "jp-17": "[JP] スイートバン",
+      "kr-0": "[KR] 명량",
+      "kr-1": "[KR] 노량",
+      "kr-2": "[KR] 한산도",
+      "kr-3": "[KR] 옥계"
     },
     "ScreenshotMethod": {
       "name": "Screenshot Method",
@@ -2078,6 +2111,7 @@
     "Amount": {
       "name": "Amount",
       "help": "",
+      "0": "0 (collect only)",
       "1": "1",
       "2": "2",
       "3": "3",

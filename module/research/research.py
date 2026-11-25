@@ -26,6 +26,32 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
     enforce = False
     end_time = None
 
+    def research_resume_interrupted_requirement(self):
+        """Resume only the exact, twice-confirmed zero-progress E-315-MI card."""
+        from module.base.utils import load_image
+        from module.research.kr_resume import can_resume_zero_requirement
+        from module.research.project import OCR_RESEARCH_DETAIL_KR
+
+        if self.config.SERVER != 'kr' or getattr(self, '_kr_requirement_resume_attempted', False):
+            return False
+        reference = load_image('./assets/kr/research/REQUIREMENT_ZERO_15.png')
+        for _ in range(2):
+            self.device.screenshot()
+            if not self.appear(RESEARCH_STOP, offset=(20, 20)):
+                return False
+            code = OCR_RESEARCH_DETAIL_KR.ocr(self.device.image)
+            if not can_resume_zero_requirement(code, self.device.image, reference):
+                return False
+        self._kr_requirement_resume_attempted = True
+        logger.info('KR resume confirmed E-315-MI requirement: 0/15; preserve existing project')
+        self.research_detail_quit()
+        self.storage_disassemble_equipment(rarity=1, amount=15)
+        self.ui_ensure(page_research)
+        # Reload the live research state rather than trusting cached indexes.
+        self.config.task_delay(minute=0)
+        self.config.task_stop()
+        return True
+
     def research_has_finished(self):
         """
         Finished research should be auto-focused to the center, but sometimes didn't, due to an unknown game bug.
@@ -194,6 +220,8 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
         self.interval_clear([RESEARCH_START])
         self.popup_interval_clear()
         available = False
+        start_confirmed = False
+        self._kr_research_started_now = False
         click_timer = Timer(10)
         click_count = 0
         while 1:
@@ -217,6 +245,7 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                 available = True
                 continue
             if self.handle_popup_confirm('RESEARCH_START'):
+                start_confirmed = True
                 continue
 
             # End
@@ -225,7 +254,15 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                              'probably because there is a research running but requirements not satisfied, '
                              'or a research finished')
                 raise GameTooManyClickError
+            # KR returns directly to the project list after confirming a
+            # research instead of keeping the running-project detail open.
+            if self.config.SERVER == 'kr' and start_confirmed and self.is_in_research():
+                self._kr_research_started_now = True
+                self.research_project_started = project
+                self._research_project_offset = (index - 2) % 5
+                return True
             if self.appear(RESEARCH_STOP, offset=(20, 20)):
+                self._kr_research_started_now = available or start_confirmed
                 # RESEARCH_STOP is a semi-transparent button,
                 # color will vary depending on the background.
                 if add_queue:
@@ -268,7 +305,14 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
             logger.info(f'Going to start an E series research: {project} '
                         f'and disassemble {project.equipment_amount} equipment')
             # Start it
-            self.research_project_start(project, add_queue=False)
+            started = self.research_project_start(project, add_queue=False)
+            if not started:
+                return started
+            if self.config.SERVER == 'kr' and not self._kr_research_started_now:
+                # The running card may reappear after interruption. Its quota
+                # was not necessarily zero: try queuing without dismantling
+                # again; the queue handler preserves unmet requirements.
+                return self.research_project_start(project, add_queue=add_queue)
             # Disassemble
             self.storage_disassemble_equipment(amount=project.equipment_amount)
             # Get back
@@ -312,7 +356,7 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                 else:
                     self.device.screenshot()
 
-                if self.appear(RESEARCH_CHECK, offset=(20, 20), interval=10):
+                if self.is_in_research(interval=10):
                     if self.research_has_finished():
                         self.device.click(RESEARCH_ENTRANCE[self._research_finished_index])
 
@@ -335,6 +379,12 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
                         logger.info(f'{appear_button} appeared')
                         record_button = appear_button
                         confirm_timer.reset()
+                # Multi-row KR research rewards can briefly stop matching the
+                # generic GET_ITEMS template after their entrance animation.
+                # Once the popup has been positively identified, waiting for
+                # the same stabilization interval is sufficient.
+                elif record_button is not None and confirm_timer.reached():
+                    break
 
             # Take screenshots of items
             self.drop_record(drop=record)
@@ -525,9 +575,19 @@ class RewardResearch(ResearchSelector, ResearchQueue, StorageHandler):
 
             if timeout.reached():
                 logger.warning('receive_6th_research wait timeout')
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_research_wait_timeout.png')
                 break
 
             status = self.get_research_status(self.device.image)
+            # KR completed text is not a waiting/running/detail template.
+            # Only skip the animation wait when the completed card is centered
+            # and all four surrounding cards have loaded.
+            if (self.config.SERVER == 'kr'
+                    and status == ['detail', 'detail', 'unknown', 'detail', 'detail']
+                    and self.research_has_finished() and self._research_finished_index == 2):
+                logger.info('KR completed 6th research already centered')
+                break
             # Project cards haven't fully loaded
             if 'unknown' in status:
                 continue

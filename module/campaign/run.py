@@ -164,6 +164,7 @@ class CampaignRun(CampaignEvent):
             str, str: name, folder
         """
         name = to_map_file_name(name)
+        requested_name = name
         # For GemsFarming, auto choose events or main chapters
         if self.config.task.command == 'GemsFarming':
             if self.stage_is_main(name):
@@ -219,6 +220,7 @@ class CampaignRun(CampaignEvent):
             'event_20250724_cn',
             'event_20250814_cn',
             'event_20251023_cn',
+            'event_20261022_cn',
             'event_20260326_cn',
             'event_20260625_cn',
             'event_20261022_cn',
@@ -229,6 +231,25 @@ class CampaignRun(CampaignEvent):
             'war_archives_20251023_cn',
         ]:
             name = convert.get(name, name)
+        # These events expose three normal and three hard stages while still
+        # accepting the usual A/C/D stage names in the UI.  Do this before
+        # the six-stage conversion below so D3 resolves to ht3, not ht6.
+        if folder in [
+            'event_20260625_cn',
+            'war_archives_20240725_cn',
+        ]:
+            convert_three_stage = {
+                'a1': 't1',
+                'a2': 't2',
+                'a3': 't3',
+                'c1': 'ht1',
+                'c2': 'ht2',
+                'c3': 'ht3',
+                'd1': 'ht1',
+                'd2': 'ht2',
+                'd3': 'ht3',
+            }
+            name = convert_three_stage.get(name, name)
         # Convert between A/B/C/D and T/HT
         convert = {
             'a1': 't1',
@@ -261,6 +282,7 @@ class CampaignRun(CampaignEvent):
             'event_20250724_cn',
             'event_20250814_cn',
             'event_20251023_cn',
+            'event_20261022_cn',
             'event_20260326_cn',
             'event_20260625_cn',
             'event_20261022_cn',
@@ -307,6 +329,22 @@ class CampaignRun(CampaignEvent):
         if folder == 'event_20240829_cn':
             if name == 'tp':
                 name = 'sp'
+        # D3 is the shared default for War Archives, but older archives use
+        # several incompatible stage schemes (D1-D2, HT1-HT3, T1-T6, or
+        # SP1-SP5).  Only repair that untouched default; explicit user input
+        # must still fail loudly when the requested stage does not exist.
+        if folder.startswith('war_archives_') and requested_name == 'd3':
+            files = map_files(folder)
+            if name not in files:
+                for prefix in ['d', 'ht', 't', 'sp']:
+                    candidates = [
+                        file for file in files
+                        if file.startswith(prefix) and file[len(prefix):].isdigit()
+                    ]
+                    if candidates:
+                        name = max(candidates, key=lambda file: int(file[len(prefix):]))
+                        logger.info(f'War Archives default stage D3 redirected to {name.upper()}')
+                        break
         # Stage loop
         for alias, stages in self.config.STAGE_LOOP_ALIAS.items():
             alias_folder, alias = alias
@@ -367,9 +405,45 @@ class CampaignRun(CampaignEvent):
             in: page_campaign
         """
         if self.campaign.commission_notice_show_at_campaign():
+            if self.config.SERVER == 'kr':
+                from module.commission.kr_oil_delay import active
+                if active(self.config.config_name):
+                    logger.info('Keep commission deferred after full KR oil storage')
+                    return
             logger.info('Commission notice found')
             self.config.task_call('Commission', force_call=True)
             self.config.task_stop('Commission notice found')
+
+    def _resume_kr_single_sortie(self):
+        """Finish an existing auto-search sortie under a one-sortie limit.
+
+        Called only after is_in_map() succeeds. Never enter or withdraw a map;
+        failures propagate instead of falling back to the fresh-sortie path.
+        """
+        if not (self.config.SERVER == 'kr'
+                and self.config.Campaign_Event == 'campaign_main'
+                and self.config.Campaign_Mode == 'normal'
+                and self.config.Campaign_UseClearMode
+                and self.config.Campaign_UseAutoSearch
+                and self.run_limit == 1 and self.config.StopCondition_RunCount == 1):
+            return False
+        logger.info('Resume existing KR single sortie; no retreat or new entry')
+        self.campaign.map_is_auto_search = True
+        self.campaign.map_is_clear_mode = True
+        self.campaign.map = self.campaign.MAP
+        self.campaign.battle_count = 0
+        self.campaign.lv_reset()
+        for _ in range(20):
+            try:
+                self.campaign.auto_search_execute_a_battle()
+            except CampaignEnd:
+                self.run_count = 1
+                self.config.StopCondition_RunCount = 0
+                self.config.Scheduler_Enable = False
+                logger.info('Existing single sortie ended; fresh sortie disabled')
+                self.campaign.ensure_auto_search_exit()
+                return True
+        raise RequestHumanTakeover('Existing sortie recovery exhausted its battle limit')
 
     def run(self, name, folder='campaign_main', mode='normal', total=0):
         """
@@ -406,6 +480,8 @@ class CampaignRun(CampaignEvent):
                 self.device.screenshot()
             self.campaign.device.image = self.device.image
             if self.campaign.is_in_map():
+                if self._resume_kr_single_sortie():
+                    return
                 logger.info('Already in map, retreating.')
                 try:
                     self.campaign.withdraw()

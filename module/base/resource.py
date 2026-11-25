@@ -81,7 +81,13 @@ class Resource:
         if s is None:
             s = server.server
         if isinstance(data, dict):
-            return data[s]
+            try:
+                return data[s]
+            except KeyError:
+                fallback = server.SERVER_ASSET_FALLBACK.get(s)
+                if fallback is not None:
+                    return data[fallback]
+                raise
         else:
             return data
 

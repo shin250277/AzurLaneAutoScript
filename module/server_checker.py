@@ -18,6 +18,7 @@ class ServerChecker:
             'list': '/server/list'                      # get
         }
 
+        self._server_group: str = server.split('-')[0]
         if server != 'disabled':
             server = server.split('-')
             server = server_list[server[0]][int(server[-1])]
@@ -73,6 +74,15 @@ class ServerChecker:
                     if self._expired > 3:
                         logger.warning(f'Timestamp {self._timestamp} has not been updated for 3 times.')
             elif resp.status_code == 404:
+                # The public checker currently lists CN, EN and JP servers
+                # only. Keep probing on each new ALAS launch so KR support is
+                # picked up automatically when the API adds it, but do not
+                # treat its current absence as a checker failure.
+                if self._server_group == 'kr':
+                    logger.warning('Server checker API does not support KR servers, skip server status check.')
+                    self._server = 'disabled'
+                    self._state.append(True)
+                    return
                 self._state.append(False)
                 raise ScriptError(f'Server "{self._server}" does not exist!')
             else:

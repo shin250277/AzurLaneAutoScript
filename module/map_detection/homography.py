@@ -202,6 +202,9 @@ class Homography:
             cv2.bitwise_and(image_edge, image_trans, dst=image_edge)
             cv2.bitwise_and(image_edge, self.ui_mask_homo_stroke, dst=image_edge)
             self.detect_edges(image_edge, hough_th=self.config.HOMO_EDGE_HOUGHLINES_THRESHOLD)
+            self._recover_kr_os_vertical_edge(image_edge)
+            self._reject_kr_os_internal_horizontal_edge(image_edge)
+            self._reject_kr_os_internal_vertical_edge(image_edge)
 
         # Log
         time_cost = round(time.time() - start_time, 3)
@@ -213,6 +216,97 @@ class Homography:
             '/' if self.left_edge else ' ', '_' if self.upper_edge else ' ', '\\' if self.right_edge else ' ',
             point2str(*self.homo_loca, length=3))
                     )
+
+    def _recover_kr_os_vertical_edge(self, image):
+        """Recover a partially occluded OpSi edge without relaxing other maps.
+
+        KR failure frames from both corners lose the vertical boundary at 300
+        Hough votes. Keep the original result unless 240 votes produces one
+        grid-aligned vertical line and leaves the horizontal boundary unchanged.
+        """
+        if (getattr(self.config, 'SERVER', None) != 'kr'
+                or not self.config.Scheduler_Command.startswith('Opsi')
+                or self.config.HOMO_EDGE_HOUGHLINES_THRESHOLD != 300
+                or self.left_edge or self.right_edge
+                or not (self.lower_edge or self.upper_edge)):
+            return
+        original = (self.left_edge, self.right_edge, self.lower_edge,
+                    self.upper_edge, self._map_edge_count)
+        self.detect_edges(image, hough_th=240)
+        if (self._map_edge_count[0] == 1
+                and bool(self.left_edge) != bool(self.right_edge)
+                and (self.lower_edge, self.upper_edge) == original[2:4]):
+            logger.info('KR OpSi: recovered partially occluded vertical map edge')
+        else:
+            (self.left_edge, self.right_edge, self.lower_edge,
+             self.upper_edge, self._map_edge_count) = original
+
+    def _reject_kr_os_internal_horizontal_edge(self, image):
+        """Disambiguate an outer border from a short, internal fog boundary.
+
+        KR West B failure frames contain both within three tile rows. OpSi
+        maps are taller than four rows; require near-complete support for one
+        border and weak support for the other before discarding either.
+        Ambiguous or occluded borders retain the original detection.
+        """
+        if (getattr(self.config, 'SERVER', None) != 'kr'
+                or not self.config.Scheduler_Command.startswith('Opsi')
+                or not self.lower_edge or not self.upper_edge
+                or not 0 < self.upper_edge - self.lower_edge <= 4 * self.config.HOMO_TILE[1]):
+            return
+        x0 = max(0, int(self.left_edge or 0))
+        x1 = min(image.shape[1], int(self.right_edge or image.shape[1]))
+        support = []
+        for edge in (self.lower_edge, self.upper_edge):
+            y = int(round(edge))
+            if not 1 <= y < image.shape[0] - 1 or x1 <= x0:
+                return
+            valid = self.ui_mask_homo_stroke[y, x0:x1] > 0
+            count = np.count_nonzero(valid)
+            if count < 300:
+                return
+            pixels = np.any(image[y - 1:y + 2, x0:x1] > 0, axis=0)
+            support.append(np.count_nonzero(pixels & valid) / count)
+        if support[0] >= 0.9 and support[1] < 0.6:
+            self.upper_edge = None
+        elif support[1] >= 0.9 and support[0] < 0.6:
+            self.lower_edge = None
+        else:
+            return
+        logger.info('KR OpSi: rejected short internal horizontal fog boundary')
+
+    def _reject_kr_os_internal_vertical_edge(self, image):
+        """Reject the short fog-edge pair observed in KR Caribbean Sea C.
+
+        Require an almost uninterrupted outer border opposite a weaker line;
+        never resolve two similarly supported borders by guessing their side.
+        Known OpSi maps are wider than six columns.
+        """
+        if (getattr(self.config, 'SERVER', None) != 'kr'
+                or not self.config.Scheduler_Command.startswith('Opsi')
+                or not self.left_edge or not self.right_edge
+                or not 0 < self.right_edge - self.left_edge <= 6 * self.config.HOMO_TILE[0]):
+            return
+        y0 = max(0, int(self.lower_edge or 0))
+        y1 = min(image.shape[0], int(self.upper_edge or image.shape[0]))
+        support = []
+        for edge in (self.left_edge, self.right_edge):
+            x = int(round(edge))
+            if not 1 <= x < image.shape[1] - 1 or y1 <= y0:
+                return
+            valid = self.ui_mask_homo_stroke[y0:y1, x] > 0
+            count = np.count_nonzero(valid)
+            if count < 300:
+                return
+            pixels = np.any(image[y0:y1, x - 1:x + 2] > 0, axis=1)
+            support.append(np.count_nonzero(pixels & valid) / count)
+        if support[0] >= 0.98 and support[1] < 0.8:
+            self.right_edge = None
+        elif support[1] >= 0.98 and support[0] < 0.8:
+            self.left_edge = None
+        else:
+            return
+        logger.info('KR OpSi: rejected short internal vertical fog boundary')
 
     def search_tile_center(self, image, threshold_good=0.9, threshold=0.8, encourage=1.0):
         """

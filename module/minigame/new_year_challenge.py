@@ -1,3 +1,4 @@
+from module.base.button import Button
 from module.base.timer import Timer
 from module.logger import logger
 from module.minigame.assets import *
@@ -14,6 +15,10 @@ OCR_NEW_YEAR_BATTLE_SCORE = Digit(NEW_YEAR_CHALLENGE_SCORE_HOLDER,
                                   letter=(231, 215, 82),
                                   threshold=128)
 
+KR_NEW_YEAR_CHALLENGE_START = Button(
+    area=(285, 425, 500, 485), color=(220, 160, 135),
+    button=(285, 425, 500, 485), name='KR_NEW_YEAR_CHALLENGE_START')
+
 
 class NewYearChallenge(MinigameRun):
     NEW_YEAR_BATTLE_RED = (255, 150, 123)
@@ -29,6 +34,11 @@ class NewYearChallenge(MinigameRun):
                                          NEW_YEAR_BATTLE_BLUE: NEW_YEAR_CHALLENGE_BLUE_BUTTON}
 
     def deal_specific_popup(self):
+        # KR minigame rewards use a different background treatment from the
+        # common GET_ITEMS_1 popup, so keep this match scoped to this game.
+        if self.config.SERVER == 'kr' and self.appear_then_click(
+                NEW_YEAR_CHALLENGE_GET_ITEMS, offset=(20, 20), interval=3):
+            return True
         # enter NEW_YEAR_BATTLE first time
         if self.appear(NEW_YEAR_CHALLENGE_FIRST_TIME, offset=(5, 5), interval=3):
             self.device.click(NEW_YEAR_CHALLENGE_SAFE_AREA)
@@ -55,6 +65,8 @@ class NewYearChallenge(MinigameRun):
                 self.device.click(NEW_YEAR_CHALLENGE_ENTRANCE)
                 self.interval_reset(page_game_room.check_button, interval=3)
                 continue
+            # Match the card artwork before selecting it. A fixed KR row
+            # position selected the unrelated shooting game after list changes.
             # swipe down
             if self.ui_page_appear(page_game_room, interval=3) and MINIGAME_SCROLL.appear(main=self) \
                     and not MINIGAME_SCROLL.set(main=self, position=0.25, distance_check=False):
@@ -62,6 +74,11 @@ class NewYearChallenge(MinigameRun):
                 continue
 
     def use_coin(self, skip_first_screenshot=True):
+        if self.config.SERVER == 'kr':
+            if not skip_first_screenshot:
+                self.device.screenshot()
+            # KR uses the default one-ticket setting.
+            return self.appear(NEW_YEAR_CHALLENGE_START, offset=(5, 5))
         return self.use_coin_new_year_challenge(count=5)
 
     def play_game(self, skip_first_screenshot=True):
@@ -71,7 +88,9 @@ class NewYearChallenge(MinigameRun):
             out: page_game_room new_year_challenge_end/new_year_challenge_prepare
         """
         score_ocr_interval = Timer(0.6, count=5).start()
+        kr_game_duration = Timer(65).start()
         started = False
+        turn_seen = False
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
@@ -81,6 +100,7 @@ class NewYearChallenge(MinigameRun):
                 continue
             # a turn
             if self.appear(NEW_YEAR_CHALLENGE_CHOOSING, offset=(5, 5), interval=3):
+                turn_seen = True
                 # choose, click on clock to avoid be detected as "Too many click between 2 buttons"
                 # self.device.click(NEW_YEAR_CHALLENGE_CHOOSING)
                 self.new_year_challenge_turn(skip_first_screenshot=False)
@@ -93,17 +113,39 @@ class NewYearChallenge(MinigameRun):
                 score_ocr_interval.reset()
                 if score > 1000 and self.appear_then_click(NEW_YEAR_CHALLENGE_STOP_PLAY, offset=(5, 5), interval=3):
                     continue
+            # On KR the preparation screen also resembles the shared end
+            # button. Start the game before checking the end state.
+            if self.config.SERVER == 'kr' and not started and self.appear(
+                    NEW_YEAR_CHALLENGE_START, offset=(5, 5), interval=3):
+                started = True
+                self.device.click(KR_NEW_YEAR_CHALLENGE_START)
+                continue
+            # The KR preparation/transition screens resemble the shared end
+            # button. Wait until at least one real turn has appeared.
+            if self.config.SERVER == 'kr' and started and not turn_seen:
+                if self.appear(NEW_YEAR_CHALLENGE_START, offset=(5, 5), interval=3):
+                    self.device.click(KR_NEW_YEAR_CHALLENGE_START)
+                continue
+            # The shared end template also matches elements during KR play.
+            # A round lasts about one minute, so do not accept it early.
+            if self.config.SERVER == 'kr' and not kr_game_duration.reached():
+                continue
             # finished
             if self.appear(NEW_YEAR_CHALLENGE_END, offset=(5, 5), interval=3):
                 break
             # game rule introduction
             if self.appear(NEW_YEAR_CHALLENGE_START, offset=(5, 5), interval=3):
                 if started:
+                    if self.config.SERVER == 'kr':
+                        continue
                     self.interval_clear(NEW_YEAR_CHALLENGE_START)
                     break
                 else:
                     started = True
-                    self.device.click(NEW_YEAR_CHALLENGE_START)
+                    if self.config.SERVER == 'kr':
+                        self.device.click(KR_NEW_YEAR_CHALLENGE_START)
+                    else:
+                        self.device.click(NEW_YEAR_CHALLENGE_START)
                     continue
 
     def exit_game(self, skip_first_screenshot=True):

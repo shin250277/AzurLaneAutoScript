@@ -23,6 +23,7 @@ from module.island.utils import (
 from module.island_handler.restaurant_config import get_menu_reserve_items
 from module.island_handler.recipe import IslandReversedDigitCounter
 from module.logger import logger
+from module.exception import RequestHumanTakeover
 from module.map_detection.utils import Points
 from module.ocr.ocr import Duration, Ocr
 from module.ui.page import page_island_order
@@ -101,7 +102,7 @@ class IslandOrder(IslandUI):
 
     @property
     def requirement_name_grid(self):
-        if server.server == 'en':
+        if server.server in ('en', 'kr'):
             name_grid = self.requirement_grid.crop((81, 12, 328, 40))
         else:
             name_grid = self.requirement_grid.crop((168, 12, 328, 40))
@@ -117,6 +118,10 @@ class IslandOrder(IslandUI):
 
     @cached_property
     def requirement_name_ocr(self):
+        if server.server == 'kr':
+            from module.island.korean_order_ocr import KoreanOrderNameOcr
+            return KoreanOrderNameOcr(self.requirement_name_grid.buttons, lang='ko',
+                                      name='REQUIREMENTS_NAME_OCR_KR')
         if server.server == 'jp':
             lang = 'jp'
         elif server.server == 'tw':
@@ -133,6 +138,15 @@ class IslandOrder(IslandUI):
                                           name='REQUIREMENTS_COUNTER_OCR')
 
     def item_name_to_item_id(self, name):
+        if server.server == 'kr':
+            if not isinstance(name, str):
+                return None
+            normalized = ''.join(name.split())
+            if not normalized:
+                return None
+            matches = [item for item, data in DIC_ISLAND_ITEM.items()
+                       if ''.join(data['name'].get('kr', '').split()) == normalized]
+            return matches[0] if len(matches) == 1 else None
         if name == '':
             return None
         if server.server == 'jp':
@@ -162,7 +176,32 @@ class IslandOrder(IslandUI):
         counter_ocr = self.requirement_counter_ocr
         names = name_ocr.ocr(self.device.image)
         ids = [self.item_name_to_item_id(name) for name in names]
+        if server.server == 'kr':
+            from module.island.korean_order_icons import resolve_order_icon
+            ids = [item_id if item_id is not None else resolve_order_icon(name, self.device.image, row)
+                   for row, (name, item_id) in enumerate(zip(names, ids))]
         counters = counter_ocr.ocr(self.device.image)
+        if server.server == 'kr':
+            # Do not silently discard an unread row and approve the remaining
+            # subset. Zero counters are OCR failure sentinels, not free orders.
+            if len(names) != 3 or len(counters) != len(names):
+                raise RequestHumanTakeover('Incomplete Korean order requirement rows')
+            requirements = {}
+            for name, item_id, counter in zip(names, ids, counters):
+                if isinstance(name, str) and not name.strip() and counter == (0, 0, 0):
+                    continue  # Unused rows in the fixed three-row panel.
+                if (item_id is None or item_id in requirements
+                        or not isinstance(counter, (tuple, list)) or len(counter) != 3
+                        or any(not isinstance(value, (int, np.integer)) or isinstance(value, bool)
+                               for value in counter)):
+                    raise RequestHumanTakeover('Unknown or ambiguous Korean order requirement')
+                stock, required, difference = counter
+                if stock < 0 or required <= 0 or difference != stock - required:
+                    raise RequestHumanTakeover('Invalid Korean order quantity; no order action taken')
+                requirements[item_id] = counter
+            if not requirements:
+                raise RequestHumanTakeover('No Korean order requirements could be verified')
+            return requirements
         requirements = {}
         for id, counter in zip(ids, counters):
             if id is not None and counter is not None:
@@ -248,6 +287,8 @@ class IslandOrder(IslandUI):
         return False
 
     def submit_order(self, is_urgent=False):
+        korean = self.config.SERVER == 'kr'
+        submitted = False
         if is_urgent:
             submit_button = ISLAND_ORDER_ACCEPT_URGENT
         else:
@@ -262,11 +303,14 @@ class IslandOrder(IslandUI):
             if self.handle_island_order_level_up():
                 confirm_timer.reset()
                 continue
-            if not clicked and self.match_template_color(submit_button, offset=(20, 20), interval=1):
+            if not clicked and not (korean and submitted) and self.match_template_color(submit_button, offset=(20, 20), interval=1):
                 self.device.click(submit_button)
+                submitted = True
                 confirm_timer.reset()
                 continue
             if not confirm_timer.reached():
+                continue
+            if korean and not submitted:
                 continue
             if self.match_template_color(ISLAND_ORDER_BACKGROUND, offset=(20, 20)):
                 logger.info('Submit success')
@@ -278,7 +322,7 @@ class IslandOrder(IslandUI):
             if not is_urgent and self.match_template_color(ISLAND_ORDER_COOLDOWN_SPEED_UP, offset=(20, 20)):
                 logger.info('Previous order submitted, wait for next order to appear')
                 continue
-            if clicked and self.match_template_color(ISLAND_ORDER_ACCEPT, offset=(20, 20)):
+            if not korean and clicked and self.match_template_color(ISLAND_ORDER_ACCEPT, offset=(20, 20)):
                 logger.info('Confirm timer timeout, assuming submit success')
                 return True
         else:
@@ -367,12 +411,13 @@ class IslandOrder(IslandUI):
 
     def detect_all_orders(self):
         self.regular_cooldown_orders = self.detect_orders(color=COLOR_REGULAR_COOLDOWN)
-        self.regular_orders = self.detect_orders(color=COLOR_REGULAR)
-        for order in self.regular_orders:
-            for cooldown_order in self.regular_cooldown_orders:
-                if np.linalg.norm(np.array(order.button) - np.array(cooldown_order.button)) < 10:
-                    self.regular_orders.remove(order)
-                    break
+        # Filtering while iterating the same list skips consecutive cooldowns.
+        # Keep the detection result intact and exclude every cooling-down order.
+        self.regular_orders = [
+            order for order in self.detect_orders(color=COLOR_REGULAR)
+            if not any(np.linalg.norm(np.array(order.button) - np.array(cooldown.button)) < 10
+                       for cooldown in self.regular_cooldown_orders)
+        ]
         self.urgent_orders = self.detect_orders(color=COLOR_URGENT)
         if len(self.urgent_orders) > 1:
             logger.warning(f'Multiple urgent orders detected, which is unexpected: {len(self.urgent_orders)}')
@@ -403,6 +448,9 @@ class IslandOrder(IslandUI):
         return False
 
     def run(self):
+        if self.config.SERVER == 'kr':
+            from module.island.korean_order import run_regular_orders
+            return run_regular_orders(self)
         self.ui_ensure(page_island_order)
         self.next_runtime = []
         self.update_production_plan = False

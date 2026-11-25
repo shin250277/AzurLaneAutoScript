@@ -118,6 +118,13 @@
       "OpsiDaemon",
       "EventStory",
       "IslandProductionPlanner",
+      "IslandProductionTrial",
+      "EventShopScan",
+      "IslandInspect",
+      "IslandOrderTrial",
+      "RaidInspect",
+      "RaidRewardClaim",
+      "RaidTrial",
       "Benchmark",
       "AzurLaneUncensored",
       "GameManager"

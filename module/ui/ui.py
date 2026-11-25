@@ -1,7 +1,9 @@
+import module.config.server as server
+
 from module.base.button import Button
 from module.base.decorator import run_once
 from module.base.timer import Timer
-from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2, GET_SHIP
+from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2, GET_SHIP, NEW_SHIP
 from module.exception import (GameNotRunningError, GamePageUnknownError,
                               RequestHumanTakeover)
 from module.exercise.assets import EXERCISE_PREPARATION
@@ -9,17 +11,330 @@ from module.handler.assets import (AUTO_SEARCH_MENU_EXIT, BATTLE_PASS_NEW_SEASON
                                    LOGIN_ANNOUNCE, LOGIN_ANNOUNCE_2, LOGIN_CHECK, LOGIN_RETURN_SIGN,
                                    MAINTENANCE_ANNOUNCE, MONTHLY_PASS_NOTICE)
 from module.handler.info_handler import InfoHandler
+from module.map.kr_preparation import preparation_button
 from module.logger import logger
 from module.map.assets import (FLEET_PREPARATION, MAP_PREPARATION,
                                MAP_PREPARATION_HARD, MAP_PREPARATION_CANCEL, WITHDRAW)
-from module.meowfficer.assets import MEOWFFICER_BUY
+from module.meowfficer.assets import MEOWFFICER_BUY, MEOWFFICER_TRAIN_START
 from module.ocr.ocr import Ocr
-from module.os_handler.assets import (AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
+from module.os_handler.assets import (ACTION_POINT_CANCEL, ACTION_POINT_USE, CURRENT_AP_CHECK,
+                                      AUTO_SEARCH_REWARD, EXCHANGE_CHECK, RESET_FLEET_PREPARATION, RESET_TICKET_POPUP)
 from module.raid.assets import *
+from module.raid.kr_fleet import BIGSHOT_FLEET_HEADER, BIGSHOT_FLEET_CLOSE
 from module.ui.assets import *
-from module.ui.page import Page, page_academy, page_campaign, page_event, page_main, page_main_white, page_sp, \
-    page_tactical
+from module.ui.page import (Page, page_academy, page_build, page_campaign, page_campaign_menu, page_coalition,
+                            page_channel, page_commission, page_dock, page_dorm, page_event, page_event_list, page_exercise, page_fleet,
+                            page_guild, page_island_manage, page_main, page_main_white, page_mail, page_meowfficer, page_meta, page_mission,
+                            page_island_map, page_island_shop, page_tactical,
+                            page_munitions, page_private_quarters, page_research, page_reshmenu, page_reward,
+                            page_shipyard, page_shop, page_sp, page_storage, page_supply_pack)
 from module.ui_white.assets import *
+
+KR_ISLAND_SEED_HEADER = Button(
+    area=(148, 18, 310, 54), color=(0, 0, 0), button=(148, 18, 310, 54),
+    file='./assets/kr/ui/ISLAND_SEED_HEADER.png')
+KR_ISLAND_PROCESSING_HEADER = Button(
+    area=(148, 18, 310, 54), color=(0, 0, 0), button=(148, 18, 310, 54),
+    file='./assets/kr/ui/ISLAND_PROCESSING_HEADER.png')
+KR_ISLAND_MATERIAL_DETAIL = Button(
+    area=(351, 157, 452, 192), color=(0, 0, 0), button=(902, 156, 937, 192),
+    file='./assets/kr/ui/ISLAND_MATERIAL_DETAIL.png')
+KR_ISLAND_MATERIAL_DETAIL_CLOSE = Button(
+    area=(902, 156, 937, 192), color=(0, 0, 0), button=(902, 156, 937, 192),
+    file='./assets/kr/ui/ISLAND_MATERIAL_DETAIL.png', name='KR_ISLAND_MATERIAL_DETAIL_CLOSE')
+
+KR_DEFEAT_RESULT = Button(
+    area=(230, 220, 551, 293), color=(180, 170, 173),
+    button=(1000, 632, 1050, 657),
+    file='./assets/kr/ui/DEFEAT_RESULT.png', name='KR_DEFEAT_RESULT')
+
+KR_DEFEAT_SUMMARY = Button(
+    area=(28, 58, 311, 119), color=(180, 170, 173),
+    button=(1140, 645, 1230, 680),
+    file='./assets/kr/ui/DEFEAT_SUMMARY.png', name='KR_DEFEAT_SUMMARY')
+
+KR_CAMPAIGN_MENU_CHECK = Button(
+    area=(170, 582, 312, 644),
+    color=(54, 56, 60),
+    button=(170, 582, 312, 644),
+    file='./assets/kr/ui/CAMPAIGN_MENU_CHECK.png',
+    name='KR_CAMPAIGN_MENU_CHECK',
+)
+
+KR_CAMPAIGN_CHECK = Button(
+    # Keep the template on the stable Korean chapter glyph. The wider box
+    # includes the animated chapter-header sheen and can fall below the
+    # default template threshold even though the campaign page is visible.
+    area=(184, 78, 202, 102),
+    color=(85, 95, 132),
+    button=(184, 78, 202, 102),
+    file='./assets/kr/ui/CAMPAIGN_CHECK.png',
+    name='KR_CAMPAIGN_CHECK',
+)
+
+KR_HORROR_COALITION_CHECK = Button(
+    area=(204, 50, 250, 67),
+    color=(178, 159, 157),
+    button=(204, 50, 250, 67),
+    file='./assets/kr/coalition/HORROR_COALITION_CHECK.png',
+    name='KR_HORROR_COALITION_CHECK',
+)
+
+# The newer KR event hub uses a round home icon instead of GOTO_MAIN.
+# Check two small, stable strokes so the animated event background does not
+# turn this into a broad brightness heuristic.
+KR_EVENT_HOME_LIGHT = Button(
+    area=(1229, 33, 1232, 36),
+    color=(173, 171, 175),
+    button=(1204, 7, 1270, 73),
+    name='KR_EVENT_HOME_LIGHT',
+)
+
+KR_EVENT_HOME_EDGE = Button(
+    area=(1220, 42, 1223, 45),
+    color=(170, 178, 182),
+    button=(1204, 7, 1270, 73),
+    name='KR_EVENT_HOME_EDGE',
+)
+
+KR_MISSION_CHECK = Button(
+    area=(120, 14, 173, 40),
+    color=(130, 144, 186),
+    button=(120, 14, 173, 40),
+    file='./assets/kr/ui/MISSION_CHECK.png',
+    name='KR_MISSION_CHECK',
+)
+
+KR_COMMISSION_CHECK = Button(
+    area=(118, 14, 180, 42),
+    color=(131, 144, 184),
+    button=(118, 14, 180, 42),
+    file='./assets/kr/ui/COMMISSION_CHECK.png',
+    name='KR_COMMISSION_CHECK',
+)
+
+KR_DOCK_CHECK = Button(
+    area=(120, 13, 176, 41),
+    color=(105, 116, 153),
+    button=(120, 13, 176, 41),
+    file='./assets/kr/retire/DOCK_CHECK.png',
+    name='KR_DOCK_CHECK',
+)
+
+KR_DOCK_FULL_CLOSE = Button(
+    area=(354, 308, 927, 378), color=(119, 130, 140),
+    button=(865, 177, 925, 215),
+    file='./assets/kr/ui/KR_DOCK_FULL_CLOSE.png', name='KR_DOCK_FULL_CLOSE')
+
+KR_STORAGE_CHECK = Button(
+    area=(120, 13, 176, 41),
+    color=(112, 124, 162),
+    button=(120, 13, 176, 41),
+    file='./assets/kr/ui/STORAGE_CHECK.png',
+    name='KR_STORAGE_CHECK',
+)
+
+KR_RESHMENU_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(86, 94, 128),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/RESHMENU_CHECK.png',
+    name='KR_RESHMENU_CHECK',
+)
+
+KR_SHOP_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(48, 61, 79),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/SHOP_CHECK.png',
+    name='KR_SHOP_CHECK',
+)
+
+KR_BUILD_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(76, 83, 113),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/BUILD_CHECK.png',
+    name='KR_BUILD_CHECK',
+)
+
+KR_MAIL_CHECK = Button(
+    area=(116, 10, 220, 45),
+    color=(39, 45, 61),
+    button=(116, 10, 220, 45),
+    file='./assets/kr/ui/MAIL_CHECK.png',
+    name='KR_MAIL_CHECK',
+)
+
+KR_DORM_CHECK = Button(
+    area=(949, 600, 1005, 654),
+    color=(255, 244, 209),
+    button=(),
+    name='KR_DORM_CHECK',
+)
+
+KR_DORM_INFO_CONFIRM = Button(
+    area=(1018, 596, 1194, 658),
+    color=(95, 140, 194),
+    button=(1018, 596, 1194, 658),
+    name='KR_DORM_INFO_CONFIRM',
+)
+
+KR_DORM_FEED_CANCEL = Button(
+    area=(419, 491, 621, 554),
+    color=(246, 206, 134),
+    button=(419, 491, 621, 554),
+    name='KR_DORM_FEED_CANCEL',
+)
+
+KR_MEOWFFICER_INFO_CONFIRM = Button(
+    area=(1078, 598, 1253, 658),
+    color=(233, 202, 92),
+    button=(1078, 598, 1253, 658),
+    name='KR_MEOWFFICER_INFO_CONFIRM',
+)
+
+KR_ACADEMY_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(59, 64, 82),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/ACADEMY_CHECK.png',
+    name='KR_ACADEMY_CHECK',
+)
+
+KR_MEOWFFICER_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(235, 230, 230),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/MEOWFFICER_CHECK.png',
+    name='KR_MEOWFFICER_CHECK',
+)
+
+KR_RESEARCH_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(89, 97, 130),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/RESEARCH_CHECK.png',
+    name='KR_RESEARCH_CHECK',
+)
+
+KR_SHIPYARD_CHECK = Button(
+    area=(0, 120, 130, 165),
+    color=(85, 105, 135),
+    button=(0, 120, 130, 165),
+    file='./assets/kr/ui/SHIPYARD_CHECK.png',
+    name='KR_SHIPYARD_CHECK',
+)
+
+KR_META_CHECK = Button(
+    area=(116, 8, 320, 48),
+    color=(114, 82, 85),
+    button=(116, 8, 320, 48),
+    file='./assets/kr/ui/META_CHECK.png',
+    name='KR_META_CHECK',
+)
+
+KR_FLEET_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(60, 66, 91),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/FLEET_CHECK.png',
+    name='KR_FLEET_CHECK',
+)
+
+KR_GUILD_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(66, 72, 97),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/GUILD_CHECK.png',
+    name='KR_GUILD_CHECK',
+)
+
+KR_EXERCISE_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(63, 69, 93),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/EXERCISE_CHECK.png',
+    name='KR_EXERCISE_CHECK',
+)
+
+KR_EVENT_LIST_CHECK = Button(
+    area=(116, 8, 300, 48),
+    color=(68, 74, 100),
+    button=(116, 8, 300, 48),
+    file='./assets/kr/ui/EVENT_LIST_CHECK.png',
+    name='KR_EVENT_LIST_CHECK',
+)
+
+KR_PRIVATE_QUARTERS_CHECK = Button(
+    area=(128, 20, 230, 48),
+    color=(92, 95, 98),
+    button=(128, 20, 230, 48),
+    file='./assets/kr/ui/PRIVATE_QUARTERS_CHECK.png',
+    name='KR_PRIVATE_QUARTERS_CHECK',
+)
+
+KR_MUNITIONS_CHECK = Button(
+    area=(15, 360, 165, 410),
+    color=(86, 181, 233),
+    button=(15, 360, 165, 410),
+    file='./assets/kr/ui/MUNITIONS_CHECK.png',
+    name='KR_MUNITIONS_CHECK',
+)
+
+KR_SUPPLY_PACK_CHECK = Button(
+    area=(15, 295, 165, 350),
+    color=(80, 179, 232),
+    button=(15, 295, 165, 350),
+    file='./assets/kr/ui/SUPPLY_PACK_CHECK.png',
+    name='KR_SUPPLY_PACK_CHECK',
+)
+
+KR_LOCALIZED_PAGE_CHECKS = {
+    page_campaign: KR_CAMPAIGN_CHECK,
+    page_coalition: KR_HORROR_COALITION_CHECK,
+    page_mission: KR_MISSION_CHECK,
+    page_commission: KR_COMMISSION_CHECK,
+    page_dock: KR_DOCK_CHECK,
+    page_storage: KR_STORAGE_CHECK,
+    page_reshmenu: KR_RESHMENU_CHECK,
+    page_shop: KR_SHOP_CHECK,
+    page_build: KR_BUILD_CHECK,
+    page_mail: KR_MAIL_CHECK,
+    page_academy: KR_ACADEMY_CHECK,
+    page_meowfficer: KR_MEOWFFICER_CHECK,
+    page_research: KR_RESEARCH_CHECK,
+    page_shipyard: KR_SHIPYARD_CHECK,
+    page_meta: KR_META_CHECK,
+    page_fleet: KR_FLEET_CHECK,
+    page_guild: KR_GUILD_CHECK,
+    page_exercise: KR_EXERCISE_CHECK,
+    page_event_list: KR_EVENT_LIST_CHECK,
+    page_private_quarters: KR_PRIVATE_QUARTERS_CHECK,
+    page_munitions: KR_MUNITIONS_CHECK,
+    page_supply_pack: KR_SUPPLY_PACK_CHECK,
+}
+
+
+KR_AUTOMATION_NOTICE = Button(
+    area=(363, 224, 643, 248), color=(0, 0, 0),
+    button=(575, 505, 700, 545),
+    file='./assets/kr/combat/KR_AUTOMATION_NOTICE.png', name='KR_AUTOMATION_NOTICE')
+
+
+KR_UI_SHIP_CARD = Button(
+    area=(40, 360, 85, 410), color=(120, 124, 132),
+    button=(980, 650, 1030, 680),
+    file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png', name='KR_UI_SHIP_CARD')
+
+# Registered-ship acquisition animation. The bottom-right checkbox is a
+# preference; only read its caption. Dismiss on the ship portrait instead.
+KR_CARD_CAPTION = Button(area=(1057, 672, 1240, 694), color=(0, 0, 0),
+                         button=(780, 420, 820, 455), name='KR_CARD_CAPTION',
+                         file='./assets/kr/ui/KR_CARD_CAPTION.png')
+KR_CARD_ZOOM = Button(area=(30, 462, 56, 496), color=(0, 0, 0),
+                      button=(780, 420, 820, 455), name='KR_CARD_ZOOM',
+                      file='./assets/kr/ui/KR_CARD_ZOOM.png')
 
 
 class UI(InfoHandler):
@@ -33,11 +348,81 @@ class UI(InfoHandler):
             interval:
         """
         if page == page_main:
+            if self.config.SERVER == 'kr':
+                if any(self.appear(header, offset=(3, 3), similarity=0.95)
+                       for header in (KR_ISLAND_SEED_HEADER, KR_ISLAND_PROCESSING_HEADER)):
+                    return False
+                # During page transitions the main screen may already be
+                # visible behind an overlay. A visible home icon means the
+                # foreground page has not closed yet.
+                if self.appear(GOTO_MAIN, offset=(5, 5), similarity=0.8):
+                    return False
+                # The dorm's bottom controls can resemble the white main
+                # navigation bar, so exclude it before checking the dock tab.
+                if self.appear(KR_DORM_CHECK, offset=0, threshold=15):
+                    return False
+                if self.appear(KR_MEOWFFICER_CHECK, offset=(10, 10), similarity=0.8):
+                    return False
+                if self.appear(KR_PRIVATE_QUARTERS_CHECK, offset=(10, 10), similarity=0.8):
+                    return False
+                # The 3D island's white avatar can resemble the dock tab.
+                # Its management icon is shared across servers and identifies
+                # the foreground scene before the main-menu color check.
+                if self.appear(ISLAND_CHECK, offset=(10, 10)):
+                    return False
+                # Island management has a white background at the main dock
+                # tab coordinates. Require its localized title to exclude it.
+                if self.appear(page_island_manage.check_button, offset=(10, 10), similarity=0.8):
+                    return False
+                # The channel is an overlay over the main screen, so the
+                # bottom dock tab remains visible behind it.
+                if self.appear(page_channel.check_button, offset=offset):
+                    return False
+                # KR's reward panel is an overlay over the main screen, so the
+                # bottom dock tab remains visible behind it.
+                if self.appear(page_reward.check_button, offset=offset):
+                    return False
+                # The fleet card also looks white on KR's campaign menu. The
+                # bottom dock tab is present only on the actual main page.
+                if not self.appear(MAIN_GOTO_DOCK_WHITE, offset=0, interval=interval, threshold=40):
+                    return False
+                # These island pages also have a white panel at the dock tab.
+                return not any(self.appear(p.check_button, offset=offset)
+                               for p in (page_island_map, page_island_shop))
             if self.appear(page_main_white.check_button, offset=offset, interval=interval):
                 return True
             if self.appear(page_main.check_button, offset=(5, 5), interval=interval):
                 return True
             return False
+        if self.config.SERVER == 'kr' and page == page_campaign_menu:
+            # The old card-color check intermittently matched the animated KR
+            # game room. The localized War Archives button is fixed and unique
+            # to the campaign menu.
+            return self.appear(KR_CAMPAIGN_MENU_CHECK, offset=(5, 5), interval=interval, similarity=0.8)
+        if self.config.SERVER == 'kr' and page == page_dorm:
+            # The manage button background is shared with JP, while its label
+            # is localized. Color matching remains stable over the animated room.
+            return self.appear(KR_DORM_CHECK, offset=0, interval=interval, threshold=15)
+        if self.config.SERVER == 'kr' and page == page_shop:
+            # Shop subpages keep the same localized header as the general
+            # shop. Exclude their active tabs before matching the shared title.
+            if self.appear(KR_MUNITIONS_CHECK, offset=0, threshold=15) \
+                    or self.appear(KR_SUPPLY_PACK_CHECK, offset=0, threshold=15):
+                return False
+            return self.appear(KR_SHOP_CHECK, offset=offset, interval=interval) and not self.appear(
+                page_island_shop.check_button, offset=offset)
+        if self.config.SERVER == 'kr' and page in (page_munitions, page_supply_pack):
+            # Both pages share the same localized shop menu. Detect the blue
+            # background of the active tab instead of matching inactive text.
+            return self.appear(KR_LOCALIZED_PAGE_CHECKS[page], offset=0, interval=interval, threshold=15)
+        if self.config.SERVER == 'kr' and page == page_academy:
+            # The tactical classroom keeps the academy header in the background.
+            return self.appear(KR_ACADEMY_CHECK, offset=offset, interval=interval) and not self.appear(
+                page_tactical.check_button, offset=offset)
+        if self.config.SERVER == 'kr' and page in KR_LOCALIZED_PAGE_CHECKS:
+            # These page titles keep JP's geometry, but localized glyphs need
+            # dedicated templates to distinguish screens with the same header.
+            return self.appear(KR_LOCALIZED_PAGE_CHECKS[page], offset=offset, interval=interval)
         # shitty EN localization changing font width of ACADEMY title,
         # check other buttons also
         if self.config.SERVER == 'en':
@@ -62,6 +447,20 @@ class UI(InfoHandler):
         Returns:
             bool: If clicked
         """
+        if self.config.SERVER == 'kr':
+            # The Korean reward overlay leaves the white main navigation bar
+            # visible.  Checking that bar alone therefore mistakes an open
+            # destination panel for page_main and repeatedly clicks its menu
+            # icon.  Never navigate when the requested page is already open.
+            if self.ui_page_appear(page, offset=(20, 20), interval=0):
+                return False
+            # Reuse the foreground-page exclusions (dorm, meowfficer, etc.).
+            # Their bottom controls can match the main dock tab by color.
+            if self.ui_page_appear(page_main, offset=offset, interval=interval):
+                button = page_main_white.links[page]
+                self.device.click(button)
+                return True
+            return False
         if self.appear(page_main.check_button, offset=offset, interval=interval):
             button = page_main.links[page]
             self.device.click(button)
@@ -154,6 +553,62 @@ class UI(InfoHandler):
         else:
             return self.appear(check_button, offset=offset)
 
+    def _handle_kr_island_character_back(self):
+        if self.config.SERVER != 'kr':
+            return False
+        if (self.appear(KR_ISLAND_MATERIAL_DETAIL, offset=(3, 3), similarity=0.95)
+                and self.appear(KR_ISLAND_MATERIAL_DETAIL_CLOSE, offset=(3, 3), similarity=0.95, interval=2)):
+            logger.info('Close KR material detail without following purchase link')
+            self.device.click(KR_ISLAND_MATERIAL_DETAIL_CLOSE)
+            return True
+        from module.island_handler.assets import ISLAND_DOCK_CHECK, ISLAND_RECIPE_CHECK
+        from module.ui_white.assets import BACK_ARROW_WHITE
+        if (self.appear(ISLAND_DOCK_CHECK, offset=(0, 20), similarity=0.85)
+                or self.appear(ISLAND_RECIPE_CHECK, offset=(20, 20), similarity=0.9)
+                or any(self.appear(header, offset=(3, 3), similarity=0.95)
+                       for header in (KR_ISLAND_SEED_HEADER, KR_ISLAND_PROCESSING_HEADER))) and self.appear(
+                BACK_ARROW_WHITE, offset=(20, 20), interval=2):
+            logger.info('Leave island character/recipe selection before changing tasks')
+            self.device.click(BACK_ARROW_WHITE)
+            return True
+        return False
+
+    def _handle_kr_island_restaurant_back(self):
+        if self.config.SERVER != 'kr':
+            return False
+        from module.island_handler.assets import ISLAND_RESTAURANT_CHECK, ISLAND_RESTAURANT_RESULT
+        from module.island.assets import ISLAND_CLICK_SAFE_AREA
+        from module.ui_white.assets import BACK_ARROW_WHITE
+        if self.appear(ISLAND_RESTAURANT_RESULT, offset=(20, 20), interval=2, similarity=0.9):
+            logger.info('Close KR restaurant settlement before changing tasks')
+            self.device.click(ISLAND_CLICK_SAFE_AREA)
+            return True
+        if self.appear(ISLAND_RESTAURANT_CHECK, offset=(0, 20), similarity=0.9) and self.appear(
+                BACK_ARROW_WHITE, offset=(20, 20), interval=2):
+            logger.info('Leave island restaurant before changing tasks')
+            self.device.click(BACK_ARROW_WHITE)
+            return True
+        return False
+
+    def _handle_kr_raid_fleet_back(self):
+        if self.config.SERVER != 'kr':
+            return False
+        if self.appear(BIGSHOT_FLEET_HEADER, offset=(0, 0), similarity=0.9) and self.appear(
+                BIGSHOT_FLEET_CLOSE, offset=(0, 0), interval=2, similarity=0.9):
+            logger.info('Leave KR raid fleet selection before changing tasks')
+            self.device.click(BIGSHOT_FLEET_CLOSE)
+            return True
+        return False
+
+    def ui_close_kr_dock_full(self):
+        # Startup/page recovery only. Keep combat/gacha retirement guards intact.
+        if server.server == 'kr' and self.appear(
+                KR_DOCK_FULL_CLOSE, offset=(5, 5), similarity=0.9, interval=3):
+            logger.info('Dismiss dock-full warning without retirement or expansion')
+            self.device.click(KR_DOCK_FULL_CLOSE)
+            return True
+        return False
+
     def ui_get_current_page(self, skip_first_screenshot=True):
         """
         Args:
@@ -190,6 +645,16 @@ class UI(InfoHandler):
                 break
 
             # Known pages
+            if self._handle_kr_registered_ship():
+                continue
+            if self.ui_close_kr_dock_full():
+                continue
+            if self._handle_kr_island_character_back():
+                continue
+            if self._handle_kr_island_restaurant_back():
+                continue
+            if self._handle_kr_raid_fleet_back():
+                continue
             for page in Page.iter_pages():
                 if page.check_button is None:
                     continue
@@ -200,6 +665,14 @@ class UI(InfoHandler):
 
             # Unknown page but able to handle
             logger.info("Unknown ui page")
+            if self.config.SERVER == 'kr':
+                # Resume after a manual stop inside the daily stage selector.
+                # Dismiss outside the dialog; never choose a battle on recovery.
+                from module.daily.daily import KR_DAILY_DISMISS, KR_DAILY_NORMAL_RUN, KR_DAILY_SKIP
+                if (self.match_template_color(KR_DAILY_NORMAL_RUN, offset=(5, 5))
+                        and self.match_template_color(KR_DAILY_SKIP, offset=(5, 5), interval=2)):
+                    self.device.click(KR_DAILY_DISMISS)
+                    continue
             if self.appear_then_click(GOTO_MAIN, offset=(30, 30), interval=2):
                 timeout.reset()
                 continue
@@ -207,6 +680,11 @@ class UI(InfoHandler):
                 timeout.reset()
                 continue
             if self.appear_then_click(RPG_HOME, offset=(30, 30), interval=2):
+                timeout.reset()
+                continue
+            if self.config.SERVER == 'kr' \
+                    and self.appear(KR_EVENT_HOME_LIGHT, threshold=20) \
+                    and self.appear_then_click(KR_EVENT_HOME_EDGE, threshold=20, interval=2):
                 timeout.reset()
                 continue
             if self.ui_additional():
@@ -231,6 +709,27 @@ class UI(InfoHandler):
         logger.critical("Please switch to a supported page before starting Alas")
         raise GamePageUnknownError
 
+    def wait_kr_island_scene(self):
+        """Observe the loading transition without clicking through its white areas."""
+        # A cold island load on MuMu can exceed 20s. Keep a bounded wait,
+        # with no speculative clicks on the loading screen.
+        timeout = Timer(60, count=120).start()
+        retried_source_menu = False
+        while 1:
+            self.device.screenshot()
+            if self.appear(ISLAND_CHECK, offset=(10, 10)):
+                logger.info('KR island scene ready')
+                return
+            if timeout.reached():
+                if not retried_source_menu and self.appear(DORMMENU_CHECK, offset=(10, 10)):
+                    logger.info('Island entry did not leave dorm menu; retry confirmed source once')
+                    self.device.click(DORMMENU_GOTO_ISLAND)
+                    retried_source_menu = True
+                    timeout.reset()
+                    continue
+                self.device.image_save('./log/kr_island_loading_timeout.png')
+                raise RequestHumanTakeover('Island scene did not finish loading; no further menu retry')
+
     def ui_goto(self, destination, get_ship=True, offset=(30, 30), skip_first_screenshot=True):
         """
         Args:
@@ -244,6 +743,7 @@ class UI(InfoHandler):
         self.interval_clear(list(Page.iter_check_buttons()))
 
         logger.hr(f"UI goto {destination}")
+        suppress_kr_campaign_popups = False
         island_page_detected = False
         while 1:
             GOTO_MAIN.clear_offset()
@@ -253,34 +753,71 @@ class UI(InfoHandler):
                 self.device.screenshot()
 
             # Destination page
+            if get_ship and self._handle_kr_registered_ship():
+                continue
             if self.ui_page_appear(page=destination, offset=offset):
                 logger.info(f'Page arrive: {destination}')
                 self.ui_current = destination
                 break
+
+            # A shop back action may reveal the underlying island recipe
+            # screen midway through navigation, not only at startup.
+            if self.config.SERVER == 'kr' and self._handle_kr_island_character_back():
+                continue
 
             # Other pages
             clicked = False
             for page in Page.iter_pages():
                 if page.parent is None or page.check_button is None:
                     continue
-                if self.appear(page.check_button, offset=offset, interval=5):
+                if page == page_main:
+                    # Main has both legacy and white/new layouts. Use the same
+                    # helper that selects the matching layout's click button;
+                    # KR uses the new layout while inheriting legacy assets.
+                    if self.ui_main_appear_then_click(page.parent, offset=offset, interval=5):
+                        logger.info(f'Page switch: {page} -> {page.parent}')
+                        if self.config.SERVER == 'kr':
+                            self.device.sleep(1)
+                        clicked = True
+                        break
+                    continue
+                appeared = self.ui_page_appear(page, offset=offset, interval=5)
+                if appeared:
                     self.ui_current = page
                     island_page_detected = page.is_island() or page.parent.is_island()
                     logger.info(f'Page switch: {page} -> {page.parent}')
-                    button = page.links[page.parent]
+                    button = self._kr_navigation_button(page, page.links[page.parent])
                     self.device.click(button)
                     self.ui_button_interval_reset(button)
+                    if self.config.SERVER == 'kr' and button == DORMMENU_GOTO_ISLAND:
+                        self.wait_kr_island_scene()
+                    if self.config.SERVER == 'kr' and page == page_campaign_menu \
+                            and destination == page_campaign:
+                        suppress_kr_campaign_popups = True
                     clicked = True
                     break
             if clicked:
                 continue
 
             # Additional
+            if suppress_kr_campaign_popups:
+                # The KR campaign transition itself can resemble inherited
+                # reward popups. There are no legitimate main-page popups in
+                # this short route, so wait only for the localized destination.
+                continue
             if self.ui_additional(get_ship=get_ship and not island_page_detected):
                 continue
 
         # Reset connection
         Page.clear_connection()
+
+    def _kr_navigation_button(self, page, button):
+        # Island mail shares MAIL_CHECK but has no upper-right main shortcut.
+        # Use the actually observed back arrow, then re-detect the parent page.
+        if (self.config.SERVER == 'kr' and page == page_mail
+                and self.appear(BACK_ARROW_WHITE, offset=(20, 20))):
+            return BACK_ARROW_WHITE
+        return button
 
     def ui_ensure(self, destination, skip_first_screenshot=True):
         """
@@ -375,6 +912,15 @@ class UI(InfoHandler):
         """
         Handle popups appear at page_main, page_reward
         """
+        if server.server == 'kr' and (
+                self.ui_page_appear(page_campaign_menu) or self.ui_page_appear(page_campaign)
+        ):
+            # KR campaign backgrounds share large color regions with the
+            # inherited reward and monthly-pass templates. Once either
+            # campaign page is visible these are foreground controls, not
+            # main-page popups, so never click them from the global handler.
+            return False
+
         # Guild popup
         if self.handle_guild_popup_cancel():
             return True
@@ -384,11 +930,18 @@ class UI(InfoHandler):
             return True
         if self.appear_then_click(LOGIN_ANNOUNCE_2, offset=(30, 30), interval=3):
             return True
-        if self.appear_then_click(GET_ITEMS_1, offset=True, interval=3):
+        # KR keeps the same popup colors and layout, but localized text makes
+        # template matching fail. Color matching is sufficient on these two
+        # full-screen reward popups.
+        get_items_offset = False if server.server == 'kr' else True
+        if self.appear_then_click(GET_ITEMS_1, offset=get_items_offset, interval=3):
             return True
-        if self.appear_then_click(GET_ITEMS_2, offset=True, interval=3):
+        if self.appear_then_click(GET_ITEMS_2, offset=get_items_offset, interval=3):
             return True
-        if get_ship:
+        # GET_SHIP is only a 6x20 white color sample in the inherited assets.
+        # On KR it also matches the main-page chat control, so do not use it as
+        # a global popup detector until a KR-specific contextual asset exists.
+        if get_ship and server.server != 'kr':
             if self.appear_then_click(GET_SHIP, offset=(20, 20), interval=5):
                 return True
         if self.appear_then_click(LOGIN_RETURN_SIGN, offset=(30, 30), interval=3):
@@ -398,10 +951,17 @@ class UI(InfoHandler):
             if self.appear_then_click(GOTO_MAIN, offset=(30, 30)):
                 return True
         # Monthly pass is about to expire
-        if self.appear_then_click(MONTHLY_PASS_NOTICE, offset=(30, 30), interval=3):
+        # The inherited monthly/battle-pass notice samples are broad blue
+        # rectangles. On KR they also match normal event banners and can open
+        # the event list instead of dismissing a popup. Keep these handlers
+        # disabled until localized notice assets are available.
+        notice_offset = (30, 30)
+        if server.server != 'kr' and self.appear_then_click(
+                MONTHLY_PASS_NOTICE, offset=notice_offset, interval=3):
             return True
         # Battle pass is about to expire and player has uncollected battle pass rewards
-        if self.appear_then_click(BATTLE_PASS_NOTICE, offset=(30, 30), interval=3):
+        if server.server != 'kr' and self.appear_then_click(
+                BATTLE_PASS_NOTICE, offset=notice_offset, interval=3):
             return True
         # Popup that advertise you to buy battle pass
         # 2024.12.19, PURCHASE_POPUP at main page becomes BATTLE_PASS_NEW_SEASON
@@ -423,10 +983,8 @@ class UI(InfoHandler):
             logger.info(f'UI additional: {SHIPYARD_CHECK} -> {GOTO_MAIN}')
             if self.appear_then_click(GOTO_MAIN, offset=(30, 30)):
                 return True
-        if self.appear(META_CHECK, offset=(30, 30), interval=5):
-            logger.info(f'UI additional: {META_CHECK} -> {GOTO_MAIN}')
-            if self.appear_then_click(GOTO_MAIN, offset=(30, 30)):
-                return True
+        if self.ui_handle_meta_return():
+            return True
         # Mistaken click
         if self.appear(PLAYER_CHECK, offset=(30, 30), interval=3):
             logger.info(f'UI additional: {PLAYER_CHECK} -> {GOTO_MAIN}')
@@ -441,6 +999,14 @@ class UI(InfoHandler):
         """
         Handle popups appear at page_os
         """
+        # Recover an interrupted KR AP purchase without confirming a purchase.
+        # Its close icon also matches the maintenance dialog close icon.
+        if (server.server == 'kr'
+                and self.match_template_color(CURRENT_AP_CHECK, offset=(40, 5), threshold=15)
+                and self.appear(ACTION_POINT_USE, offset=(20, 20))
+                and self.appear_then_click(ACTION_POINT_CANCEL, offset=(20, 20), interval=3)):
+            return True
+
         # Opsi reset
         # - Opsi has reset, handle_story_skip() clicks confirm
         # - RESET_TICKET_POPUP
@@ -467,6 +1033,34 @@ class UI(InfoHandler):
 
         return False
 
+    def handle_kr_automation_notice(self):
+        # Match the specific informational sentence, not a generic blue confirm.
+        if self.config.SERVER == 'kr' and self.appear_then_click(
+                KR_AUTOMATION_NOTICE, offset=(5, 5), interval=2):
+            return True
+        return False
+
+    def _handle_kr_registered_ship(self):
+        if self.config.SERVER != 'kr' or not self.appear(
+                KR_CARD_CAPTION, offset=(3, 3), similarity=.88):
+            return False
+        if not self.appear(KR_CARD_ZOOM, offset=(3, 3), similarity=.86):
+            return False
+        if self.appear(KR_CARD_CAPTION, offset=(3, 3), similarity=.88, interval=2):
+            self.device.click(KR_CARD_CAPTION)
+        return True
+
+    def ui_handle_kr_ship_card(self):
+        # Reuse the contextual card detector already used in combat/gacha,
+        # not GET_SHIP's tiny white patch that also matches the main chat UI.
+        if self.config.SERVER != 'kr' or not self.appear(
+                KR_UI_SHIP_CARD, offset=(3, 3), interval=1, similarity=0.85):
+            return False
+        if self.appear(NEW_SHIP):
+            self.config.GET_SHIP_TRIGGERED = True
+        self.device.click(KR_UI_SHIP_CARD)
+        return True
+
     def ui_additional(self, get_ship=True):
         """
         Handle all annoying popups during UI switching.
@@ -474,6 +1068,17 @@ class UI(InfoHandler):
         Args:
             get_ship:
         """
+        if get_ship and self.ui_handle_kr_ship_card():
+            return True
+        # A stopped KR run can resume on a defeat result instead of a map.
+        if self.handle_kr_automation_notice():
+            return True
+        if server.server == 'kr':
+            if self.appear_then_click(KR_DEFEAT_RESULT, offset=(5, 5), interval=3):
+                return True
+            if self.appear_then_click(KR_DEFEAT_SUMMARY, offset=(5, 5), interval=3):
+                return True
+
         # Popups appear at page_os
         # Has a popup_confirm variant
         # so must take precedence
@@ -503,6 +1108,12 @@ class UI(InfoHandler):
             return True
 
         # Dorm popup
+        if server.server == 'kr':
+            # These confirmation labels are localized, while their large
+            # button backgrounds keep stable colors and geometry.
+            for button in (KR_DORM_INFO_CONFIRM, KR_DORM_FEED_CANCEL, KR_MEOWFFICER_INFO_CONFIRM):
+                if self.appear_then_click(button, offset=0, interval=3, threshold=18):
+                    return True
         if self.appear(DORM_INFO, offset=(30, 30), similarity=0.75, interval=3):
             self.device.click(DORM_INFO)
             return True
@@ -512,6 +1123,12 @@ class UI(InfoHandler):
             return True
 
         # Meowfficer popup
+        if self.config.SERVER == 'kr' and self.appear(
+                MEOWFFICER_TRAIN_START, offset=(20, 20), interval=3):
+            # Close the training overlay without claiming or accelerating it.
+            # This is the same safe header used by meow_menu_close().
+            self.device.click(MEOWFFICER_CHECK)
+            return True
         if self.appear_then_click(MEOWFFICER_INFO, offset=(30, 30), interval=3):
             self.interval_reset(GET_SHIP)
             return True
@@ -522,6 +1139,20 @@ class UI(InfoHandler):
             return True
 
         # Campaign preparation
+        kr_prep = preparation_button(self, interval=3)
+        if kr_prep:
+            # Close the observed new dialog, never the Handover execution tab.
+            # Follow the matching dialog's horizontal displacement.
+            self.device.click(kr_prep.move((45, -335), name='KR_PREPARATION_CLOSE'))
+            return True
+        if self.config.SERVER == 'kr' and self.appear(
+                MAP_PREPARATION, offset=(80, 20), interval=3):
+            # The legacy KR shortcut dialog also expands for additional
+            # rewards (11-4). Follow its matched displacement and use only
+            # the close icon, never the shortcut/paid currency controls.
+            self.device.click(MAP_PREPARATION.crop(
+                (170, -325, 200, -295), name='KR_LEGACY_PREPARATION_CLOSE'))
+            return True
         if self.appear(MAP_PREPARATION, offset=(30, 30), interval=3) \
                 or self.appear(MAP_PREPARATION_HARD, offset=(30, 30), interval=3) \
                 or self.appear(FLEET_PREPARATION, offset=(20, 50), interval=3) \
@@ -554,6 +1185,10 @@ class UI(InfoHandler):
         # Login
         if self.appear_then_click(LOGIN_CHECK, offset=(30, 30), interval=3):
             return True
+        if server.server == 'kr' and self.appear(MAINTENANCE_ANNOUNCE, offset=(30, 30), interval=3):
+            logger.info('KR server maintenance detected, retry in 30 minutes')
+            self.config.task_delay(minute=30)
+            self.config.task_stop('KR server maintenance')
         if self.appear_then_click(MAINTENANCE_ANNOUNCE, offset=(30, 30), interval=3):
             return True
         # rerun event select page
@@ -622,6 +1257,19 @@ class UI(InfoHandler):
             return True
         return False
 
+    def ui_handle_meta_return(self):
+        if self.config.SERVER == 'kr':
+            # Share the localized check's timer with ui_goto. An inherited
+            # META check can otherwise click HOME again during its fade-out,
+            # opening Settings on the main screen underneath.
+            if not self.ui_page_appear(page_meta, offset=(30, 30), interval=5):
+                return False
+            return self.appear_then_click(GOTO_MAIN, offset=(30, 30), interval=2)
+        if self.appear(META_CHECK, offset=(30, 30), interval=5):
+            logger.info(f'UI additional: {META_CHECK} -> {GOTO_MAIN}')
+            return self.appear_then_click(GOTO_MAIN, offset=(30, 30))
+        return False
+
     def ui_button_interval_reset(self, button):
         """
         Reset interval of some button to avoid mistaken clicks
@@ -629,6 +1277,9 @@ class UI(InfoHandler):
         Args:
             button (Button):
         """
+        if self.config.SERVER == 'kr' and button == GOTO_MAIN:
+            self.interval_reset(GOTO_MAIN)
+            self.interval_reset(KR_META_CHECK)
         if button == MEOWFFICER_GOTO_DORMMENU:
             self.interval_reset(GET_SHIP)
         if button == DORMMENU_GOTO_DORM:

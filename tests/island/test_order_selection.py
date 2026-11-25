@@ -65,7 +65,7 @@ def test_execute_order_does_not_read_unconfirmed_requirements():
 def test_cooldown_fallback_does_not_read_unconfirmed_panel(monkeypatch):
     main = object.__new__(IslandOrder)
     delays = []
-    main.config = SimpleNamespace(task_delay=lambda **kwargs: delays.append(kwargs))
+    main.config = SimpleNamespace(SERVER='cn', task_delay=lambda **kwargs: delays.append(kwargs))
     main.device = SimpleNamespace(image=object())
     main.ui_ensure = lambda page: None
     main.detect_all_orders = lambda: None

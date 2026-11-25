@@ -1,5 +1,6 @@
 import re
 
+import module.config.server as server
 from module.base.button import ButtonGrid
 from module.base.decorator import Config, cached_property
 from module.base.filter import Filter
@@ -29,6 +30,14 @@ class ExchangeLimitOcr(Digit):
         Returns:
             np.ndarray: Shape (width, height)
         """
+        # KR uses subdued text on a translucent bar; absolute white misses
+        # valid digits. The KR crop excludes the trailing Hangul unit.
+        if server.server == 'kr':
+            gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+            if int(gray.max()) - int(gray.min()) < 30:
+                return np.full((gray.shape[0]+4, gray.shape[1]+6), 255, np.uint8)
+            glyph = 255 - cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+            return cv2.copyMakeBorder(glyph, 2, 2, 3, 3, cv2.BORDER_CONSTANT, value=255)
         return 255 - color_mapping(rgb2gray(image), max_multiply=2.5)
 
 
@@ -134,30 +143,64 @@ class GuildLogistics(GuildBase):
             in: GUILD_LOGISTICS
             out: GUILD_LOGISTICS
         """
-        accept_timer = Timer(0.5, count=1)
-        for _ in self.loop():
-            if self.handle_info_bar():
-                accept_timer.clear()
-
-            if self.appear(GUILD_MISSION_FINISHED, offset=(20, 20)):
+        if self.config.SERVER == 'kr':
+            r, g, b = get_color(self.device.image, GUILD_MISSION.area)
+            if g > max(r, b) - 10:
+                # Green tick at the bottom right corner if guild mission finished
                 logger.info('Guild mission has finished this week')
                 self._guild_logistics_mission_finished = True
                 return False
-            # Allow the centered suffix to shift between 0/300 and 299/300.
-            elif self.appear(GUILD_MISSION_IN_PROGRESS, offset=(40, 20)):
-                logger.info('Guild mission in progress')
-                return False
-            elif self.appear(GUILD_MISSION_CLAIM, offset=(20, 20)):
-                logger.info('Guild mission reward available')
-                return True
-            elif self.appear(GUILD_MISSION_ACCEPT, offset=(20, 20)):
-                # Acceptance briefly appears while a newly issued mission loads.
-                if accept_timer.start().reached():
-                    logger.info('Guild mission acceptance available')
-                    return True
-            else:
+            elif self.image_color_count(GUILD_MISSION, color=(255, 255, 255), threshold=1, count=50):
+                # 0/300 in JP is (255, 255, 255)
                 logger.info('Guild mission button inactive')
                 return False
+            elif self.image_color_count(GUILD_MISSION, color=(255, 255, 255), threshold=75, count=400):
+                # (255, 255, 255) less than 50, but has many blue-white pixels
+                logger.info('Guild mission button active')
+                return True
+            elif not self.image_color_count(GUILD_MISSION, color=(255, 255, 255), threshold=75, count=50):
+                # No guild mission counter
+                logger.info('No guild mission found, mission of this week may not started')
+                # Guild mission choose in JP server disabled until we get the screenshot.
+                return False
+                # if self.image_color_count(GUILD_MISSION_CHOOSE, color=(255, 255, 255), threshold=221, count=100):
+                #     # Guild mission choose available if user is guild master
+                #     logger.info('Guild mission choose found')
+                #     return True
+                # else:
+                #     logger.info('Guild mission choose not found')
+                #     return False
+            else:
+                if self.config.SERVER == 'kr':
+                    logger.info('Guild mission is in progress')
+                else:
+                    logger.info('Unknown guild mission condition. Skipped.')
+                return False
+        else:
+            accept_timer = Timer(0.5, count=1)
+            for _ in self.loop():
+                if self.handle_info_bar():
+                    accept_timer.clear()
+
+                if self.appear(GUILD_MISSION_FINISHED, offset=(20, 20)):
+                    logger.info('Guild mission has finished this week')
+                    self._guild_logistics_mission_finished = True
+                    return False
+                # Allow the centered suffix to shift between 0/300 and 299/300.
+                elif self.appear(GUILD_MISSION_IN_PROGRESS, offset=(40, 20)):
+                    logger.info('Guild mission in progress')
+                    return False
+                elif self.appear(GUILD_MISSION_CLAIM, offset=(20, 20)):
+                    logger.info('Guild mission reward available')
+                    return True
+                elif self.appear(GUILD_MISSION_ACCEPT, offset=(20, 20)):
+                    # Acceptance briefly appears while a newly issued mission loads.
+                    if accept_timer.start().reached():
+                        logger.info('Guild mission acceptance available')
+                        return True
+                else:
+                    logger.info('Guild mission button inactive')
+                    return False
 
     @Config.when(SERVER=None)
     def _guild_logistics_mission_available(self):

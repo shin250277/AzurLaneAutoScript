@@ -2112,6 +2112,41 @@
       "Storage": {}
     }
   },
+  "IslandProductionTrial": {
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "EventShopScan": {
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "IslandInspect": {
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "IslandOrderTrial": {
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "RaidInspect": {
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "RaidRewardClaim": {
+    "Storage": {
+      "Storage": {}
+    }
+  },
+  "RaidTrial": {
+    "Storage": {
+      "Storage": {}
+    }
+  },
   "Benchmark": {
     "Benchmark": {
       "DeviceType": "emulator",

@@ -2,8 +2,8 @@ Deploy:
   Git:
     # URL of AzurLaneAutoScript repository
     # [CN user] Use 'git://git.lyoko.io/AzurLaneAutoScript' for faster and more stable download
-    # [Other] Use 'https://github.com/LmeSzinc/AzurLaneAutoScript'
-    Repository: 'https://github.com/LmeSzinc/AzurLaneAutoScript'
+    # This Korean-server fork must update from its own repository to preserve KR support
+    Repository: 'https://github.com/shin250277/AzurLaneAutoScript.git'
     # Branch of Alas
     # [Developer] Use 'dev', 'app', etc, to try new features
     # [Other] Use 'master', the stable branch

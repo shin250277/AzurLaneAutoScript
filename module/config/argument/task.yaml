@@ -369,6 +369,13 @@ Tool:
       - EventStory
     IslandProductionPlanner:
       - IslandProductionPlanner
+    IslandProductionTrial: []
+    EventShopScan: []
+    IslandInspect: []
+    IslandOrderTrial: []
+    RaidInspect: []
+    RaidRewardClaim: []
+    RaidTrial: []
     Benchmark:
       - Benchmark
     AzurLaneUncensored:

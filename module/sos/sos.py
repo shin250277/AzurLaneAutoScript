@@ -202,7 +202,7 @@ class CampaignSos(CampaignRun, CampaignBase):
             in: Any page
             out: page_campaign
         """
-        if self.config.SERVER in ['cn', 'en', 'jp']:
+        if self.config.SERVER in ['cn', 'en', 'jp', 'kr']:
             logger.warning('AL no longer has SOS maps, disable task')
             self.config.Scheduler_Enable = False
             self.config.task_stop()

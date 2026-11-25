@@ -3,6 +3,7 @@ from module.logger import logger
 from module.shop.assets import *
 from module.shop.base import ShopItemGrid, ShopItemGrid_250814
 from module.shop.clerk import ShopClerk
+from module.shop.shop_select_globals import SELECT_ITEM_INFO_MAP
 from module.shop.shop_status import ShopStatus
 from module.shop.ui import ShopUI
 
@@ -80,6 +81,12 @@ class GuildShop_250814(ShopClerk, ShopUI, ShopStatus):
         Returns:
             bool: whether interface was detected and handled
         """
+        # The previous selector can remain in ``device.image`` for one loop
+        # after a selected purchase has completed.  Do not interpret that
+        # stale frame as a selector for ordinary items such as food.
+        if item.group not in SELECT_ITEM_INFO_MAP:
+            return False
+
         if self.appear(SHOP_BUY_CONFIRM_SELECT, offset=(20, 20), interval=3):
             self.shop_buy_select_execute(item)
             self.interval_reset(SHOP_BUY_CONFIRM_SELECT)

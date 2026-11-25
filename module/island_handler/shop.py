@@ -88,6 +88,10 @@ class IslandShop(IslandShopUI):
 
     @property
     def _island_shop_item_name_ocr(self):
+        if server.server == 'kr':
+            from module.island_handler.korean_ocr import KoreanIslandShopNameOcr
+            return KoreanIslandShopNameOcr(self._island_shop_item_name_grid.buttons,
+                                           name='island_shop_item_name_ocr_kr')
         if server.server == 'jp':
             lang = 'jp'
         elif server.server == 'tw':
@@ -103,6 +107,13 @@ class IslandShop(IslandShopUI):
         )
 
     def item_name_to_recipe_id(self, name):
+        if server.server == 'kr':
+            if not isinstance(name, str) or not name.strip():
+                return None
+            normalized = ''.join(name.split())
+            matches = [key for key, recipe in DIC_ISLAND_SHOP_RECIPE.items()
+                       if normalized == ''.join(recipe['name'].get('kr', '').split())]
+            return matches[0] if len(matches) == 1 else None
         if name == '':
             return None
         min_distance = float('inf')
@@ -110,6 +121,8 @@ class IslandShop(IslandShopUI):
         corrected_name = None
         corrected_id = None
         for recipe_id, recipe in DIC_ISLAND_SHOP_RECIPE.items():
+            if 'servers' in recipe and server.server not in recipe['servers']:
+                continue
             recipe_name = recipe['name'][server.server]
             if isinstance(name, str) and isinstance(recipe_name, str) and len(recipe_name) >= len(name) and len(name) > 0:
                 best_sub_distance = float('inf')
@@ -132,6 +145,10 @@ class IslandShop(IslandShopUI):
         if min_real_distance > 0:
             logger.info(f"Corrected '{name}' to '{corrected_name}' with distance {min_distance}")
         return corrected_id
+
+    @cached_property
+    def island_shop_item_ids(self):
+        return self.island_shop_get_item_ids()
 
     def island_shop_get_item_ids(self, expected_recipe_id=None):
         for _ in self.loop(timeout=5):

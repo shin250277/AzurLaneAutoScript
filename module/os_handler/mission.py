@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import *
 from module.config.utils import DEFAULT_TIME, get_os_next_reset
@@ -10,6 +11,14 @@ from module.os.globe_detection import GLOBE_MAP_SHAPE
 from module.os.globe_operation import GlobeOperation
 from module.os.globe_zone import Zone, ZoneManager
 from module.os_handler.assets import *
+
+
+# Normal and hard KR Arbiter missions have different prefixes. Reuse only
+# their shared name in the existing asset; never follow the boss as a daily.
+KR_MISSION_ARBITER = Button(
+    area=(655, 186, 710, 207), color=(112, 118, 139),
+    button=(655, 186, 710, 207),
+    file='./assets/kr/os_handler/MISSION_MONTHLY_BOSS.png')
 
 
 class MissionAtCurrentZone(Exception):
@@ -60,6 +69,10 @@ class MissionHandler(GlobeOperation, ZoneManager):
                 # No mission found, wait to confirm. Missions might not be loaded so fast.
                 if confirm_timer.reached():
                     logger.info('No OS mission found.')
+                    if self.config.SERVER == 'kr':
+                        # Retain the actual list for diagnosing a false empty
+                        # result after the mission-acceptance limit is reached.
+                        self.device.image_save('./log/kr_os_mission_empty.png')
                     break
             elif self.is_in_os_mission() \
                     and self.match_template_color(MISSION_CHECKOUT, offset=(20, 20)):
@@ -116,7 +129,9 @@ class MissionHandler(GlobeOperation, ZoneManager):
         self.os_mission_enter()
 
         checkout_offset = (20, 20)
-        if self.appear(MISSION_MONTHLY_BOSS, offset=(20, 20)):
+        if (self.appear(MISSION_MONTHLY_BOSS, offset=(20, 20))
+                or (self.config.SERVER == 'kr'
+                    and self.appear(KR_MISSION_ARBITER, offset=(40, 20)))):
             # If monthly BOSS hasn't been killed, there is always a task.
             logger.info('Monthly BOSS mission found, checking missions bellow it')
             checkout_offset = (-20, 100, 20, 150)
@@ -135,16 +150,20 @@ class MissionHandler(GlobeOperation, ZoneManager):
             return False
 
         logger.info('Checkout os mission')
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_os_mission_checkout.png')
         for _ in self.loop():
             # End
             if self.is_zone_pinned():
                 if self.get_zone_pinned_name() == 'ARCHIVE':
                     logger.info('Pinned at archive zone')
-                    self.globe_enter(zone=self.name_to_zone(72))
+                    self.globe_enter(zone=self.name_to_zone(72), zone_label='archive mission target')
                     return 'pinned_at_archive_zone'
                 else:
                     logger.info('Pinned at mission zone')
-                    self.globe_enter(zone=self.name_to_zone(72))
+                    # Zone 72 supplies an AP-cost estimate, not the selected
+                    # mission's identity. Do not report it as the locked zone.
+                    self.globe_enter(zone=self.name_to_zone(72), zone_label='mission target (unidentified)')
                     return 'pinned_at_mission_zone'
             if self.is_in_map() and self.info_bar_count():
                 logger.info('Already at mission zone')

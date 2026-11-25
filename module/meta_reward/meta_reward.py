@@ -1,4 +1,5 @@
 from module.base.timer import Timer
+from module.base.button import Button
 from module.combat.combat import Combat
 from module.logger import logger
 from module.meta_reward.assets import *
@@ -6,8 +7,29 @@ from module.os_ash.assets import DOSSIER_LIST
 from module.ui.page import page_meta
 from module.ui.ui import UI
 
+KR_CRYSTAL_LABEL = Button(
+    area=(1145, 400, 1270, 438), color=(92, 83, 74),
+    button=(980, 650, 1030, 680),
+    file='./assets/kr/meta_reward/KR_CRYSTAL_CARD.png', name='KR_CRYSTAL_LABEL')
+KR_CRYSTAL_COMMENT = Button(
+    area=(42, 465, 83, 510), color=(114, 113, 115),
+    button=(980, 650, 1030, 680),
+    file='./assets/kr/meta_reward/KR_CRYSTAL_CARD.png', name='KR_CRYSTAL_COMMENT')
+
 
 class BeaconReward(Combat, UI):
+    def handle_kr_crystal_card(self):
+        # Crystal conversion has a different card layout from a new ship.
+        # Require both the Korean reward label and the contextual card icon.
+        if self.config.SERVER != 'kr':
+            return False
+        if not self.match_template_color(KR_CRYSTAL_LABEL, offset=(3, 3)):
+            return False
+        if not self.match_template_color(KR_CRYSTAL_COMMENT, offset=(3, 3)):
+            return False
+        self.device.click(KR_CRYSTAL_LABEL)
+        return True
+
     def meta_reward_notice_appear(self):
         """
         Returns:
@@ -62,6 +84,10 @@ class BeaconReward(Combat, UI):
                 received = True
                 confirm_timer.reset()
                 continue
+            if self.handle_kr_crystal_card():
+                received = True
+                confirm_timer.reset()
+                continue
             if self.handle_get_ship():
                 received = True
                 confirm_timer.reset()
@@ -112,6 +138,11 @@ class BeaconReward(Combat, UI):
             # Sync progress >= 100%
             if self.appear(REWARD_ENTER, offset=(20, 20)):
                 logger.info('meta_sync_receive ends at REWARD_ENTER')
+                break
+            # KR uses localized sync-button artwork, so the shared SYNC_ENTER
+            # template no longer matches after the reward popup closes.
+            if self.config.SERVER == 'kr' and received and self.ui_page_appear(page_meta):
+                logger.info('meta_sync_receive ends at KR meta main page')
                 break
 
             if self.config.SERVER == 'en':
@@ -189,7 +220,7 @@ class BeaconReward(Combat, UI):
                 break
 
     def run(self):
-        if self.config.SERVER in ['cn', 'en', 'jp']:
+        if self.config.SERVER in ['cn', 'en', 'jp', 'kr']:
             pass
         else:
             logger.info(f'MetaReward is not supported in {self.config.SERVER}, please contact server maintainers')
@@ -301,7 +332,7 @@ class DossierReward(Combat, UI):
         return received
 
     def run(self):
-        if self.config.SERVER in ['cn', 'en', 'jp']:
+        if self.config.SERVER in ['cn', 'en', 'jp', 'kr']:
             pass
         else:
             logger.info(f'MetaReward is not supported in {self.config.SERVER}, please contact server maintainers')

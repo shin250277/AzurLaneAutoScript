@@ -1,5 +1,5 @@
 import module.config.server as server
-from module.base.button import ButtonGrid, color_similar, get_color
+from module.base.button import Button, ButtonGrid, color_similar, get_color
 from module.base.decorator import cached_property
 from module.base.timer import Timer
 from module.combat.assets import GET_ITEMS_1
@@ -10,31 +10,82 @@ from module.retire.assets import *
 from module.ui.scroll import Scroll
 from module.ui.setting import Setting
 from module.ui.switch import Switch
+from module.ui.page import page_dock
 
 DOCK_SORTING = Switch('Dork_sorting')
 DOCK_SORTING.add_state('Ascending', check_button=SORT_ASC, click_button=SORTING_CLICK)
 DOCK_SORTING.add_state('Descending', check_button=SORT_DESC, click_button=SORTING_CLICK)
 
-DOCK_FAVOURITE = Switch('Favourite_filter')
+class DockFavouriteSwitch(Switch):
+    def get(self, main):
+        if main.config.SERVER != 'kr':
+            return super().get(main)
+        if not main.ui_page_appear(page_dock):
+            return 'unknown'
+        # KR's empty-list overlay darkens the inactive favourite label by
+        # about 12 RGB levels. Keep on/off colors distinct but allow that shift.
+        for data in self.state_list:
+            if main.appear(data['check_button'], offset=0, threshold=20):
+                return data['state']
+        return 'unknown'
+
+
+DOCK_FAVOURITE = DockFavouriteSwitch('Favourite_filter')
 DOCK_FAVOURITE.add_state('on', check_button=COMMON_SHIP_FILTER_ENABLE)
 DOCK_FAVOURITE.add_state('off', check_button=COMMON_SHIP_FILTER_DISABLE)
 
 CARD_GRIDS = ButtonGrid(
     origin=(93, 76), delta=(164 + 2 / 3, 227), button_shape=(138, 204), grid_shape=(7, 2), name='CARD')
 CARD_RARITY_GRIDS = CARD_GRIDS.crop(area=(0, 0, 138, 5), name='RARITY')
-if server.server != 'jp':
+if server.server not in ['jp', 'kr']:
     CARD_LEVEL_GRIDS = CARD_GRIDS.crop(area=(77, 5, 138, 27), name='LEVEL')
-    CARD_EMOTION_GRIDS = CARD_GRIDS.crop(area=(23, 29, 48, 52), name='EMOTION')
 else:
     CARD_LEVEL_GRIDS = CARD_GRIDS.crop(area=(74, 5, 136, 27), name='LEVEL')
+
+if server.server != 'jp':
+    CARD_EMOTION_GRIDS = CARD_GRIDS.crop(area=(23, 29, 48, 52), name='EMOTION')
+else:
     CARD_EMOTION_GRIDS = CARD_GRIDS.crop(area=(21, 29, 71, 48), name='EMOTION')
 
 DOCK_SCROLL = Scroll(DOCK_SCROLL, color=(247, 211, 66), name='DOCK_SCROLL')
 
 OCR_DOCK_SELECTED = DigitCounter(DOCK_SELECTED, threshold=64, name='OCR_DOCK_SELECTED')
+KR_DOCK_FILTER = Button(
+    area=(1100, 7, 1190, 57), color=(74, 106, 166),
+    button=(1100, 7, 1190, 57), name='KR_DOCK_FILTER')
+KR_DOCK_FILTER_CONFIRM = Button(
+    area=(712, 642, 888, 703), color=(83, 143, 207),
+    button=(712, 642, 888, 703), name='KR_DOCK_FILTER_CONFIRM')
+KR_DOCK_EMPTY_TEXT = Button(
+    area=(85, 340, 430, 385), color=(238, 235, 239),
+    button=(85, 340, 430, 385), name='KR_DOCK_EMPTY_TEXT')
+KR_DOCK_EMPTY_ICON = Button(
+    area=(1080, 290, 1210, 430), color=(173, 54, 59),
+    button=(1080, 290, 1210, 430), name='KR_DOCK_EMPTY_ICON')
 
 
 class Dock(Equipment):
+    def dock_empty_appear(self):
+        if self.appear(DOCK_EMPTY, offset=(20, 20)):
+            return True
+        if self.config.SERVER == 'kr':
+            return self.image_color_count(
+                KR_DOCK_EMPTY_TEXT, color=KR_DOCK_EMPTY_TEXT.color,
+                threshold=35, count=700) and self.image_color_count(
+                KR_DOCK_EMPTY_ICON, color=KR_DOCK_EMPTY_ICON.color,
+                threshold=55, count=900)
+        return False
+
+    def _dock_filter_confirm_appear(self, interval=0):
+        if self.appear(DOCK_FILTER_CONFIRM, offset=(20, 60), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                KR_DOCK_FILTER_CONFIRM,
+                color=KR_DOCK_FILTER_CONFIRM.color,
+                threshold=45, count=1200):
+            return True
+        return False
+
     def handle_dock_cards_loading(self, skip_first_screenshot=True):
         # Poor implementation
         # confirm_timer method cannot be used
@@ -46,7 +97,7 @@ class Dock(Equipment):
                 self.device.screenshot()
 
             # Quick exit if dock is empty
-            if self.appear(DOCK_EMPTY):
+            if self.dock_empty_appear():
                 logger.info('Dock empty')
                 break
             # Otherwise we just wait 1.2s
@@ -83,10 +134,14 @@ class Dock(Equipment):
         logger.info('Dock filter enter')
         self.interval_clear(DOCK_CHECK)
         for _ in self.loop():
-            if self.appear(DOCK_FILTER_CONFIRM, offset=(20, 60)):
+            if self._dock_filter_confirm_appear():
                 break
-            if self.appear(DOCK_CHECK, offset=(20, 20), interval=5):
-                self.device.click(DOCK_FILTER)
+            if self.appear(DOCK_CHECK, offset=(20, 20), interval=5) or (
+                    self.config.SERVER == 'kr' and self.ui_page_appear(page_dock)):
+                if self.config.SERVER == 'kr':
+                    self.device.click(KR_DOCK_FILTER)
+                else:
+                    self.device.click(DOCK_FILTER)
                 continue
             # slow popups from last retirement
             # Equip confirm
@@ -115,10 +170,16 @@ class Dock(Equipment):
             # End
             # sometimes you have dock filter without black-blurred background
             # DOCK_FILTER_CONFIRM and DOCK_CHECK appears
-            if not self.appear(DOCK_FILTER_CONFIRM, offset=(20, 60)):
+            if self.config.SERVER == 'kr' and self.ui_page_appear(page_dock):
+                break
+            if not self._dock_filter_confirm_appear():
                 if self.appear(DOCK_CHECK, offset=(20, 20)):
                     break
-            if self.appear_then_click(DOCK_FILTER_CONFIRM, offset=(20, 60), interval=3):
+            if self._dock_filter_confirm_appear(interval=3):
+                if self.config.SERVER == 'kr':
+                    self.device.click(KR_DOCK_FILTER_CONFIRM)
+                else:
+                    self.device.click(DOCK_FILTER_CONFIRM)
                 continue
 
         if wait_loading:
@@ -307,7 +368,7 @@ class Dock(Equipment):
             # End
             if self.appear(SHIP_DETAIL_CHECK, offset=(20, 20)):
                 return True
-            if self.appear(DOCK_EMPTY, offset=(20, 20)):
+            if self.dock_empty_appear():
                 logger.info('Dock empty')
                 return False
 

@@ -4,6 +4,7 @@ from module.base.timer import Timer
 from module.campaign.campaign_status import CampaignStatus
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2
 from module.config.utils import get_server_weekday
+from module.exception import RequestHumanTakeover
 from module.freebies.assets import *
 from module.logger import logger
 from module.ocr.ocr import Digit
@@ -19,15 +20,19 @@ class SupplyPack(CampaignStatus):
         Returns:
             bool: If found.
         """
-        for _ in range(9):
+        for attempt in range(9):
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
+            if self.appear(BUY_CONFIRM, offset=(20, 20)):
+                raise RequestHumanTakeover('Unselected supply-pack purchase confirmation; refusing to confirm')
             if self.appear(supply_pack, offset=(0, -20, 400, 20)):
                 return True
-            self.device.swipe_vector((-400, 0), box=(230, 200, 1060, 600))            
+            if attempt == 8 or not self.appear(page_supply_pack.check_button, offset=(20, 20)):
+                break
+            self.device.swipe_vector((-400, 0), box=(230, 200, 1060, 600))
 
         logger.warning(f'Supply pack {supply_pack} not found after 8 swipes')
         return False
@@ -64,14 +69,18 @@ class SupplyPack(CampaignStatus):
                 click_count += 1
                 confirm_timer.reset()
                 continue
-            if self.appear_then_click(BUY_CONFIRM, offset=(20, 20), interval=3):
-                confirm_timer.reset()
-                continue
-            if self.handle_popup_confirm('BUY_SUPPLY_PACK'):
-                self.interval_reset(supply_pack)
-                self.interval_reset(BUY_CONFIRM)
-                executed = True
-                continue
+            if not click_count and self.appear(BUY_CONFIRM, offset=(20, 20)):
+                raise RequestHumanTakeover('Unselected supply-pack purchase confirmation; refusing to confirm')
+            # A confirmation left by another action is not authorization to buy.
+            if click_count:
+                if self.appear_then_click(BUY_CONFIRM, offset=(20, 20), interval=3):
+                    confirm_timer.reset()
+                    continue
+                if self.handle_popup_confirm('BUY_SUPPLY_PACK'):
+                    self.interval_reset(supply_pack)
+                    self.interval_reset(BUY_CONFIRM)
+                    executed = True
+                    continue
             for button in [GET_ITEMS_1, GET_ITEMS_2]:
                 if self.appear_then_click(button, offset=(30, 30), interval=3):
                     confirm_timer.reset()
@@ -104,16 +113,22 @@ class SupplyPack(CampaignStatus):
         """
         self.ui_ensure(page_shop)
         self.goto_supply_pack()
-        if self.get_oil() < 21000:
+        oil = self.get_oil()
+        if oil is None:
+            logger.warning('Cannot verify oil balance; skip free weekly supply pack')
+            return
+        if oil < 21000:
             server_today = get_server_weekday()
             target = self.config.SupplyPack_DayOfWeek
             target_name = day_name[target]
             if server_today >= target:
-                self.supply_pack_buy(FREE_SUPPLY_PACK)
+                executed = self.supply_pack_buy(FREE_SUPPLY_PACK)
+                if not executed and self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_free_supply_unexecuted.png')
             else:
                 logger.info(f'Delaying free week supply pack to {target_name}')
         else:
-            logger.info('Oil > 21000, unable to buy free weekly supply pack')
+            logger.info('Oil >= 21000, unable to buy free weekly supply pack')
 
 
 class SupplyPack_250814(SupplyPack):
@@ -132,6 +147,8 @@ class SupplyPack_250814(SupplyPack):
 
             if timeout.reached():
                 logger.warning('Get oil timeout')
+                if self.config.SERVER == 'kr':
+                    return None
                 break
 
             if not self.appear(SHOP_OCR_OIL_CHECK, offset=(10, 2)):

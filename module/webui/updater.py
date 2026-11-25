@@ -197,6 +197,9 @@ class Updater(DeployConfig, GitManager, PipManager):
         try:
             self.git_install()
             self.pip_install()
+        except (RuntimeError, subprocess.CalledProcessError) as exc:
+            logger.error(f"Update stopped without resetting the working tree: {exc}")
+            return False
         except ExecutionError:
             return False
         return True

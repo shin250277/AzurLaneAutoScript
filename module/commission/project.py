@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from functools import lru_cache
 
 from module.base.decorator import Config
 from module.base.filter import Filter
@@ -55,6 +56,55 @@ def crop_suffix_image(image, area):
     image = crop(image, suffix_area)
     image = extract_letters(image, letter=(255, 255, 255), threshold=128).astype(np.uint8)
     return image
+
+
+def crop_kr_name_image(image, area):
+    """Keep the complete KR title, including its Roman numeral, without OCR."""
+    letters = extract_letters(crop(image, area), letter=(255, 255, 255), threshold=128).astype(np.uint8)
+    points = cv2.findNonZero((letters < 128).astype(np.uint8))
+    if points is None:
+        return None
+    x, y, width, height = cv2.boundingRect(points)
+    return letters[y:y + height, x:x + width].copy()
+
+
+def kr_name_images_match(first, second, similarity=0.90):
+    if first is None or second is None:
+        return False
+    # Do not match a short title/numeral as a substring of a longer one.
+    if any(abs(a - b) > 2 for a, b in zip(first.shape, second.shape)):
+        return False
+    scores = []
+    for image, template in ((first, second), (second, first)):
+        padded = cv2.copyMakeBorder(image, 2, 2, 2, 2, cv2.BORDER_CONSTANT, value=255)
+        result = cv2.matchTemplate(padded, template, cv2.TM_CCOEFF_NORMED)
+        scores.append(cv2.minMaxLoc(result)[1])
+    return min(scores) >= similarity
+
+
+@lru_cache(maxsize=1)
+def _kr_name_templates():
+    templates = []
+    for name, genre in dictionary_kr_visual.items():
+        path = './assets/kr/commission/names/{}.png'.format(name)
+        image = cv2.imread(path, cv2.IMREAD_GRAYSCALE)
+        if image is None:
+            raise FileNotFoundError(path)
+        templates.append((name, image))
+    return templates
+
+
+def classify_kr_name_key(image):
+    if image is None:
+        return ''
+    matches = {dictionary_kr_visual_aliases.get(name, name) for name, template in _kr_name_templates()
+               if kr_name_images_match(image, template)}
+    # Ambiguous names must not be merged even when they have the same genre.
+    return next(iter(matches)) if len(matches) == 1 else ''
+
+
+def classify_kr_name(image):
+    return dictionary_kr_visual.get(classify_kr_name_key(image), '')
 
 
 def image_hash(image):
@@ -186,15 +236,32 @@ class Commission:
         button = Button(area=area, color=(), button=area, name='COMMISSION')
         ocr = Ocr(button, letter=(201, 201, 201), lang='jp')
         self.button = button
-        result = ocr.ocr(self.image).upper()
-        # NB装備輸送 -> NYB装備輸送
-        result = result.replace('NB', 'BYB').replace('BW', 'BIW')
+        if self.config.SERVER == 'kr':
+            # No Korean model is bundled. Avoid mojibake in logs (and on
+            # legacy Windows consoles) instead of running the JP model.
+            result = 'KR_COMMISSION'
+        else:
+            result = ocr.ocr(self.image).upper()
+            # NB装備輸送 -> NYB装備輸送
+            result = result.replace('NB', 'BYB').replace('BW', 'BIW')
         self.name = result
-        self.genre = self.commission_name_parse(self.name)
+        # KR currently falls back to JP assets, but the bundled JP OCR model
+        # turns Korean names into arbitrary CJK glyphs. Those glyphs can
+        # accidentally match a JP commission and produce a worse result than
+        # an explicit generic classification.
+        if self.config.SERVER == 'kr':
+            self.genre = ''
+        else:
+            self.genre = self.commission_name_parse(self.name)
 
         # Suffix
         self.suffix_image = crop_suffix_image(self.image, self.button.area)
         self.suffix_hash = image_hash(self.suffix_image)
+        if self.config.SERVER == 'kr':
+            self.name = f'KR_COMMISSION_{self.suffix_hash[:8]}'
+            self.kr_name_image = crop_kr_name_image(self.image, self.button.area)
+            self.kr_name_key = classify_kr_name_key(self.kr_name_image)
+            self.kr_name_genre = dictionary_kr_visual.get(self.kr_name_key, '')
 
         # Duration time
         area = area_offset((290, 68, 390, 95), self.area[0:2])
@@ -225,6 +292,22 @@ class Commission:
         if self.genre == 'daily_event':
             color -= [50, 30, 20]
         self.status = dic[int(np.argmax(color))]
+
+        # ALAS does not bundle a Korean OCR model. Keep Korean commissions
+        # usable with stable timing metadata and never infer reward type from
+        # the JP model's mojibake output.
+        if self.config.SERVER == 'kr':
+            if self.kr_name_genre:
+                self.genre = self.kr_name_genre
+            elif self.expire:
+                self.genre = 'urgent_drill'
+            elif self.duration >= timedelta(hours=8):
+                self.genre = 'major_comm'
+            else:
+                self.genre = 'extra_drill'
+            self.valid = self.kr_name_image is not None
+            source = 'name template' if self.kr_name_genre else 'fallback'
+            logger.info(f'Korean commission {source}: {self.genre}, duration={self.duration}')
 
     @Config.when(SERVER='tw')
     def commission_parse(self):
@@ -347,7 +430,11 @@ class Commission:
             return False
         if self.genre != other.genre or self.status != other.status:
             return False
-        if self.category_str == 'daily':
+        korean_name = hasattr(self, 'kr_name_image') or hasattr(other, 'kr_name_image')
+        if korean_name:
+            if not self.kr_name_match(other):
+                return False
+        if self.category_str == 'daily' and not korean_name:
             if not self.suffix_match(other):
                 return False
         if self.genre == 'urgent_box':
@@ -365,13 +452,27 @@ class Commission:
                 return False
         if self.repeat_count != other.repeat_count:
             return False
-        if self.genre in ['extra_oil', 'night_oil'] and not self.suffix_match(other):
+        if not korean_name and self.genre in ['extra_oil', 'night_oil'] and not self.suffix_match(other):
             return False
 
         return True
 
     def __hash__(self):
+        if hasattr(self, 'kr_name_image'):
+            # Visually equal names may have different pixel hashes or only one
+            # recognized template key. Genre is checked by every equality path.
+            return hash(self.genre)
         return hash(f'{self.genre}_{self.name}')
+
+    def kr_name_match(self, other, similarity=0.90):
+        if getattr(self, 'kr_name_image', None) is None or getattr(other, 'kr_name_image', None) is None:
+            return False
+        first_key = getattr(self, 'kr_name_key', '')
+        second_key = getattr(other, 'kr_name_key', '')
+        if first_key and second_key:
+            return first_key == second_key
+        return kr_name_images_match(getattr(self, 'kr_name_image', None),
+                                    getattr(other, 'kr_name_image', None), similarity)
 
     def suffix_match(self, other, similarity=0.75):
         """

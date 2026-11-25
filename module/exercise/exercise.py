@@ -46,7 +46,11 @@ class DatedDuration(Ocr):
             datetime.timedelta:
         """
         import re
-        result = re.search(r'(\d{1,2})\D?(\d{1,2}):?(\d{2}):?(\d{2})', string)
+        # Without a day separator, HH must retain both digits. Otherwise
+        # KR OCR "808:37:44" is greedily split into 80 days and 8 hours.
+        result = re.search(r'(\d{1,2})\D+(\d{1,2}):?(\d{2}):?(\d{2})', string)
+        if result is None:
+            result = re.search(r'(\d{1,2})(\d{2}):?(\d{2}):?(\d{2})', string)
         if result:
             result = [int(s) for s in result.groups()]
             return timedelta(days=result[0], hours=result[1], minutes=result[2], seconds=result[3])

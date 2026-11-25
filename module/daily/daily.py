@@ -1,14 +1,41 @@
 import numpy as np
 
 import module.config.server as server
+from module.base.button import Button
 from module.base.utils import get_color
 from module.combat.assets import BATTLE_PREPARATION
 from module.combat.combat import Combat
 from module.daily.assets import *
+from module.exception import RequestHumanTakeover
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.ui.assets import BACK_ARROW, DAILY_CHECK
 from module.ui.page import page_campaign_menu, page_daily
+
+
+KR_DAILY_SKIP = Button(
+    area=(825, 295, 975, 351),
+    color=(128, 164, 210),
+    button=(817, 286, 981, 358),
+    file='./assets/kr/daily/DAILY_SKIP.png',
+    name='KR_DAILY_SKIP',
+)
+KR_DAILY_NORMAL_RUN = Button(
+    area=(408, 295, 560, 351),
+    color=(239, 176, 99),
+    button=(400, 286, 566, 358),
+    file='./assets/kr/daily/DAILY_NORMAL_RUN.png',
+    name='KR_DAILY_NORMAL_RUN',
+)
+KR_DAILY_INFO_CONFIRM = Button(
+    area=(615, 497, 665, 529),
+    color=(109, 151, 205),
+    button=(552, 496, 728, 555),
+    name='KR_DAILY_INFO_CONFIRM',
+)
+KR_DAILY_DISMISS = Button(
+    area=(180, 620, 260, 660), color=(0, 0, 0),
+    button=(180, 620, 260, 660), name='KR_DAILY_DISMISS')
 
 DAILY_MISSION_LIST = [DAILY_MISSION_1, DAILY_MISSION_2, DAILY_MISSION_3]
 if server.server != 'jp':
@@ -141,14 +168,14 @@ class Daily(Combat):
     @property
     def supply_line_disruption_index(self):
         if self.emergency_module_development:
-            return 2
+            return 6
         else:
             return 2
 
     @property
     def empty_index(self):
         if self.emergency_module_development:
-            return 4
+            return 8  # All seven displayed tasks are present in this layout.
         else:
             return 4
 
@@ -177,6 +204,7 @@ class Daily(Combat):
                 self.device.click(BACK_ARROW)
             return self.appear(DAILY_ENTER_CHECK, threshold=30) or self.appear(BACK_ARROW, offset=(30, 30))
 
+        self._kr_daily_skip_returned = False
         self.ui_click(click_button=DAILY_ENTER, check_button=daily_enter_check, appear_button=DAILY_CHECK,
                       skip_first_screenshot=True)
         if self.appear(DAILY_LOCKED):
@@ -190,9 +218,21 @@ class Daily(Combat):
             logger.hr(f'Count {n + 1}')
             result = self.daily_enter(button)
             if not result:
+                # KR quick battle consumes one attempt and returns directly to
+                # the daily list. Re-enter the same daily until all attempts
+                # observed at the start have been consumed.
+                if self.config.SERVER == 'kr' and self._kr_daily_skip_returned and n + 1 < remain:
+                    self._kr_daily_skip_returned = False
+                    self.ui_click(
+                        click_button=DAILY_ENTER,
+                        check_button=daily_enter_check,
+                        appear_button=DAILY_CHECK,
+                        skip_first_screenshot=True,
+                    )
+                    continue
                 break
             if self.daily_current == self.supply_line_disruption_index:
-                logger.info('Submarine daily skip not unlocked, skip')
+                logger.info('Supply Line Disruption quick battle not unlocked, skip')
                 self.ui_click(click_button=BACK_ARROW, check_button=daily_enter_check, skip_first_screenshot=True)
                 break
             # Execute classic daily run
@@ -200,10 +240,34 @@ class Daily(Combat):
                                  next_button=DAILY_FLEET_NEXT, fast=False, skip_first_screenshot=True)
             self.combat(emotion_reduce=False, save_get_items=False, expected_end=daily_end, balance_hp=False)
 
-        self.ui_click(click_button=BACK_ARROW, check_button=DAILY_CHECK, additional=self.handle_daily_additional,
-                      skip_first_screenshot=True)
+        if self._kr_daily_skip_returned:
+            # The quick-battle selector closes directly to the daily list.
+            # Page detection is localized in UI and the inherited
+            # DAILY_CHECK asset cannot be used here.
+            self.device.sleep((0.5, 0.7))
+        else:
+            self.ui_click(click_button=BACK_ARROW, check_button=DAILY_CHECK, additional=self.handle_daily_additional,
+                          skip_first_screenshot=True)
         self.device.sleep((1, 1.2))
         return True
+
+    def close_korean_daily_selector(self):
+        """Dismiss outside the modal, then verify the actual daily carousel.
+
+        The blurred back arrow behind the selector is not a close control.
+        Never submit another quick battle while acknowledging one reward.
+        """
+        for _ in self.loop(timeout=8, skip_first=False):
+            if self.match_template_color(DAILY_CHECK, offset=(30, 30), threshold=15):
+                return True
+            if self.match_template_color(KR_DAILY_SKIP, offset=(20, 20)):
+                self.device.click(KR_DAILY_DISMISS)
+                continue
+            if self.appear(DAILY_ENTER_CHECK, threshold=30, interval=2):
+                self.device.click(BACK_ARROW)
+                continue
+            self.handle_get_items()
+        raise RequestHumanTakeover('KR daily reward received but return unconfirmed; no repeat battle')
 
     def daily_enter(self, button, skip_first_screenshot=True):
         """
@@ -225,17 +289,43 @@ class Daily(Combat):
             else:
                 self.device.screenshot()
 
+            # The KR carousel can resemble the blue quick-battle button.
+            # Never click a selector on the daily list. A return without a
+            # reward means the previously observed count/page is stale.
+            if self.config.SERVER == 'kr' and self.match_template_color(
+                    DAILY_CHECK, offset=(30, 30), threshold=15):
+                if reward_received:
+                    self._kr_daily_skip_returned = True
+                    return False
+                raise RequestHumanTakeover(
+                    'KR daily returned to list before reward; verify remaining attempts')
+
             if self.appear(DAILY_ENTER_CHECK, threshold=30, interval=5):
                 self.device.click(button)
                 continue
             if self.handle_get_items():
                 reward_received = True
                 continue
-            if self.config.Daily_UseDailySkip:
-                if self.appear_then_click(DAILY_SKIP, offset=(20, 20), interval=5):
+            # KR shows a first-use auto-battle tutorial over the quick-battle
+            # selector. Handle it before looking for the dimmed selector below.
+            if self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_DAILY_INFO_CONFIRM, color=KR_DAILY_INFO_CONFIRM.color,
+                    threshold=20, count=700):
+                self.device.click(KR_DAILY_INFO_CONFIRM)
+                continue
+            if self.config.Daily_UseDailySkip and (not reward_received or self.config.SERVER != 'kr'):
+                if self.config.SERVER == 'kr':
+                    if self.match_template_color(KR_DAILY_SKIP, offset=(20, 20), interval=5):
+                        self.device.click(KR_DAILY_SKIP)
+                        continue
+                elif self.appear_then_click(DAILY_SKIP, offset=(20, 20), interval=5):
                     continue
-            else:
-                if self.appear_then_click(DAILY_NORMAL_RUN, offset=(20, 20), interval=5):
+            elif not self.config.Daily_UseDailySkip:
+                if self.config.SERVER == 'kr':
+                    if self.match_template_color(KR_DAILY_NORMAL_RUN, offset=(20, 20), interval=5):
+                        self.device.click(KR_DAILY_NORMAL_RUN)
+                        continue
+                elif self.appear_then_click(DAILY_NORMAL_RUN, offset=(20, 20), interval=5):
                     continue
             if self.handle_combat_automation_confirm():
                 continue
@@ -245,8 +335,16 @@ class Daily(Combat):
                 continue
 
             # End
-            if self.appear(DAILY_SKIP, offset=(20, 20)):
+            selector_visible = (self.match_template_color(KR_DAILY_SKIP, offset=(20, 20))
+                                if self.config.SERVER == 'kr'
+                                else self.appear(DAILY_SKIP, offset=(20, 20)))
+            if selector_visible:
                 if reward_received:
+                    # KR keeps the quick-battle selector open after rewards.
+                    # Close it before the caller tries to leave the daily
+                    # detail page; the blurred BACK_ARROW cannot be matched.
+                    if self.config.SERVER == 'kr':
+                        self._kr_daily_skip_returned = self.close_korean_daily_selector()
                     return False
                 if self.info_bar_count():
                     return False
@@ -314,7 +412,15 @@ class Daily(Combat):
                 self.daily_check()
                 # The order of daily tasks will be disordered after execute a daily, exit and re-enter to reset.
                 # 打完一次之后每日任务的顺序会乱掉, 退出再进入来重置顺序.
-                self.ui_goto(page_campaign_menu)
+                if self.config.SERVER == 'kr' and self._kr_daily_skip_returned:
+                    # The localized daily page check is handled in UI, while
+                    # ui_goto's direct path starts from inherited DAILY_CHECK.
+                    self.device.click(BACK_ARROW)
+                    for _ in self.loop():
+                        if self.ui_page_appear(page_campaign_menu):
+                            break
+                else:
+                    self.ui_goto(page_campaign_menu)
                 break
 
     def daily_run(self):

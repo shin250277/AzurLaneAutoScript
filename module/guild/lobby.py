@@ -9,6 +9,7 @@ from module.guild.base import GuildBase
 from module.logger import logger
 from module.map_detection.utils import Points
 from module.ui.assets import GUILD_CHECK
+from module.ui.page import page_guild
 
 
 class GuildLobby(GuildBase):
@@ -50,7 +51,7 @@ class GuildLobby(GuildBase):
             else:
                 self.device.screenshot()
 
-            if click_timer.reached() and self.appear(GUILD_CHECK, offset=(20, 20)):
+            if click_timer.reached() and self.ui_page_appear(page_guild):
                 button = self.guild_lobby_get_report()
                 if button is not None:
                     self.device.click(button)
@@ -78,7 +79,7 @@ class GuildLobby(GuildBase):
                 continue
 
             # End
-            if self.appear(GUILD_CHECK, offset=(20, 20)):
+            if self.ui_page_appear(page_guild):
                 if confirm_timer.reached():
                     break
             else:

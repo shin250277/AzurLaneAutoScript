@@ -71,8 +71,14 @@ class CoalitionUI(Combat):
         elif event == 'coalition_20260723':
             # HORROR mode has appear animation so enlarge search area
             mode_switch = HorrorSwitch('CoalitionMode', offset=(50, 20))
-            mode_switch.add_state('story', HORROR_MODE_STORY)
-            mode_switch.add_state('battle', HORROR_MODE_BATTLE)
+            if self.config.SERVER == 'kr':
+                # The selected KR logo is animated continuously. Detect the
+                # stable inactive logo on the opposite side instead.
+                mode_switch.add_state('story', HORROR_MODE_BATTLE)
+                mode_switch.add_state('battle', HORROR_MODE_STORY)
+            else:
+                mode_switch.add_state('story', HORROR_MODE_STORY)
+                mode_switch.add_state('battle', HORROR_MODE_BATTLE)
         else:
             logger.error(f'MODE_SWITCH is not defined in event {event}')
             raise ScriptError

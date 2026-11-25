@@ -1,3 +1,4 @@
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import crop, rgb2gray
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2, GET_ITEMS_3, GET_ITEMS_3_CHECK
@@ -6,12 +7,25 @@ from module.research.assets import *
 from module.research.project import RESEARCH_STATUS
 from module.research.series import RESEARCH_SCALING
 from module.ui.assets import BACK_ARROW, RESEARCH_CHECK
+from module.ui.page import page_research
 from module.ui.ui import UI
+
+KR_RESEARCH_GET_ITEMS = Button(
+    area=(565, 127, 748, 171), color=(135, 164, 206),
+    button=(570, 535, 710, 585),
+    file='./assets/kr/research/KR_RESEARCH_GET_ITEMS.png',
+    name='KR_RESEARCH_GET_ITEMS')
 
 
 class ResearchUI(UI):
     def is_in_research(self, interval=0):
-        return self.appear(RESEARCH_CHECK, offset=(20, 20), interval=interval)
+        if self.config.SERVER == 'kr':
+            # The localized title remains visible behind project details.
+            # Do not reopen a project or declare start success through them.
+            for button in (RESEARCH_START, RESEARCH_STOP, RESEARCH_UNAVAILABLE):
+                if self.appear(button, offset=(20, 20)):
+                    return False
+        return self.ui_page_appear(page_research, offset=(20, 20), interval=interval)
 
     def is_in_queue(self, interval=0):
         return self.appear(QUEUE_CHECK, offset=(20, 20), interval=interval)
@@ -28,6 +42,10 @@ class ResearchUI(UI):
             in: is_in_research
             out: is_in_queue
         """
+        if (self.config.SERVER == 'kr' and not self.is_in_research()
+                and self.ui_page_appear(page_research, offset=(20, 20))):
+            # A restarted worker can inherit an open project detail overlay.
+            self.research_detail_quit()
         self.ui_click(RESEARCH_GOTO_QUEUE, check_button=self.is_in_queue, appear_button=self.is_in_research,
                       retry_wait=1, skip_first_screenshot=skip_first_screenshot)
 
@@ -54,6 +72,12 @@ class ResearchUI(UI):
                 logger.info(f'{GET_ITEMS_1} -> {GET_ITEMS_RESEARCH_SAVE}')
                 self.device.click(GET_ITEMS_RESEARCH_SAVE)
                 continue
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_RESEARCH_GET_ITEMS, offset=(3, 3),
+                    interval=3, similarity=0.75):
+                logger.info(f'{KR_RESEARCH_GET_ITEMS} -> {GET_ITEMS_RESEARCH_SAVE}')
+                self.device.click(GET_ITEMS_RESEARCH_SAVE)
+                continue
 
         self.ensure_research_center_stable()
 
@@ -62,6 +86,9 @@ class ResearchUI(UI):
         Returns:
             Button:
         """
+        if self.config.SERVER == 'kr' and self.appear(
+                KR_RESEARCH_GET_ITEMS, offset=(3, 3), similarity=0.75):
+            return KR_RESEARCH_GET_ITEMS
         if self.appear(GET_ITEMS_3, offset=(5, 5)):
             if self.image_color_count(GET_ITEMS_3_CHECK, color=(255, 255, 255), threshold=30, count=100):
                 return GET_ITEMS_3
@@ -117,6 +144,13 @@ class ResearchUI(UI):
                 out.append('unknown')
 
         logger.info(f'Research status: {out}')
+        if (self.config.SERVER == 'kr' and out == ['detail', 'detail', 'unknown', 'detail', 'detail']
+                and image is self.device.image
+                and not getattr(self, '_kr_center_unknown_saved', False)):
+            # Keep one real center-card failure per worker for offline diagnosis.
+            # Do not save unrelated supplied images or change navigation decisions.
+            self.device.image_save('./log/kr_research_center_unknown.png')
+            self._kr_center_unknown_saved = True
         return out
 
     def is_research_stabled(self):

@@ -2,6 +2,7 @@ import time
 
 import inflection
 
+from module.base.button import Button
 from module.base.timer import Timer
 from module.config.utils import get_os_reset_remain
 from module.exception import CampaignEnd, GameTooManyClickError, MapWalkError, RequestHumanTakeover, ScriptError
@@ -17,6 +18,14 @@ from module.os_handler.assets import AUTO_SEARCH_OS_MAP_OPTION_OFF, AUTO_SEARCH_
 from module.os_handler.strategic import StrategicSearchHandler
 from module.ui.assets import GOTO_MAIN
 from module.ui.page import page_os
+
+
+KR_OS_MISSION_COMPLETE = Button(
+    area=(470, 340, 655, 365),
+    color=(48, 48, 53),
+    button=(422, 449, 623, 486),
+    file='./assets/kr/os_handler/KR_OS_MISSION_COMPLETE.png',
+)
 
 
 class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
@@ -90,7 +99,8 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
         self.zone = self.get_globe_pinned_zone()
         self.zone_config_set()
         self.os_globe_goto_map()
-        self.zone_init(fallback_init=False)
+        if self.config.SERVER != 'kr':
+            self.zone_init(fallback_init=False)
         return self.zone
 
     def globe_goto(self, zone, types=('SAFE', 'DANGEROUS'), refresh=False, stop_if_safe=False):
@@ -144,9 +154,16 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
         self.zone_type_select(types=types)
         self.globe_enter(zone)
         # IN_MAP
-        if hasattr(self, 'zone'):
-            del self.zone
-        self.zone_init()
+        if self.config.SERVER == 'kr':
+            # The destination is already known here. KR sector titles are
+            # rendered in Korean and cannot be parsed by the bundled map-name
+            # OCR model, so keep the reliable globe destination instead.
+            self.zone = zone
+            self.zone_config_set()
+        else:
+            if hasattr(self, 'zone'):
+                del self.zone
+            self.zone_init()
         # self.map_init()
         return True
 
@@ -232,6 +249,24 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
             return False
 
         self.hp_get()
+        if self.config.SERVER == 'kr':
+            # Globe-to-map transitions can hide every HP bar while the cached
+            # fleet still contains ships. Do not treat that frame as damage.
+            for attempt in range(4):
+                if not (any(self.hp_has_ship) and all(hp == 0 for hp in self.hp)
+                        and not any(self.need_repair)):
+                    break
+                if not getattr(self, '_kr_zero_hp_saved', False):
+                    self.device.image_save('./log/kr_os_zero_hp.png')
+                    self._kr_zero_hp_saved = True
+                    logger.warning('KR all-zero HP without repair icons; diagnostic saved')
+                if attempt == 3:
+                    logger.warning('KR HP remains unreadable; stop before port repair')
+                    raise RequestHumanTakeover
+                logger.info('KR ambiguous zero HP, wait for fleet bars and recheck')
+                self.device.sleep(0.5)
+                self.device.screenshot()
+                self.hp_get()
         check = [round(data, 2) <= self.config.OpsiGeneral_RepairThreshold if use else False
                  for data, use in zip(self.hp, self.hp_has_ship)]
         if any(check):
@@ -479,7 +514,9 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
         logger.hr('OS auto search', level=2)
         self.on_auto_search_battle_count_reset()
         unlock_checked = False
-        unlock_check_timer = Timer(5, count=10).start()
+        # KR can show the previous zone's rewards after returning from EMP
+        # recovery. Allow a bounded transition window, not an unlock bypass.
+        unlock_check_timer = Timer(15 if self.config.SERVER == 'kr' else 5, count=10).start()
         self.ash_popup_canceled = False
 
         success = True
@@ -489,12 +526,6 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
         self.device.stuck_record_clear()
         self.hp_reset()
         for _ in self.loop():
-            # End
-            if not unlock_checked and unlock_check_timer.reached():
-                logger.critical('Unable to use auto search in current zone')
-                logger.critical('Please finish the story mode of OpSi to unlock auto search '
-                                'before using any OpSi functions')
-                raise RequestHumanTakeover
             if self.is_in_map():
                 if not success:
                     self.walk_counter_changed(reset=True)
@@ -531,12 +562,28 @@ class OSMap(OSFleet, Map, GlobeCamera, StrategicSearchHandler):
                 self.walk_counter_changed(reset=True)
                 unlock_checked = True
                 continue
+            # A reward can arrive on the first frame after the deadline.
+            # Handle known controls before deciding that search is unavailable.
+            if not unlock_checked and unlock_check_timer.reached():
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_os_search_unavailable.png')
+                logger.critical('Unable to recognize auto search in current zone')
+                logger.critical('Check the current screen and OpSi auto-search unlock status')
+                raise RequestHumanTakeover
             if self.handle_retirement():
                 # Retire will interrupt auto search, need a retry
                 self.walk_counter_changed(reset=True)
                 self.ash_popup_canceled = True
                 continue
+            if self.config.SERVER == 'kr' and self.appear_then_click(
+                    KR_OS_MISSION_COMPLETE, offset=(20, 20), interval=2):
+                # Korean OpSi displays a mission-completion notice over the
+                # tactical map. Close it without leaving auto-search.
+                continue
             if self.combat_appear():
+                # Entry can go straight into combat before a map option is seen.
+                # A completed battle must not trip the initial recognition timer.
+                unlock_checked = True
                 self.walk_counter_changed(reset=True)
                 self.on_auto_search_battle_count_add()
                 if strategic and self.config.task_switched():

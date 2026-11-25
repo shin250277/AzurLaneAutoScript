@@ -4,7 +4,7 @@ from module.base.button import ButtonGrid
 from module.base.timer import Timer
 from module.base.utils import rgb2gray
 from module.combat.assets import GET_ITEMS_1, GET_ITEMS_2
-from module.exception import ScriptError
+from module.exception import ScriptError, RequestHumanTakeover
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.retire.assets import EQUIP_CONFIRM, EQUIP_CONFIRM_2
@@ -167,6 +167,10 @@ class StorageHandler(StorageUI):
             # a long animation that opens a box, will be on the top of BOX_AMOUNT_CONFIRM
             if self.match_template_color(BOX_AMOUNT_CONFIRM, offset=(20, 20), interval=5):
                 actual = self._handle_use_box_amount(amount)
+                if not 1 <= actual <= amount:
+                    self.device.image_save('./log/box_amount_unconfirmed.png')
+                    raise RequestHumanTakeover(
+                        f'Box amount is unsafe: requested={amount}, detected={actual}')
                 self.device.click(BOX_AMOUNT_CONFIRM)
                 self.interval_reset(BOX_AMOUNT_CONFIRM)
                 used = actual
@@ -186,6 +190,13 @@ class StorageHandler(StorageUI):
             # Storage full
             if self.appear(EQUIPMENT_FULL, offset=(20, 20)):
                 logger.info('Storage full')
+                if self.config.SERVER == 'kr':
+                    # The localized message confirms this is the full-storage
+                    # modal. Its LEFT button opens existing equipment; never
+                    # use the right-hand expansion button.
+                    self.ui_click(EQUIPMENT_FULL, check_button=DISASSEMBLE_CANCEL,
+                                  skip_first_screenshot=True, retry_wait=3)
+                    raise StorageFull
                 # Close popup
                 self.ui_click(MATERIAL_ENTER, check_button=self._storage_in_material, appear_button=EQUIPMENT_FULL,
                               retry_wait=3, skip_first_screenshot=True)

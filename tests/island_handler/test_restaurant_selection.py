@@ -291,6 +291,7 @@ def test_single_active_role_selects_only_one_character(monkeypatch):
 
 def test_restaurant_does_not_start_after_selection_failure():
     main = object.__new__(restaurant.IslandRestaurant)
+    main.config = SimpleNamespace(SERVER='cn')
     main.restaurant_running = lambda: False
     main.receive_revenue = lambda: None
     main.restaurant_resting = lambda: False

@@ -379,6 +379,42 @@ class AzurLaneAutoScript:
         from module.raid.run import RaidRun
         RaidRun(config=self.config, device=self.device).run()
 
+    def raid_inspect(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.raid.run import RaidRun
+        from module.ui.page import page_raid
+        ui = RaidRun(config=self.config, device=self.device, task='Raid')
+        if ui.config.SERVER != 'kr':
+            raise RequestHumanTakeover('KR event inspection only')
+        ui.device.screenshot()
+        ui.ui_ensure(page_raid)
+        ui.device.screenshot()
+        ui.device.image_save('./log/kr_raid_inspect.png')
+        logger.info('Raid inspection complete; no battle or purchases')
+
+    def raid_reward_claim(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.raid.run import RaidRun
+        from module.raid.kr_rewards import claim_visible_rewards
+        ui = RaidRun(config=self.config, device=self.device, task='Raid')
+        claim_visible_rewards(ui)
+
+    def raid_trial(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.raid.run import RaidRun
+        ui = RaidRun(config=self.config, device=self.device, task='Raid')
+        if ui.config.SERVER != 'kr' or ui.config.Raid_Mode not in ('easy', 'normal', 'hard'):
+            raise RequestHumanTakeover('Only configured KR non-EX difficulty may run')
+        ui.config.override(Raid_UseTicket=False, StopCondition_RunCount=1,
+                           StopCondition_OilLimit=20000, TaskBalancer_Enable=False,
+                           Retirement_RetireMode='old_retire', OldRetire_N=False,
+                           OldRetire_R=False, OldRetire_SR=False, OldRetire_SSR=False)
+        ui.device.screenshot()
+        ui.run(total=1)
+
     def hospital(self):
         from module.event_hospital.hospital import Hospital
         Hospital(config=self.config, device=self.device).run()
@@ -414,6 +450,48 @@ class AzurLaneAutoScript:
     def island_production(self):
         from module.island.production import IslandProduction
         IslandProduction(config=self.config, device=self.device).run()
+
+    def island_inspect(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.island.inspect import IslandInspect
+        ui = IslandInspect(config=self.config, device=self.device, task='IslandSeasonTask')
+        ui.device.screenshot()
+        ui.run()
+
+    def island_order_trial(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.island.order import IslandOrder
+        from module.island.order_trial import run_trial
+        ui = IslandOrder(config=self.config, device=self.device, task='IslandOrder')
+        ui.device.screenshot()
+        run_trial(ui)
+
+    def event_shop_scan(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.shop_event.scan import EventShopScan
+        ui = EventShopScan(config=self.config, device=self.device, task='EventShop')
+        if ui.config.SERVER != 'kr':
+            raise RequestHumanTakeover('This inspection tool is only for KR')
+        ui.device.screenshot()
+        ui.run()
+
+    def island_production_trial(self):
+        from module.config.server import set_server
+        set_server(self.config.Emulator_PackageName)
+        from module.island.production import IslandProduction
+        from module.island.potato_trial import RECEIPT, collect_trial
+        ui = IslandProduction(config=self.config, device=self.device, task='IslandProduction')
+        if ui.config.SERVER != 'kr':
+            raise RequestHumanTakeover('This bounded trial is only for KR')
+        ui.kr_potato_trial = True
+        ui.device.screenshot()
+        if RECEIPT.exists():
+            collect_trial(ui)
+            return
+        ui.run()
 
     def island_order(self):
         from module.island.order import IslandOrder
@@ -576,8 +654,10 @@ class AzurLaneAutoScript:
             # Init device and change server
             _ = self.device
             self.device.config = self.config
-            # Skip first restart
-            if self.is_first_task and task == 'Restart':
+            # Skip a routine first restart, but honor the UI's explicit
+            # immediate-run sentinel (clearing the next-run input).
+            if (self.is_first_task and task == 'Restart'
+                    and self.config.Scheduler_NextRun != datetime(2020, 1, 1)):
                 logger.info('Skip task `Restart` at scheduler start')
                 self.config.task_delay(server_update=True)
                 del_cached_property(self, 'config')

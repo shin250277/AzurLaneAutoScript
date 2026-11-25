@@ -123,6 +123,8 @@ class GeneralShop_250814(ShopClerk, ShopUI, ShopStatus):
         """
         if self.config.GeneralShop_ConsumeCoins and self._currency >= 550000:
             if item.cost == 'Coins':
+                if self.config.SERVER == 'kr':
+                    return 0 < item.price <= self._currency
                 return True
 
         if self.config.GeneralShop_BuySkinBox:

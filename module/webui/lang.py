@@ -44,10 +44,15 @@ def _t(s, lang=None):
     if not lang:
         lang = LANG
     try:
-        return dic_lang[lang][s]
+        value = dic_lang[lang][s]
+        # Newly added languages can be translated incrementally. The config
+        # generator writes the key itself for untranslated values.
+        if lang != "en-US" and value in (s, s.rsplit(".", 1)[-1]):
+            return dic_lang["en-US"].get(s, s)
+        return value
     except KeyError:
-        print(f"Language key ({s}) not found")
-        return s
+        print(f"Language key ({s}) not found in {lang}, falling back to en-US")
+        return dic_lang.get("en-US", {}).get(s, s)
 
 
 dic_lang: Dict[str, Dict[str, str]] = {}
@@ -65,6 +70,10 @@ def reload():
         for path, v in deep_iter(read_file(filepath_i18n(lang)), depth=3):
             dic_lang[lang][".".join(path)] = v
 
-    for key in dic_lang["ja-JP"].keys():
-        if dic_lang["ja-JP"][key] == key:
-            dic_lang["ja-JP"][key] = dic_lang["en-US"][key]
+    for current_lang in LANGUAGES:
+        if current_lang == "en-US":
+            continue
+        for key, english in dic_lang["en-US"].items():
+            value = dic_lang[current_lang].get(key)
+            if value is None or value in (key, key.rsplit(".", 1)[-1]):
+                dic_lang[current_lang][key] = english

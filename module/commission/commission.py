@@ -15,6 +15,7 @@ from module.dorm.dorm import RewardDorm
 from module.exception import GameStuckError, OilMaxed, RequestHumanTakeover
 from module.handler.info_handler import InfoHandler
 from module.logger import logger
+from module.ocr.ocr import Digit
 from module.map.map_grids import SelectedGrids
 from module.retire.assets import DOCK_CHECK
 from module.ui.assets import BACK_ARROW, REWARD_GOTO_COMMISSION
@@ -27,7 +28,28 @@ from module.ui_white.assets import REWARD_1_WHITE, REWARD_GOTO_COMMISSION_WHITE
 COMMISSION_SWITCH = Switch('Commission_switch', is_selector=True)
 COMMISSION_SWITCH.add_state('daily', COMMISSION_DAILY)
 COMMISSION_SWITCH.add_state('urgent', COMMISSION_URGENT)
+# KR's full sidebar rectangles extend into the back-navigation hit region.
+# Use the observed tab labels, not the outer panel, for selector input.
+KR_COMMISSION_SWITCH = Switch('KR_commission_switch', is_selector=True)
+KR_COMMISSION_SWITCH.add_state('daily', COMMISSION_DAILY, click_button=Button(
+    area=(35, 145, 70, 180), color=(), button=(35, 145, 70, 180),
+    file=None, name='KR_COMMISSION_DAILY_TAB'))
+KR_COMMISSION_SWITCH.add_state('urgent', COMMISSION_URGENT, click_button=Button(
+    area=(35, 240, 70, 275), color=(), button=(35, 240, 70, 275),
+    file=None, name='KR_COMMISSION_URGENT_TAB'))
 COMMISSION_SCROLL = Scroll(COMMISSION_SCROLL_AREA, color=(247, 211, 66), name='COMMISSION_SCROLL')
+KR_COMMISSION_OIL_CONFIRM = Button(
+    area=(422, 329, 856, 360), color=(), button=(422, 329, 856, 360),
+    file='./assets/kr/commission/KR_OIL_NOTICE.png', name='KR_COMMISSION_OIL_CONFIRM')
+KR_COMMISSION_OIL_FIVE_CONFIRM = Button(
+    area=(422, 329, 856, 360), color=(), button=(422, 329, 856, 360),
+    file='./assets/kr/commission/KR_OIL_NOTICE_5.png', name='KR_COMMISSION_OIL_FIVE_CONFIRM')
+KR_COMMISSION_OIL_MAXED = Button(
+    area=(359, 310, 663, 337), color=(), button=(359, 310, 663, 337),
+    file='./assets/kr/commission/KR_OIL_MAXED.png', name='KR_COMMISSION_OIL_MAXED')
+OCR_KR_COMMISSION_OIL = Digit(
+    Button(area=(585, 331, 660, 359), color=(), button=(585, 331, 660, 359),
+           name='KR_COMMISSION_OIL_COST'), letter=(132, 211, 74), threshold=128)
 
 
 def lines_detect(image):
@@ -72,8 +94,10 @@ class RewardCommission(UI, InfoHandler):
         for y in lines_detect(image):
             comm = Commission(image, y=y, config=self.config)
             logger.attr('Commission', comm)
-            repeat = len([c for c in commission if c == comm])
-            comm.repeat_count += repeat
+            # Equality includes repeat_count. Counting matches once assigns
+            # 1, 2, 2 to three identical cards and loses the third on merging.
+            while any(c == comm for c in commission):
+                comm.repeat_count += 1
             commission.append(comm)
 
         return SelectedGrids(commission)
@@ -203,7 +227,8 @@ class RewardCommission(UI, InfoHandler):
         return True
 
     def _commission_ensure_mode(self, mode):
-        if COMMISSION_SWITCH.set(mode, main=self):
+        switch = KR_COMMISSION_SWITCH if self.config.SERVER == 'kr' else COMMISSION_SWITCH
+        if switch.set(mode, main=self):
             # If daily list has commissions > 4, usually to be 5, and 1 <= urgent <= 4
             # commission list will have an animation to scroll,
             # which causes the topmost one undetected.
@@ -254,6 +279,23 @@ class RewardCommission(UI, InfoHandler):
         COMMISSION_SCROLL.set_top(main=self, skip_first_screenshot=True)
         return True
 
+    def _save_kr_commission_selection_mismatch(self):
+        """Retain the selected-card evidence before the mismatch is dismissed."""
+        if self.config.SERVER != 'kr' or getattr(self, '_kr_selection_mismatch_saved', False):
+            return
+        self.device.image_save('./log/kr_commission_selection_mismatch.png')
+        self._kr_selection_mismatch_saved = True
+
+    def _save_kr_commission_scan_frame(self):
+        """Bounded local evidence for KR names/rewards; no extra game input."""
+        if self.config.SERVER != 'kr':
+            return
+        index = getattr(self, '_kr_scan_frame_count', 0)
+        if index >= 8:
+            return
+        self.device.image_save(f'./log/kr_commission_scan_{index}.png')
+        self._kr_scan_frame_count = index + 1
+
     def _commission_scan_list(self):
         """
         Returns:
@@ -263,6 +305,7 @@ class RewardCommission(UI, InfoHandler):
         commission = SelectedGrids([])
         for _ in range(15):
             new = self.commission_detect(trial=2)
+            self._save_kr_commission_scan_frame()
             commission = commission.add_by_eq(new)
 
             # End
@@ -364,10 +407,22 @@ class RewardCommission(UI, InfoHandler):
                 raise GameStuckError('Triggered commission list flashing bug')
 
             # Click
+            if self.config.SERVER == 'kr' and self.appear(
+                    COMMISSION_START, offset=(5, 20), similarity=0.97, interval=1):
+                self.device.click(COMMISSION_START)
+                self.interval_reset(COMMISSION_ADVICE)
+                comm_timer.reset()
+                # The same location becomes Abandon immediately after start.
+                # Do not click it again while waiting for a toast.
+                self.device.sleep(1)
+                return self._kr_commission_start_confirmed(comm, is_urgent=is_urgent)
             if self.match_template_color(COMMISSION_START, offset=(5, 20), interval=7):
                 self.device.click(COMMISSION_START)
                 self.interval_reset(COMMISSION_ADVICE)
                 comm_timer.reset()
+                if self.config.SERVER == 'kr':
+                    self.device.sleep(1)
+                    return self._kr_commission_start_confirmed(comm, is_urgent=is_urgent)
                 continue
             if self.handle_popup_confirm('COMMISSION_START'):
                 self.interval_reset(COMMISSION_ADVICE)
@@ -391,6 +446,7 @@ class RewardCommission(UI, InfoHandler):
                         logger.info('Selected to the correct commission')
                     else:
                         logger.warning('Selected to the wrong commission')
+                        self._save_kr_commission_selection_mismatch()
                         return False
                 else:
                     logger.warning('No selected commission detected, assuming correct')
@@ -406,7 +462,66 @@ class RewardCommission(UI, InfoHandler):
                 self.device.sleep(0.3)
                 comm_timer.reset()
 
+        if self.config.SERVER == 'kr':
+            return self._kr_commission_start_confirmed(comm, is_urgent=is_urgent)
         return True
+
+    def _kr_commission_start_confirmed(self, comm, is_urgent=False):
+        """A toast alone is not proof of departure; re-read the running list."""
+        # Preserve the response before dismissing any toast or popup.
+        self.device.screenshot()
+        self.device.image_save('./log/kr_commission_departure_before_handling.png')
+        self.handle_info_bar()
+        self.device.screenshot()
+        # Only the observed, non-premium 5/10-oil departure notices are allowed.
+        # An unrelated modal (especially Abandon) must still be cancelled.
+        if (self.appear(KR_COMMISSION_OIL_CONFIRM, offset=(5, 5), similarity=0.95)
+                and OCR_KR_COMMISSION_OIL.ocr(self.device.image) == 10):
+            if self.handle_popup_confirm('COMMISSION_OIL_10'):
+                self.device.sleep(1)
+                self.device.screenshot()
+        elif (self.appear(KR_COMMISSION_OIL_FIVE_CONFIRM, offset=(5, 5), similarity=0.95)
+                and OCR_KR_COMMISSION_OIL.ocr(self.device.image) == 5):
+            if self.handle_popup_confirm('COMMISSION_OIL_5'):
+                self.device.sleep(1)
+                self.device.screenshot()
+        # A stale Start coordinate may have opened Abandon. Any modal other
+        # than the verified oil notice above must be cancelled.
+        if self.handle_popup_cancel('COMMISSION_DEPARTURE_VERIFY'):
+            self.device.sleep(0.5)
+            self.device.screenshot()
+        if not self._commission_mode_reset():
+            self.device.image_save('./log/kr_commission_departure_unconfirmed.png')
+            logger.warning('KR commission departure unconfirmed: list is obscured')
+            return False
+        self._commission_swipe_to_top()
+        current = self._commission_scan_list()
+        if is_urgent:
+            current.call('convert_to_night')
+        expected = copy.deepcopy(comm)
+        expected.convert_to_running()
+        expected.expire = timedelta(0)
+        normalize_urgent = (expected.genre == 'urgent_drill'
+                            and not getattr(expected, 'kr_name_genre', ''))
+        confirmed = False
+        for item in current:
+            if normalize_urgent:
+                # Departure removes the red expiry label used by KR fallback.
+                # Use the observed countdown for classification, including an
+                # eight-hour commission that has just ticked below eight hours.
+                # Equality still checks running status, duration and occurrence.
+                expected.expire = timedelta(0)
+                expected.genre = 'major_comm' if item.duration >= timedelta(hours=8) else 'extra_drill'
+                expected.category_str, expected.genre_str = expected.genre.split('_', 1)
+                if is_urgent:
+                    expected.convert_to_night()
+            if item == expected:
+                confirmed = True
+                break
+        logger.attr('KR commission running confirmed', confirmed)
+        if not confirmed:
+            self.device.image_save('./log/kr_commission_departure_pending.png')
+        return confirmed
 
     def _commission_find_and_start(self, comm, is_urgent=False):
         """
@@ -463,6 +578,27 @@ class RewardCommission(UI, InfoHandler):
         self.device.click_record_clear()
         return False
 
+    def _commission_start_kr(self):
+        """Refresh selection after departure: scrolling can split one title into aliases."""
+        for _ in range(4):
+            self._commission_scan_all()
+            choices = [(comm, False) for comm in self.daily_choose]
+            choices += [(comm, True) for comm in self.urgent_choose]
+            started = False
+            for comm, urgent in choices:
+                self._commission_ensure_mode('urgent' if urgent else 'daily')
+                self._commission_swipe_to_top()
+                self.handle_info_bar()
+                started = self._commission_find_and_start(comm, is_urgent=urgent)
+                if started:
+                    comm.convert_to_running()
+                self._commission_mode_reset()
+                if started:
+                    # Never use the remaining pre-departure queue after list reordering.
+                    break
+            if not started:
+                break
+
     def commission_start(self):
         """
         Scan and Start all chosen commissions.
@@ -471,6 +607,9 @@ class RewardCommission(UI, InfoHandler):
             in: page_commission
             out: page_commission
         """
+        if self.config.SERVER == 'kr':
+            self._commission_start_kr()
+            return
         self._commission_scan_all()
 
         logger.hr('Commission run', level=1)
@@ -517,6 +656,9 @@ class RewardCommission(UI, InfoHandler):
                     skip_first_screenshot = False
                 else:
                     self.device.screenshot()
+
+                if self.config.SERVER == 'kr' and self.appear(KR_COMMISSION_OIL_MAXED, offset=(20, 5)):
+                    raise OilMaxed
 
                 # End
                 if self.ui_page_appear(page_commission, offset=(20, 20)):
@@ -593,6 +735,12 @@ class RewardCommission(UI, InfoHandler):
                 reward = self._commission_receive()
                 return reward
             except OilMaxed:
+                if self.config.SERVER == 'kr':
+                    logger.warning('KR oil storage is full; defer commission without buying food')
+                    from module.commission.kr_oil_delay import defer
+                    defer(self.config.config_name)
+                    self.config.task_delay(minute=30)
+                    self.config.task_stop()
                 logger.info("Oil maxed, buy food to consume oil")
                 RewardDorm(self.config, self.device).dorm_food_run(amount=10)
                 self.ui_ensure(page_reward)

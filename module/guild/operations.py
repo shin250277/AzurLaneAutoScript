@@ -13,6 +13,45 @@ GUILD_OPERATIONS_PROGRESS = DigitCounter(OCR_GUILD_OPERATIONS_PROGRESS, letter=(
 
 
 class GuildOperations(GuildBase):
+    def _guild_operations_active_appear(self, offset=(20, 20)):
+        if self.appear(GUILD_OPERATIONS_ACTIVE_CHECK, offset=offset):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                GUILD_OPERATIONS_ACTIVE_CHECK,
+                color=GUILD_OPERATIONS_ACTIVE_CHECK.color,
+                threshold=55, count=5000):
+            return True
+        return False
+
+    def _guild_dispatch_quick_appear(self, interval=0):
+        if self.appear(GUILD_DISPATCH_QUICK, offset=(20, 20), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                GUILD_OPERATIONS_ACTIVE_CHECK,
+                color=GUILD_OPERATIONS_ACTIVE_CHECK.color,
+                threshold=55, count=5000):
+            return True
+        return False
+
+    def _guild_dispatch_recommend_appear(self, interval=0):
+        if self.appear(GUILD_DISPATCH_RECOMMEND, offset=(20, 20), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                GUILD_DISPATCH_RECOMMEND,
+                color=GUILD_DISPATCH_RECOMMEND.color,
+                threshold=45, count=2000):
+            return True
+        return False
+
+    def _guild_dispatch_fleet_appear(self, interval=0):
+        if self.appear(GUILD_DISPATCH_FLEET, offset=(20, 20), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                GUILD_DISPATCH_FLEET, color=(82, 93, 221),
+                threshold=20, count=500):
+            return True
+        return False
+
     def _guild_operations_ensure(self, skip_first_screenshot=True):
         """
         Ensure guild operation is loaded
@@ -75,7 +114,9 @@ class GuildOperations(GuildBase):
                 continue
 
             # End
-            if self.appear(GUILD_BOSS_ENTER) or self.appear(GUILD_OPERATIONS_ACTIVE_CHECK, offset=(20, 20)):
+            if (self.appear(GUILD_BOSS_ENTER)
+                    or self._guild_operations_active_appear()
+                    or self.appear(GUILD_OPERATIONS_NEW, offset=(20, 20))):
                 if not self.info_bar_count() and confirm_timer.reached():
                     return True
 
@@ -143,23 +184,35 @@ class GuildOperations(GuildBase):
             in: GUILD_OPERATIONS
             out: GUILD_OPERATIONS
         """
-        if self.appear(GUILD_OPERATIONS_INACTIVE_CHECK) and self.appear(GUILD_OPERATIONS_ACTIVE_CHECK):
-            logger.info(
-                'Mode: Operations Inactive, please contact your Elite/Officer/Leader seniors to select '
-                'an operation difficulty')
-            return 0
-        elif self.appear(GUILD_OPERATIONS_ACTIVE_CHECK):
-            logger.info('Mode: Operations Active, may proceed to scan and dispatch fleets')
-            return 1
-        elif self.appear(GUILD_BOSS_ENTER):
-            logger.info('Mode: Guild Raid Boss (GUILD_BOSS_ENTER)')
-            return 2
-        elif self.appear(GUILD_OPERATIONS_NEW, offset=(20, 20)):
-            logger.info('Mode: Guild Raid Boss (GUILD_OPERATIONS_NEW)')
-            return 2
-        else:
-            logger.warning('Operations interface is unrecognized')
-            return None
+        # The operation page keeps animating briefly after the side navigation
+        # becomes active. Retry with fresh screenshots instead of classifying
+        # that transitional frame as an unknown mode.
+        for attempt in range(3):
+            if attempt:
+                self.device.sleep(0.5)
+                self.device.screenshot()
+            if (self.appear(GUILD_OPERATIONS_INACTIVE_CHECK)
+                    and self._guild_operations_active_appear()):
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_guild_operations_inactive.png')
+                logger.info(
+                    'Mode: Operations Inactive, please contact your Elite/Officer/Leader seniors to select '
+                    'an operation difficulty')
+                return 0
+            elif self._guild_operations_active_appear():
+                logger.info('Mode: Operations Active, may proceed to scan and dispatch fleets')
+                return 1
+            elif self.appear(GUILD_BOSS_ENTER):
+                logger.info('Mode: Guild Raid Boss (GUILD_BOSS_ENTER)')
+                return 2
+            elif self.appear(GUILD_OPERATIONS_NEW, offset=(20, 20)):
+                logger.info('Mode: Guild Raid Boss (GUILD_OPERATIONS_NEW)')
+                return 2
+
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_guild_operations_unknown.png')
+        logger.warning('Operations interface is unrecognized')
+        return None
 
     def _guild_operations_get_entrance(self):
         """
@@ -243,38 +296,47 @@ class GuildOperations(GuildBase):
         """
         timer_1 = Timer(2, count=5)
         timer_2 = Timer(2, count=5)
+        no_entrance_timer = Timer(3).start()
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
-            if self.appear(GUILD_OPERATIONS_ACTIVE_CHECK, offset=(20, 20)):
+            if self._guild_operations_active_appear():
                 entrance_1, entrance_2 = self._guild_operations_get_entrance()
-                if not len(entrance_1):
+                if len(entrance_1):
+                    no_entrance_timer.reset()
+                    if timer_1.reached():
+                        self.device.click(entrance_1[0])
+                        timer_1.reset()
+                        continue
+                    if timer_2.reached():
+                        for button in entrance_2:
+                            # Enter button has a black area around Easy/Normal/Hard on the upper right
+                            # If operation not expanded, enter button is a background with Gaussian Blur
+                            if self.image_color_count(button, color=(0, 0, 0), threshold=20, count=50):
+                                self.device.click(button)
+                                timer_1.reset()
+                                timer_2.reset()
+                                break
+                elif no_entrance_timer.reached():
+                    logger.info('No active guild operation dispatch remains')
                     return False
-                if timer_1.reached():
-                    self.device.click(entrance_1[0])
-                    timer_1.reset()
-                    continue
-                if timer_2.reached():
-                    for button in entrance_2:
-                        # Enter button has a black area around Easy/Normal/Hard on the upper right
-                        # If operation not expanded, enter button is a background with Gaussian Blur
-                        if self.image_color_count(button, color=(0, 0, 0), threshold=20, count=50):
-                            self.device.click(button)
-                            timer_1.reset()
-                            timer_2.reset()
-                            break
 
-            if self.appear_then_click(GUILD_DISPATCH_QUICK, offset=(20, 20), interval=2):
+            # End. Check this before the KR quick-dispatch fallback because
+            # the fleet confirmation button uses a similar blue background.
+            if self._guild_dispatch_recommend_appear():
+                break
+
+            if self._guild_dispatch_quick_appear(interval=2):
+                if self.config.SERVER == 'kr':
+                    self.device.click(GUILD_OPERATIONS_ACTIVE_CHECK)
+                else:
+                    self.device.click(GUILD_DISPATCH_QUICK)
                 timer_1.reset()
                 timer_2.reset()
                 continue
-
-            # End
-            if self.appear(GUILD_DISPATCH_RECOMMEND, offset=(20, 20)):
-                break
 
         return True
 
@@ -364,12 +426,17 @@ class GuildOperations(GuildBase):
             else:
                 self.device.screenshot()
 
+            if self.config.SERVER == 'kr' and not dispatched \
+                    and self._guild_dispatch_recommend_appear(interval=3) \
+                    and not self._guild_dispatch_fleet_appear():
+                self.device.click(GUILD_DISPATCH_RECOMMEND)
+                continue
             if self.appear(GUILD_DISPATCH_FLEET_UNFILLED, offset=(20, 20), interval=3):
                 # Don't use offset here, because GUILD_DISPATCH_FLEET_UNFILLED only has a difference in colors
                 # Use long interval because the game needs a few seconds to choose the ships
                 self.device.click(GUILD_DISPATCH_RECOMMEND)
                 continue
-            if not dispatched and self.appear(GUILD_DISPATCH_FLEET, offset=(20, 20), interval=3):
+            if not dispatched and self._guild_dispatch_fleet_appear(interval=3):
                 # GUILD_DISPATCH_FLEET and GUILD_DISPATCH_FLEET_UNFILLED has same feature but different colors
                 # check background blue for double check
                 if self.image_color_count(GUILD_DISPATCH_FLEET, color=(82, 93, 221), threshold=20, count=500):
@@ -387,7 +454,7 @@ class GuildOperations(GuildBase):
                 # In first dispatch, it will show GUILD_DISPATCH_IN_PROGRESS
                 logger.info('Fleet dispatched, dispatch in progress')
                 break
-            if dispatched and self.appear(GUILD_DISPATCH_FLEET, offset=(20, 20), interval=3):
+            if dispatched and self._guild_dispatch_fleet_appear(interval=3):
                 # GUILD_DISPATCH_FLEET and GUILD_DISPATCH_FLEET_UNFILLED has same feature but different colors
                 # check background blue for double check
                 if self.image_color_count(GUILD_DISPATCH_FLEET, color=(82, 93, 221), threshold=20, count=500):
@@ -412,7 +479,7 @@ class GuildOperations(GuildBase):
             else:
                 self.device.screenshot()
 
-            if self.appear(GUILD_DISPATCH_RECOMMEND, offset=(20, 20), interval=2):
+            if self._guild_dispatch_recommend_appear(interval=2):
                 self.device.click(GUILD_DISPATCH_CLOSE)
                 continue
             if self.appear(GUILD_DISPATCH_QUICK, offset=(20, 20), interval=2):
@@ -424,7 +491,7 @@ class GuildOperations(GuildBase):
                 continue
 
             # End
-            if self.appear(GUILD_OPERATIONS_ACTIVE_CHECK):
+            if self._guild_operations_active_appear(offset=(0, 0)):
                 break
 
     def _guild_operations_dispatch(self):

@@ -5,13 +5,14 @@ unit tested and reused: every input is passed in explicitly and every result
 is stored as a plain attribute on ProductionPlanCalculator.
 """
 from collections import defaultdict
+from datetime import datetime
 from typing import Dict
 
 import numpy as np
 
 import module.config.server as server
 from module.island.data import *
-from module.island.season_data import DIC_ISLAND_SEASON
+from module.island.season_data import DIC_ISLAND_SEASON as SEASON_RECIPE_CATALOG
 from module.island.utils import (
     apply_server_overrides,
     ceil_with_epsilon,
@@ -37,6 +38,19 @@ from module.island_handler.restaurant_config import (
     normalize_waitress_slots,
 )
 from module.logger import logger
+
+
+def get_current_activity_list(time):
+    """Resolve activity IDs using verified regional dates, not the recipe catalog."""
+    for season, content in DIC_ISLAND_SEASON.items():
+        if 'servers' in content and server.server not in content['servers']:
+            continue
+        if server.server not in content['start_time'] or server.server not in content['end_time']:
+            raise ValueError('Missing {} island season schedule (season {})'.format(server.server, season))
+        start = datetime.strptime(content['start_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        end = datetime.strptime(content['end_time'][server.server], '%Y-%m-%d %H:%M:%S')
+        if start <= time < end:
+            return content.get('activity_by_server', {}).get(server.server, content['activity'])
 
 
 def extend_problem(problem, columns=(), rows=()):
@@ -214,11 +228,11 @@ class ProductionPlanCalculator:
         self.season = get_season_data(season_name) if season_name is not None else None
         season_data = self.season or {}
         self.seasonal_recipe_ids = {
-            recipe_id for season in DIC_ISLAND_SEASON.values()
+            recipe_id for season in SEASON_RECIPE_CATALOG.values()
             for recipes in season.get('production', {}).values() for recipe_id in recipes
         }
         self.seasonal_gather_ids = {
-            gather_id for season in DIC_ISLAND_SEASON.values()
+            gather_id for season in SEASON_RECIPE_CATALOG.values()
             for gather_id in season.get('wild_gather', {})
         }
         self.recipe_data = apply_server_overrides(
@@ -765,7 +779,7 @@ class ProductionPlanCalculator:
             })
 
         for shop_id, recipe in self.shop_recipe_data.items():
-            if not is_shop_recipe_available(shop_id, self.season):
+            if ('servers' in recipe and server.server not in recipe['servers']) or not is_shop_recipe_available(shop_id, self.season):
                 continue
             activities.append({
                 'kind': 'shop',

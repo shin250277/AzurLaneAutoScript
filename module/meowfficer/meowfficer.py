@@ -2,7 +2,7 @@ from module.meowfficer.buy import MeowfficerBuy
 from module.meowfficer.fort import MeowfficerFort
 from module.meowfficer.train import MeowfficerTrain
 from module.ui.page import page_meowfficer
-from module.meowfficer.assets import MEOWFFICER_BUY_ENTER
+from module.meowfficer.assets import MEOWFFICER_BUY_ENTER, MEOWFFICER_GET_CHECK, MEOWFFICER_TRAIN_FILL_QUEUE
 
 
 class RewardMeowfficer(MeowfficerBuy, MeowfficerFort, MeowfficerTrain):
@@ -40,6 +40,10 @@ class RewardMeowfficer(MeowfficerBuy, MeowfficerFort, MeowfficerTrain):
             self.config.Scheduler_Enable = False
             self.config.task_stop()
 
+        if self.config.SERVER == 'kr' and self.appear(MEOWFFICER_GET_CHECK, offset=(40, 40)):
+            self.meow_get()
+        if self.config.SERVER == 'kr' and self.appear(MEOWFFICER_TRAIN_FILL_QUEUE, offset=(20, 20)):
+            self.meow_menu_close()
         self.ui_ensure(page_meowfficer)
         self.wait_meowfficer_buttons()  # Wait for the ui to load fully
 

@@ -60,14 +60,46 @@ class Config:
                     *args:
                     **kwargs:
                 """
-                for record in cls.func_list[name]:
+                records = cls.func_list[name]
 
-                    flag = [value is None or self.config.__getattribute__(key) == value
-                            for key, value in record['options'].items()]
-                    if not all(flag):
-                        continue
+                # Prefer an explicitly implemented server branch. If none is
+                # available, use the same fallback as image assets (KR -> JP)
+                # before selecting the generic SERVER=None implementation.
+                # Other Config.when options keep their existing wildcard
+                # semantics and are evaluated in declaration order.
+                if any('SERVER' in record['options'] for record in records):
+                    actual_server = self.config.SERVER
 
-                    return record['func'](self, *args, **kwargs)
+                    def matches(record, expected_server):
+                        for key, value in record['options'].items():
+                            actual = self.config.__getattribute__(key)
+                            if key == 'SERVER':
+                                if value != expected_server:
+                                    return False
+                            elif value is not None and actual != value:
+                                return False
+                        return True
+
+                    for record in records:
+                        if matches(record, actual_server):
+                            return record['func'](self, *args, **kwargs)
+
+                    from module.config.server import SERVER_ASSET_FALLBACK
+                    fallback = SERVER_ASSET_FALLBACK.get(actual_server)
+                    if fallback is not None:
+                        for record in records:
+                            if matches(record, fallback):
+                                return record['func'](self, *args, **kwargs)
+
+                    for record in records:
+                        if matches(record, None):
+                            return record['func'](self, *args, **kwargs)
+                else:
+                    for record in records:
+                        flag = [value is None or self.config.__getattribute__(key) == value
+                                for key, value in record['options'].items()]
+                        if all(flag):
+                            return record['func'](self, *args, **kwargs)
 
                 logger.warning(f'No option fits for {name}, using the last define func.')
                 return func(self, *args, **kwargs)

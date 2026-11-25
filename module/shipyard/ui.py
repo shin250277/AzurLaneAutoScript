@@ -7,7 +7,7 @@ from module.logger import logger
 from module.shipyard.ui_globals import *
 from module.ui.assets import SHIPYARD_CHECK
 from module.ui.navbar import Navbar
-from module.ui.page import page_main_white
+from module.ui.page import page_main_white, page_shipyard
 from module.ui.ui import UI
 
 
@@ -89,33 +89,47 @@ class ShipyardUI(UI):
             count (int): Target number to ensure index
 
         Returns:
-            int remaining BPs that cannot be consumed
+            int remaining BPs that cannot be consumed, or None if unsafe to confirm
         """
         if count < 0:
             logger.warning('_shipyard_ensure_index --> Non-positive '
                            '\'count\' cannot continue')
             return None
 
-        current = diff = 0
-        for _ in range(3):
+        current = 0
+        # Three adjustments, each followed by a fresh quantity check.
+        for attempt in range(4):
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
             plus, minus, current = self._shipyard_get_total()
+            if current < 0:
+                logger.warning('Invalid shipyard quantity, refusing confirmation')
+                return None
             if current == count:
                 logger.info(f'Capable of consuming all {count} BPs')
                 return 0
 
+            if attempt == 3:
+                break
+
             diff = count - current
             button = plus if diff > 0 else minus
-            self.device.multi_click(button, n=diff, interval=(0.3, 0.5))
+            self.device.multi_click(button, n=abs(diff), interval=(0.3, 0.5))
             self.device.sleep((0.3, 0.5))
+
+        if current > count:
+            logger.warning('Shipyard quantity exceeds requested amount, refusing confirmation')
+            return None
+        if current == 0:
+            logger.warning('No blueprints selected after adjustment, refusing confirmation')
+            return None
 
         logger.info(f'Current interface does not allow consumption of {count} BPs\n')
         logger.info(f'Capable of consuming at most {current} of the {count} BPs')
-        return diff
+        return count - current
 
     def _shipyard_get_bp_count(self, index=0):
         """
@@ -140,7 +154,7 @@ class ShipyardUI(UI):
         Returns:
             bool whether in appropriate shipyard ui area
         """
-        if self.appear(SHIPYARD_CHECK, offset=(20, 20)):
+        if self.ui_page_appear(page_shipyard):
             return True
         if self.appear(SHIPYARD_IN_DEV, offset=(20, 20)):
             return True

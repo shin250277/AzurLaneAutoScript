@@ -1,5 +1,6 @@
 import numpy as np
 
+from module.base.button import Button
 from module.base.timer import Timer
 from module.base.utils import color_similar, get_color
 from module.combat.assets import *
@@ -16,6 +17,19 @@ from module.retire.retirement import Retirement
 from module.statistics.azurstats import DropImage
 from module.template.assets import TEMPLATE_COMBAT_LOADING
 from module.ui.assets import BACK_ARROW, EXERCISE_CHECK, MUNITIONS_CHECK
+
+
+KR_SHIP_CARD = Button(
+    area=(40, 360, 85, 410), color=(120, 124, 132),
+    button=(980, 650, 1030, 680),
+    file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png', name='KR_SHIP_CARD')
+
+KR_QUIT = Button(
+    area=(300, 500, 370, 525),
+    color=(255, 104, 104),
+    button=(280, 494, 584, 535),
+    name='KR_QUIT',
+)
 
 
 class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatManual, AutoSearchHandler):
@@ -150,6 +164,14 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         timer = self.get_interval_timer(QUIT, interval=interval)
         if not timer.reached():
             return False
+        # KR uses a wider localized label that does not match the shared
+        # QUIT_New/QUIT_Cyber luma templates. The button fill is stable across
+        # the battle UI themes, so detect a text-free part of the red button.
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                KR_QUIT, color=KR_QUIT.color, threshold=10, count=1000):
+            self.device.click(KR_QUIT)
+            timer.reset()
+            return True
         if QUIT.match_luma(self.device.image, offset=offset):
             self.device.click(QUIT)
             timer.reset()
@@ -230,6 +252,8 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         self.wait_until_stable(COMBAT_OIL_LOADING)
 
     def handle_combat_automation_confirm(self):
+        if self.handle_kr_automation_notice():
+            return True
         if self.appear(AUTOMATION_CONFIRM_CHECK, threshold=30, interval=1):
             self.appear_then_click(AUTOMATION_CONFIRM, offset=(20, 20))
             return True
@@ -257,7 +281,9 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
 
         for _ in self.loop():
 
-            if self.appear(BATTLE_PREPARATION, offset=(20, 20)):
+            # Some event formations (including the KR NieR special stages)
+            # place the standard battle button about 25 px farther right.
+            if self.appear(BATTLE_PREPARATION, offset=(30, 20)):
                 if self.handle_combat_automation_set(auto=auto == 'combat_auto'):
                     continue
             if self.handle_retirement():
@@ -267,6 +293,11 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
             if balance_hp and self.handle_emergency_repair_use():
                 continue
             if self.handle_battle_preparation():
+                continue
+            # Resource-cap warnings can appear after pressing battle start.
+            # They use the standard two-button confirmation dialog and must
+            # be acknowledged before the loading screen can begin.
+            if self.handle_popup_confirm('COMBAT_PREPARATION'):
                 continue
             if self.handle_combat_automation_confirm():
                 continue
@@ -294,7 +325,7 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         Returns:
             bool:
         """
-        if self.appear_then_click(BATTLE_PREPARATION, offset=(20, 20), interval=2):
+        if self.appear_then_click(BATTLE_PREPARATION, offset=(30, 20), interval=2):
             return True
 
         return False
@@ -516,7 +547,7 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         """
         if self.is_combat_executing():
             return False
-        for button in [EXP_INFO_S, EXP_INFO_A, EXP_INFO_B]:
+        for button in [EXP_INFO_S, EXP_INFO_A, EXP_INFO_B, EXP_INFO_C, EXP_INFO_D]:
             if self.appear(button, threshold=30):
                 # Keep handling this screen while throttling animation-skip clicks.
                 timer = self.get_interval_timer(button, interval=1, renew=True)
@@ -527,6 +558,17 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
 
         return False
 
+    def handle_kr_ship_card(self, drop=None):
+        if self.config.SERVER != 'kr' or not self.appear(
+                KR_SHIP_CARD, offset=(3, 3), interval=1, similarity=0.85):
+            return False
+        if self.appear(NEW_SHIP):
+            self.config.GET_SHIP_TRIGGERED = True
+            if drop:
+                drop.handle_add(self)
+        self.device.click(KR_SHIP_CARD)
+        return True
+
     def handle_get_ship(self, drop=None):
         """
         Args:
@@ -535,6 +577,12 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
         Returns:
             bool:
         """
+        if self.handle_kr_ship_card(drop=drop):
+            return True
+        if self.config.SERVER == 'kr':
+            # The legacy KR GET_SHIP sample is a tiny white patch which also
+            # matches META artwork. Only the contextual card may click on KR.
+            return False
         if self.appear_then_click(GET_SHIP, offset=(20, 20), interval=1):
             if self.appear(NEW_SHIP):
                 logger.info('Get a new SHIP')
@@ -593,6 +641,10 @@ class Combat(Level, HPBalancer, Retirement, SubmarineCall, CombatAuto, CombatMan
             if self.handle_story_skip(drop=drop):
                 continue
             # Combat status
+            # KR can show a ship card after EXP; use the specific localized
+            # marker here without relaxing the legacy generic popup guard.
+            if self.handle_kr_ship_card(drop=drop):
+                continue
             if not exp_info and self.handle_get_ship(drop=drop):
                 continue
             if self.handle_get_items(drop=drop):

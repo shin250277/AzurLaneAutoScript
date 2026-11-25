@@ -11,6 +11,25 @@ from module.map.assets import *
 from module.map.fleet_bar import FleetBarDetector
 
 
+def _kr_hard_stats_unsatisfied(image):
+    """Red text in the redesigned KR stat panel means a failed restriction."""
+    panel = image[548:600, 120:950].astype(np.int16)
+    red, green, blue = panel[:, :, 0], panel[:, :, 1], panel[:, :, 2]
+    return np.count_nonzero((red > 150) & (red - green > 70) & (red - blue > 70)) > 50
+
+
+def _kr_hard_stats_visible(image):
+    """Require positive evidence of the KR restriction panel, not just no red.
+
+    This is not a hull/formation validator; the game's sortie validation still
+    applies to the preserved fleet.
+    """
+    panel = image[548:600, 120:950].astype(np.int16)
+    red, green, blue = panel[:, :, 0], panel[:, :, 1], panel[:, :, 2]
+    return np.count_nonzero((red > 150) & (green > 140)
+                            & (red - blue > 70) & (green - blue > 60)) > 50
+
+
 class FleetOperator:
     FLEET_IN_USE_STD = 27  # In use 52, not in use (3, 6).
 
@@ -287,6 +306,26 @@ class FleetPreparation(InfoHandler):
         if self.map_fleet_checked:
             return False
 
+        # KR hard maps and normal-mode SP maps share this constraint screen
+        # without a legacy dropdown. Detect the layout, not Campaign_Mode:
+        # the legacy clear/recommend path would overwrite manual fleets.
+        if self.config.SERVER == 'kr' \
+                and self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET) \
+                and not self.appear(FLEET_1_CHOOSE, offset=FleetOperator.OFFSET):
+            logger.info('KR hard fleet selection: preserve in-game fleets')
+            self.device.screenshot()
+            self.device.image_save('./log/kr_hard_fleet_preparation.png')
+            if _kr_hard_stats_unsatisfied(self.device.image):
+                logger.critical('KR hard fleet stat restrictions are not satisfied; '
+                                'check the red requirements in the fleet preparation screen')
+                raise HardNotSatisfied
+            if not _kr_hard_stats_visible(self.device.image):
+                logger.critical('KR hard fleet restriction panel is not recognized; '
+                                'check the fleet preparation screen manually')
+                raise HardNotSatisfied
+            self.map_is_hard_mode = True
+            return False
+
         if self.appear(FLEET_1_CLEAR, offset=FleetOperator.OFFSET):
             AUTO_SEARCH_SET_MOB.load_offset(FLEET_1_CLEAR)
             AUTO_SEARCH_SET_BOSS.load_offset(FLEET_1_CLEAR)
@@ -315,7 +354,7 @@ class FleetPreparation(InfoHandler):
         # Check if ship is prepared in hard mode
         h1, h2, h3 = fleet_1.is_hard_satisfied(), fleet_2.is_hard_satisfied(), submarine.is_hard_satisfied()
         logger.info(f'Hard satisfied: Fleet_1: {h1}, Fleet_2: {h2}, Submarine: {h3}')
-        if self.config.SERVER in ['cn', 'en', 'jp']:
+        if self.config.SERVER in ['cn', 'en', 'jp', 'kr']:
             if self.config.Fleet_Fleet1:
                 fleet_1.raise_hard_not_satisfied()
             if self.config.Fleet_Fleet2:

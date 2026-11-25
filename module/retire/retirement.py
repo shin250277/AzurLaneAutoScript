@@ -1,4 +1,4 @@
-from module.base.button import ButtonGrid
+from module.base.button import Button, ButtonGrid
 from module.base.timer import Timer
 from module.base.utils import color_similar, get_color, resize
 from module.combat.assets import GET_ITEMS_1
@@ -23,8 +23,18 @@ CARD_RARITY_COLORS = {
     'SSR': (248, 223, 107)
     # Not support marriage cards.
 }
+KR_RETIRE_SR_SSR_CONFIRM = Button(
+    area=(706, 471, 881, 533), color=(83, 143, 207),
+    button=(706, 471, 881, 533), name='KR_RETIRE_SR_SSR_CONFIRM')
+KR_RETIRE_RARITY_WARNING = Button(
+    area=(441, 250, 835, 278), color=(126, 140, 140), button=(441, 250, 835, 278),
+    file='./assets/kr/retire/KR_RETIRE_RARITY_WARNING.png',
+    name='KR_RETIRE_RARITY_WARNING')
 
 RETIRE_CONFIRM_SCROLL = Scroll(RETIRE_CONFIRM_SCROLL_AREA, color=(74, 77, 110), name='STRATEGIC_SEARCH_SCROLL')
+KR_RETIRE_UR_WARNING = Button(
+    area=(489, 402, 607, 425), color=(0, 0, 0), button=(489, 402, 607, 425),
+    file='./assets/kr/retire/KR_RETIRE_UR_WARNING.png', name='KR_RETIRE_UR_WARNING')
 RETIRE_CONFIRM_SCROLL.color_threshold = 240  # Background color is (66, 72, 77), so default (256-221)=35 is not enough to dintinguish.
 
 
@@ -34,6 +44,14 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
 
     # From MapOperation
     map_cat_attack_timer = Timer(2)
+
+    def _kr_retirement_confirmation_appear(self):
+        # Blue ship-card artwork is not a confirmation dialog.
+        return self.config.SERVER == 'kr' \
+            and self.appear(KR_RETIRE_RARITY_WARNING, offset=(3, 3), similarity=0.85) \
+            and self.image_color_count(
+                KR_RETIRE_SR_SSR_CONFIRM, color=KR_RETIRE_SR_SSR_CONFIRM.color,
+                threshold=45, count=1200)
 
     def _retirement_choose(self, amount=10, target_rarity=('N',)):
         """
@@ -110,10 +128,18 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
 
             # Click
             # Ship confirm, order by display hierarchy
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_RETIRE_UR_WARNING, offset=(20, 30), similarity=0.85):
+                raise RequestHumanTakeover('UR retirement confirmation blocked; review selected ships')
             if self._unable_to_enhance \
                     or self.config.OldRetire_SR \
                     or self.config.OldRetire_SSR \
                     or self.config.Retirement_RetireMode == 'one_click_retire':
+                if self._kr_retirement_confirmation_appear():
+                    self.device.click(KR_RETIRE_SR_SSR_CONFIRM)
+                    self.interval_reset([SHIP_CONFIRM, SHIP_CONFIRM_2])
+                    self.interval_reset([EQUIP_CONFIRM, EQUIP_CONFIRM_2])
+                    continue
                 if self.handle_popup_confirm(name='RETIRE_SR_SSR', offset=(20, 50)):
                     # Avoid clicking the undelying SHIP_CONFIRM again
                     self.interval_reset([SHIP_CONFIRM, SHIP_CONFIRM_2])
@@ -140,6 +166,14 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
                 continue
             # Equip confirm
             if self.appear_then_click(EQUIP_CONFIRM, offset=(30, 30), interval=2):
+                continue
+            # KR asks which equipment to dismantle after one-click retirement.
+            # Leave that screen without selecting anything so all equipment is
+            # moved to storage instead of being destroyed automatically.
+            if self.config.SERVER == 'kr' and self.appear(EQUIP_CONFIRM_2, offset=(30, 30), interval=2):
+                logger.info('KR retirement: keep all equipment in storage')
+                self.device.adb_shell(['input', 'keyevent', '4'])
+                executed = True
                 continue
             if self.appear_then_click(EQUIP_CONFIRM_2, offset=(30, 30), interval=2):
                 self.interval_clear(GET_ITEMS_1)
@@ -276,6 +310,9 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
             rarity = self._retire_rarity
         logger.hr('Retirement')
         logger.info(f'Amount={amount}. Rarity={rarity}')
+        if not rarity:
+            raise RequestHumanTakeover(
+                'Automatic retirement is disabled: no ship rarities are selected')
 
         # transfer N R SR SSR to filter name
         correspond_name = {
@@ -387,6 +424,12 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
         Returns:
             bool: If retired.
         """
+        # An empty old-retire selection is a prohibition, not an unrestricted
+        # dock filter. Stop before entering the dock or changing its filters.
+        if self.config.Retirement_RetireMode == 'old_retire' and not self._retire_rarity:
+            if self.retirement_appear() or self.appear(IN_RETIREMENT_CHECK, offset=(20, 20)):
+                raise RequestHumanTakeover(
+                    'Dock full and automatic retirement disabled; free dock space manually')
         # 2025.05.29 game tips that infos skin feature when you enter dock
         if self.handle_game_tips():
             return True
@@ -454,6 +497,13 @@ class Retirement(Enhancement, QuickRetireSettingHandler):
 
         if mode == 'one_click_retire':
             total = self.retire_ships_one_click()
+            if not total and self.config.SERVER == 'kr':
+                # KR dock-filter reset is not reliably recognized. Broadening
+                # the selection after an empty result can include UR ships.
+                # Preserve the user's filters and fail closed instead.
+                raise RequestHumanTakeover(
+                    'KR quick retirement found no eligible ships; '
+                    'review dock and quick-retire filters before continuing')
             if not total:
                 logger.warning(
                     'No ship retired, trying to reset dock filter and disable favourite, then retire again')

@@ -231,20 +231,39 @@ class FleetScanner(Scanner):
 
         return image
 
-    def _match(self, image) -> int:
+    def _match(self, image, kr_card=None) -> int:
         """
         Using a template matching method to identify fleet.
         Performance on ultra rarity is not very good, because the flash
         will interfere with identification.
         Assuming it is not in any fleet if none matched.
         """
+        if kr_card is not None:
+            # The bright cyan background of KR fleet badges crosses the JP green
+            # threshold. Match the captured coloured digits before binarisation.
+            scores = []
+            for template, fleet in self.templates.items():
+                if fleet > 3:
+                    continue
+                patch = template.image
+                _, score, _, (x, y) = cv2.minMaxLoc(cv2.matchTemplate(
+                    kr_card, patch, cv2.TM_CCOEFF_NORMED))
+                h, w = patch.shape[:2]
+                delta = np.abs(kr_card[y:y+h, x:x+w].astype(np.int16) - patch).mean()
+                scores.append((score, delta, fleet))
+            scores.sort(reverse=True)
+            score, delta, fleet = scores[0]
+            if score >= .85 and score - scores[1][0] >= .08 and delta <= 30:
+                return fleet
         for template, fleet in self.templates.items():
+            if kr_card is not None and fleet <= 3:
+                continue
             if template.match(image):
                 return fleet
 
-        if TEMPLATE_FLEET_1.match(image, similarity=0.80):
+        if kr_card is None and TEMPLATE_FLEET_1.match(image, similarity=0.80):
             return 1
-        elif TEMPLATE_FLEET_3.match(image, similarity=0.80):
+        elif kr_card is None and TEMPLATE_FLEET_3.match(image, similarity=0.80):
             return 3
         elif TEMPLATE_FLEET_4.match(image, similarity=0.80):
             return 4
@@ -252,10 +271,10 @@ class FleetScanner(Scanner):
             return 0
 
     def _scan(self, image) -> List:
-        image = self.pre_process(image)
-        image_list = [crop(image, button.area) for button in self.grids.buttons]
-
-        return [self._match(image) for image in image_list]
+        binary = self.pre_process(image)
+        return [self._match(crop(binary, button.area),
+                            crop(image, button.area) if server.server == 'kr' else None)
+                for button in self.grids.buttons]
 
     def limit_value(self, value) -> int:
         return limit_in(value, 0, 6)

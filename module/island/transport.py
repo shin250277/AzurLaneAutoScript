@@ -27,7 +27,7 @@ from module.base.utils import (
 from module.island.assets import *
 from module.island.data import DIC_ISLAND_ITEM
 from module.island.utils import get_order_effective_stock, load_hard_floor_items, normalize_item_keys
-from module.island_handler.exchange import IslandExchange
+from module.island_handler.exchange import IslandExchange, KR_ISLAND_ACTION_ACCEPT
 from module.island_handler.production_planner import create_production_problem
 from module.island_handler.recipe import IslandReversedDigitCounter
 from module.island_handler.restaurant_config import get_menu_reserve_items
@@ -39,6 +39,9 @@ from module.ui.page import page_island, page_island_transport
 from module.ui.switch import Switch
 
 SLOT_COUNT = 3
+KR_TRANSPORT_SWAP_QUESTION = Button(
+    area=(482, 315, 799, 350), color=(219, 219, 220), button=(482, 315, 799, 350),
+    file='./assets/kr/island/KR_TRANSPORT_SWAP_QUESTION.png', name='KR_TRANSPORT_SWAP_QUESTION')
 SLOT_DELTA = 175
 TEXT_BLUE = (57, 190, 255)
 TEXT_RED = (244, 124, 124)
@@ -492,6 +495,9 @@ class IslandTransport(IslandExchange):
         return states
 
     def is_in_transport_main(self):
+        if self.config.SERVER == 'kr' and self.appear(ISLAND_TRANSPORT_LIST_CHECK, offset=(10, 10)):
+            # The Korean list is a modal; the underlying board header stays visible.
+            return False
         return self.ui_page_appear(page_island_transport, offset=(20, 20))
 
     def handle_transport_popup(self):
@@ -662,6 +668,7 @@ class IslandTransport(IslandExchange):
         Args:
             slot (int): Open this slot's swap list, or the commission list if None.
         """
+        entered = False
         for _ in self.loop(skip_first=skip_first_screenshot, timeout=15):
             if self.appear(ISLAND_TRANSPORT_LIST_CHECK, offset=(20, 20)):
                 return True
@@ -670,7 +677,12 @@ class IslandTransport(IslandExchange):
             if not self.is_in_transport_main():
                 continue
             if slot is None:
+                if entered and self.config.SERVER == 'kr':
+                    # The list can overlay the primary page. Do not keep
+                    # clicking through an unrecognised secondary screen.
+                    continue
                 if self.appear_then_click(ISLAND_TRANSPORT_LIST_ENTER, offset=(20, 20), interval=2):
+                    entered = True
                     continue
             elif self.slot_empty(slot):
                 self.device.click(BAR_GRID[0, slot])
@@ -678,6 +690,8 @@ class IslandTransport(IslandExchange):
                 self.device.click(ISLAND_TRANSPORT_SWAP)
                 continue
         logger.warning('Failed to open transport list')
+        if entered and self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_transport_list_unconfirmed.png')
         return False
 
     def transport_list_close(self, skip_first_screenshot=True):
@@ -776,7 +790,11 @@ class IslandTransport(IslandExchange):
             first = rows[0].index
             rows = self.transport_list_drag(down=False)
             if rows and rows[0].index == first:
-                break
+                # KR: the first drag after switching tabs can leave rows 03-06
+                # in place. Keep the existing three-drag bound, never select
+                # or submit a row while trying to reach the top.
+                if self.config.SERVER != 'kr':
+                    break
         return rows
 
     def transport_list_select(self, index, skip_first_screenshot=True):
@@ -1134,7 +1152,14 @@ class IslandTransport(IslandExchange):
         for _ in self.loop(timeout=15):
             if (confirmed or empty and selected) and self.is_in_transport_main():
                 return True
-            if self.handle_island_popup_confirm('TRANSPORT_SWAP'):
+            if self.config.SERVER == 'kr':
+                if (selected and not confirmed
+                        and self.match_template_color(KR_TRANSPORT_SWAP_QUESTION, offset=(4, 4))
+                        and self.match_template_color(KR_ISLAND_ACTION_ACCEPT, offset=(4, 4))):
+                    self.device.click(KR_ISLAND_ACTION_ACCEPT)
+                    confirmed = True
+                    continue
+            elif self.handle_island_popup_confirm('TRANSPORT_SWAP'):
                 confirmed = True
                 continue
             if self.appear_then_click(ISLAND_TRANSPORT_DETAIL_CLOSE, offset=(20, 20), interval=2):
@@ -1147,6 +1172,8 @@ class IslandTransport(IslandExchange):
                 selected = True
                 continue
         logger.warning('Transport swap timeout')
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_transport_swap_unconfirmed.png')
         self.transport_list_close()
         return False
 
@@ -1205,6 +1232,8 @@ class IslandTransport(IslandExchange):
                 self.device.click(ISLAND_TRANSPORT_SUBMIT)
                 continue
         logger.warning(f'Transport submit P{slot + 1} timeout')
+        if self.config.SERVER == 'kr':
+            self.device.image_save('./log/kr_transport_submit_unconfirmed.png')
         return False
 
     def transport_next_run_time(self):

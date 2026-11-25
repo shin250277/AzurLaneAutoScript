@@ -132,12 +132,17 @@ class PQShop(PQShopClerk, PQStatus):
         """
         if self.config.PrivateQuarters_BuyRoses:
             if item.sub_genre == 'roses':
+                if item.cost != 'Coins':
+                    logger.warning('Skip roses without a verified coin price')
+                    return False
                 if 24000 > self._currency:
                     return False
                 return True
 
         if self.config.PrivateQuarters_BuyCake:
             if item.sub_genre == 'cake':
+                if item.cost != 'Gems':
+                    return False
                 if 210 > self.gems:
                     return False
                 return True

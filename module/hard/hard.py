@@ -45,6 +45,15 @@ class CampaignHard(CampaignRun):
         logger.attr('Remain', remain)
         for n in range(remain):
             self.campaign.run()
+            if self.config.SERVER == 'kr':
+                self.campaign.ensure_campaign_ui(name=self.config.Hard_HardStage, mode='hard')
+                self.device.screenshot()
+                after = OCR_HARD_REMAIN.ocr(self.device.image)
+                if after >= remain - n:
+                    logger.warning('KR hard attempt did not consume a daily entry; defer instead of reporting completion')
+                    self.device.image_save('./log/kr_hard_no_progress.png')
+                    self.config.task_delay(minute=30)
+                    self.config.task_stop()
 
         self.campaign.ensure_auto_search_exit()
         # self.campaign.equipment_take_off_when_finished()

@@ -9,12 +9,13 @@ import module.config.server as server_
 from deploy.atomic import atomic_read_text, atomic_read_bytes, atomic_write
 from module.submodule.utils import *
 
-LANGUAGES = ['zh-CN', 'en-US', 'ja-JP', 'zh-TW']
+LANGUAGES = ['zh-CN', 'en-US', 'ja-JP', 'zh-TW', 'ko-KR']
 SERVER_TO_LANG = {
     'cn': 'zh-CN',
     'en': 'en-US',
     'jp': 'ja-JP',
     'tw': 'zh-TW',
+    'kr': 'ko-KR',
 }
 LANG_TO_SERVER = {v: k for k, v in SERVER_TO_LANG.items()}
 SERVER_TO_TIMEZONE = {
@@ -22,6 +23,7 @@ SERVER_TO_TIMEZONE = {
     'en': timedelta(hours=-7),
     'jp': timedelta(hours=9),
     'tw': timedelta(hours=8),
+    'kr': timedelta(hours=9),
 }
 DEFAULT_TIME = datetime(2020, 1, 1, 0, 0)
 

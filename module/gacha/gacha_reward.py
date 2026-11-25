@@ -1,26 +1,81 @@
+import module.config.server as server
+
+from module.base.button import Button
 from module.base.timer import Timer
 from module.campaign.campaign_status import OCR_COIN
 from module.combat.assets import GET_SHIP
-from module.exception import ScriptError
+from module.exception import RequestHumanTakeover, ScriptError
 from module.gacha.assets import *
 from module.gacha.ui import GachaUI
 from module.handler.assets import POPUP_CONFIRM, STORY_SKIP
 from module.logger import logger
 from module.ocr.ocr import Digit
 from module.retire.retirement import Retirement
+from module.ui.page import page_build, page_shop
 
 RECORD_GACHA_OPTION = ('RewardRecord', 'gacha')
 RECORD_GACHA_SINCE = (0,)
+KR_BUILD_GET_SHIP = Button(
+    area=(566, 181, 747, 221), color=(154, 195, 240),
+    button=(550, 500, 730, 660),
+    file='./assets/kr/gacha/KR_BUILD_GET_SHIP.png',
+    name='KR_BUILD_GET_SHIP')
+KR_GACHA_FINISH_CONFIRM = Button(
+    area=(491, 294, 789, 326), color=(110, 120, 128),
+    button=(735, 493, 845, 531),
+    file='./assets/kr/gacha/KR_GACHA_FINISH_CONFIRM.png',
+    name='KR_GACHA_FINISH_CONFIRM')
+KR_GACHA_SUBMIT_CONFIRM = Button(
+    area=(699, 451, 875, 512), color=(83, 143, 207),
+    button=(699, 451, 875, 512), name='KR_GACHA_SUBMIT_CONFIRM')
+KR_GACHA_NEW_SHIP = Button(
+    area=(40, 360, 85, 410), color=(120, 124, 132),
+    # The dialogue panel consumes taps in the former central target. Use the
+    # blank strip beside it, away from comment/lock/share/stats controls.
+    button=(980, 650, 1030, 680),
+    file='./assets/kr/gacha/KR_GACHA_NEW_SHIP.png',
+    name='KR_GACHA_NEW_SHIP')
 OCR_BUILD_CUBE_COUNT = Digit(BUILD_CUBE_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_TICKET_COUNT = Digit(BUILD_TICKET_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_SUBMIT_COUNT = Digit(BUILD_SUBMIT_COUNT, letter=(255, 247, 247), threshold=64)
 OCR_BUILD_SUBMIT_WW_COUNT = Digit(BUILD_SUBMIT_WW_COUNT, letter=(255, 247, 247), threshold=64)
+
+if server.server == 'kr':
+    OCR_BUILD_COIN_COUNT = Digit(
+        Button(
+            area=(820, 20, 925, 52),
+            color=(77, 77, 88),
+            button=(820, 20, 925, 52),
+            name='KR_BUILD_COIN_COUNT',
+        ),
+        name='KR_BUILD_COIN_COUNT',
+        letter=(239, 239, 239),
+        threshold=128,
+    )
+else:
+    OCR_BUILD_COIN_COUNT = OCR_COIN
 
 
 class RewardGacha(GachaUI, Retirement):
     build_coin_count = 0
     build_cube_count = 0
     build_ticket_count = 0
+
+    def ui_additional(self, get_ship=True):
+        if self.config.SERVER == 'kr' and self.appear(
+                KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
+            if self.appear(KR_GACHA_NEW_SHIP, offset=(3, 3), interval=1, similarity=0.85):
+                self.device.click(KR_GACHA_NEW_SHIP)
+            # Consume the card even during cooldown; generic handlers must not
+            # bypass the click interval or click the dialogue again.
+            return True
+        return super().ui_additional(get_ship=get_ship)
+
+    def gacha_guard_shop(self):
+        """Never handle purchase confirmations after an unexpected shop redirect."""
+        if self.ui_page_appear(page_shop):
+            logger.critical('Construction unexpectedly entered the shop; stop without purchasing')
+            raise RequestHumanTakeover
 
     def gacha_prep(self, target, skip_first_screenshot=True):
         """
@@ -60,6 +115,7 @@ class RewardGacha(GachaUI, Retirement):
             else:
                 self.device.screenshot()
 
+            self.gacha_guard_shop()
             if self.appear_then_click(BUILD_SUBMIT_ORDERS, interval=3):
                 ocr_submit = OCR_BUILD_SUBMIT_COUNT
                 confirm_timer.reset()
@@ -178,7 +234,7 @@ class RewardGacha(GachaUI, Retirement):
 
         return target_pool
 
-    def gacha_flush_queue(self, skip_first_screenshot=True):
+    def gacha_flush_queue(self, skip_first_screenshot=True, collect_only=False):
         """
         Flush build order queue to ensure empty before submission.
 
@@ -200,39 +256,78 @@ class RewardGacha(GachaUI, Retirement):
         # and end up in Gacha/Build page
         confirm_timer = Timer(1, count=2).start()
         confirm_mode = True  # Drill, Lock Ship
+        empty_timer = Timer(1, count=3).start()
         # Clear button offset, or will click at the PLUS button of gems or HOME button
         STORY_SKIP.clear_offset()
-        queue_clean = True
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
-            if self.appear(BUILD_QUEUE_EMPTY, offset=(20, 20)) and queue_clean:
-                self.gacha_side_navbar_ensure(upper=1)
-                break
-            else:
-                queue_clean = False
+            self.gacha_guard_shop()
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
+                if self.appear(KR_GACHA_NEW_SHIP, offset=(3, 3), interval=1, similarity=0.85):
+                    self.device.click(KR_GACHA_NEW_SHIP)
+                empty_timer.reset()
+                continue
+            # The empty-slot image can also match a fading acquisition screen.
+            # Require the build header and a stable empty queue before leaving.
+            if self.ui_page_appear(page_build) and self.appear(BUILD_QUEUE_EMPTY, offset=(20, 20)):
+                if empty_timer.reached():
+                    self.gacha_side_navbar_ensure(upper=1)
+                    break
+                continue
+            empty_timer.reset()
+
+            if collect_only:
+                # The ordinary queue handler may confirm quick-finish or
+                # retirement. A collect-only run must fail closed instead.
+                if (self.retirement_appear()
+                        or self.appear(POPUP_CONFIRM, offset=(20, 20))
+                        or (self.config.SERVER == 'kr' and self.appear(
+                            KR_GACHA_FINISH_CONFIRM, offset=(3, 3), similarity=0.75))):
+                    raise RequestHumanTakeover(
+                        'Collect-only construction needs confirmation; stop without spending or retiring')
 
             if self.appear_then_click(BUILD_FINISH_ORDERS, interval=3):
                 confirm_timer.reset()
                 continue
 
-            if self.handle_retirement():
+            if not collect_only and self.handle_retirement():
                 confirm_timer.reset()
                 continue
 
-            if self.handle_popup_confirm('FINISH_ORDERS'):
+            if not collect_only and self.handle_popup_confirm('FINISH_ORDERS'):
                 if confirm_mode:
                     self.device.sleep((0.5, 0.8))
                     self.device.click(BUILD_FINISH_ORDERS)  # Skip animation, safe area
                     confirm_mode = False
                 confirm_timer.reset()
                 continue
+            if not collect_only and self.config.SERVER == 'kr' and self.appear_then_click(
+                    KR_GACHA_FINISH_CONFIRM, offset=(3, 3),
+                    interval=3, similarity=0.75):
+                confirm_timer.reset()
+                continue
 
-            if self.appear(GET_SHIP, offset=(20, 20), interval=1):
-                self.device.click(STORY_SKIP)  # Fast forward for multiple orders
+            if self.appear(GET_SHIP, offset=False if self.config.SERVER == 'kr' else (20, 20), interval=1):
+                # The KR top bar can return before the result template fades.
+                # Never fast-forward at the currency/shop shortcut coordinates.
+                self.device.click(GET_SHIP if self.config.SERVER == 'kr' else STORY_SKIP)
+                confirm_timer.reset()
+                continue
+            # The KR result screen uses a broad blue title area instead of the
+            # templates available for other servers.  The build pool banner can
+            # contain the same colour, so finish detection must take precedence.
+            if self.appear(BUILD_SUBMIT_ORDERS) or self.appear(BUILD_SUBMIT_WW_ORDERS):
+                if confirm_timer.reached():
+                    break
+                continue
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_BUILD_GET_SHIP, offset=(3, 3), similarity=0.72):
+                self.device.click(KR_BUILD_GET_SHIP)
                 confirm_timer.reset()
                 continue
             if self.handle_get_items_ship():
@@ -260,17 +355,34 @@ class RewardGacha(GachaUI, Retirement):
             out: BUILD_FINISH_ORDERS
         """
         logger.info('Submit gacha')
+        submitted = False
         while 1:
             if skip_first_screenshot:
                 skip_first_screenshot = False
             else:
                 self.device.screenshot()
 
-            if self.appear(POPUP_CONFIRM, offset=(20, 80), interval=3):
+            self.gacha_guard_shop()
+            # KR opens the ship-introduction page immediately after a build.
+            # Its left-side comment icon is stable and absent from build pools.
+            if self.config.SERVER == 'kr' and self.appear(
+                    KR_GACHA_NEW_SHIP, offset=(3, 3), similarity=0.85):
+                if self.appear(KR_GACHA_NEW_SHIP, offset=(3, 3), interval=1, similarity=0.85):
+                    self.device.click(KR_GACHA_NEW_SHIP)
+                continue
+            if not submitted and self.config.SERVER == 'kr' and self.image_color_count(
+                    KR_GACHA_SUBMIT_CONFIRM,
+                    color=KR_GACHA_SUBMIT_CONFIRM.color,
+                    threshold=45, count=1200):
+                self.device.click(KR_GACHA_SUBMIT_CONFIRM)
+                submitted = True
+                continue
+            if not submitted and self.appear(POPUP_CONFIRM, offset=(20, 80), interval=3):
                 # Alter asset name for click
                 POPUP_CONFIRM.name = POPUP_CONFIRM.name + '_' + 'GACHA_ORDER'
                 self.device.click(POPUP_CONFIRM)
                 POPUP_CONFIRM.name = POPUP_CONFIRM.name[:-len('GACHA_ORDER') - 1]
+                submitted = True
                 continue
 
             # End
@@ -295,10 +407,18 @@ class RewardGacha(GachaUI, Retirement):
         # builds to ensure starting fresh
         # Upon exit, expected to be in
         # main Build page
-        self.gacha_flush_queue()
+        if self.config.Gacha_Amount == 0:
+            self.gacha_flush_queue(collect_only=True)
+        else:
+            self.gacha_flush_queue()
+
+        # Collect completed builds without entering any new-order path.
+        if self.config.Gacha_Amount == 0:
+            logger.info('Collect-only construction completed; no new orders')
+            return True
 
         # OCR Gold and Cubes
-        self.build_coin_count = OCR_COIN.ocr(self.device.image)
+        self.build_coin_count = OCR_BUILD_COIN_COUNT.ocr(self.device.image)
         self.build_cube_count = OCR_BUILD_CUBE_COUNT.ocr(self.device.image)
 
         # Transition to appropriate target construction pool

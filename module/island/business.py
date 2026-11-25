@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.config.utils import get_server_next_update
+from module.exception import RequestHumanTakeover
 from module.island.assets import *
 from module.island.utils import production_place_name_with_id
 from module.island_handler.assets import ISLAND_RESTAURANT_ANIMATION_CHECK
@@ -91,6 +92,9 @@ class IslandBusiness(IslandRestaurant):
                     return id
         else:
             logger.warning("Failed to recognize restaurant")
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_island_restaurant_unknown.png')
+                raise RequestHumanTakeover('Korean restaurant is not recognized; do not report it as checked.')
         return None
 
     def is_restaurant_running(self, button):
@@ -130,9 +134,21 @@ class IslandBusiness(IslandRestaurant):
             logger.info("No more restaurants")
 
     def run(self):
+        if self.config.SERVER == 'kr' and self.appear(ISLAND_BUSINESS_EVENT_POPUP_CANCEL, offset=(20, 20)):
+            self.handle_restaurant_popup()
+        if self.config.SERVER == 'kr' and self.is_in_island_restaurant():
+            self.ui_back(page_island_manage.check_button)
         self.ui_ensure(page_island_manage)
-        self.island_manage_side_navbar_ensure(upper=2)
-        self.handle_restaurant_popup()
+        ready = self.island_manage_side_navbar_ensure(upper=2)
+        cleared = self.handle_restaurant_popup()
+        if self.config.SERVER == 'kr':
+            if not cleared:
+                raise RequestHumanTakeover('KR restaurant notice did not close; no list scanning')
+            if not ready:
+                if not self.island_manage_side_navbar_ensure(upper=2, skip_first_screenshot=False):
+                    raise RequestHumanTakeover('KR restaurant tab not confirmed after notice')
+                if not self.handle_restaurant_popup():
+                    raise RequestHumanTakeover('KR restaurant notice remains after tab selection')
         self.restaurant_swipe_to_top()
         unchecked_restaurants = list(RESTAURANT_IDS)
         next_run_time = {
@@ -175,14 +191,20 @@ class IslandBusiness(IslandRestaurant):
                 unchecked_restaurants.remove(restaurant_id)
                 self.next_restaurant()
                 continue
-            logger.info(f"Restaurant {restaurant} is ready")
-            for _ in self.loop():
+            logger.info(f"Restaurant {restaurant_id} is ready")
+            for _ in self.loop(timeout=8 if self.config.SERVER == 'kr' else None):
                 if self.appear(page_island_manage.check_button, offset=(20, 20), interval=1):
                     self.device.click(entrance_button)
                     continue
-                if self.appear(ISLAND_RESTAURANT_ANIMATION_CHECK, offset=(-170, -20, 20, 20)):  # 20261016, slow animation for loading restaurants
+                if ((self.config.SERVER == 'kr' and self.is_in_island_restaurant())
+                        or self.appear(ISLAND_RESTAURANT_ANIMATION_CHECK, offset=(-170, -20, 20, 20))):
                     break
+            else:
+                if self.config.SERVER == 'kr':
+                    self.device.image_save('./log/kr_restaurant_entry_unknown.png')
+                    raise RequestHumanTakeover('KR restaurant entry not confirmed; no repeated list clicks')
             self.working_restaurant_id = restaurant_id
+            already_running = self.config.SERVER == 'kr' and self.restaurant_running()
             self.waitress_occupied = False
             success = super().run()
             if not success and self.waitress_occupied:
@@ -200,6 +222,11 @@ class IslandBusiness(IslandRestaurant):
             del_cached_property(super(), '_restaurant_offset')
             if restaurant_id in unchecked_restaurants:
                 unchecked_restaurants.remove(restaurant_id)
+            if already_running:
+                # The localized list label may miss a running restaurant even
+                # though its detail page confirms it. Do not defer to midnight.
+                self.device.image_save('./log/kr_restaurant_running_list.png')
+                next_run_time[restaurant_id] = datetime.now() + self.get_remain_time(button)
             if success:
                 next_run_time[restaurant_id] = datetime.now() + timedelta(hours=8)
                 # Since dealt restaurants will be moved to the bottom,

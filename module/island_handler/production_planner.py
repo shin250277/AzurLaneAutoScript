@@ -1,3 +1,10 @@
+from datetime import datetime
+
+from module.base.decorator import cached_property
+from module.config.utils import server_time_offset
+import module.config.server as server
+from module.exception import RequestHumanTakeover
+from module.logger import logger
 from module.base.base import ModuleBase
 from module.island.utils import (
     get_configured_season,
@@ -6,7 +13,7 @@ from module.island.utils import (
     load_item_mapping,
     load_technology_status,
 )
-from module.island_handler.production_plan_calculator import ProductionPlanCalculator
+from module.island_handler.production_plan_calculator import ProductionPlanCalculator, get_current_activity_list
 from module.island_handler.restaurant_config import (
     RESTAURANT_CONFIG,
     RESTAURANT_IDS,
@@ -97,6 +104,15 @@ def create_production_problem(config):
 
 
 class IslandProductionPlanner(ModuleBase):
+    @property
+    def current_activity_list(self):
+        season = get_configured_season(self.config)
+        if server.server == 'kr':
+            active = get_current_activity_list(datetime.now() - server_time_offset())
+            if active is None or set(active) != set(season['activity']):
+                raise ValueError('Configured island season does not match the verified KR schedule')
+        return season['activity']
+
     """Config/device adapter around ProductionPlanCalculator.
 
     Reads planner inputs from config, runs the pure calculator, then writes
@@ -117,6 +133,13 @@ class IslandProductionPlanner(ModuleBase):
             export=True,
             use_item_name_in_export=True,
     ):
+        # Do not spend minutes scanning the game or export a foreign season's
+        # production plan when regional schedule data is unavailable.
+        try:
+            self.current_activity_list
+        except ValueError as exc:
+            logger.critical(str(exc))
+            raise RequestHumanTakeover(str(exc))
         if tech_status_yaml is not None:
             technology_status = tech_status_yaml
         else:
@@ -152,10 +175,16 @@ class IslandProductionPlanner(ModuleBase):
         calculator.solve_production_plan(hard_floor_items=hard_floor_items, **demands)
         calculator.print_solved_production_plan()
         if export:
+            if not calculator.lp_success:
+                raise RequestHumanTakeover(
+                    'Production optimization failed; preserve existing buffers, hard floors and menus')
             inventory_levels_yaml_text = calculator.daily_buffer_items_to_yaml(use_item_name=use_item_name_in_export)
             idle_accumulating_items_yaml_text = calculator.idle_accumulating_items_to_yaml(use_item_name=use_item_name_in_export)
             hard_floor_items_yaml_text = calculator.hard_floor_items_to_yaml(use_item_name=use_item_name_in_export)
             restaurant_menu_yaml_texts = calculator.restaurant_menus_to_yaml()
+            if any(slot not in restaurant_menu_yaml_texts for slot in self.RESTAURANT_MENU_CONFIG):
+                raise RequestHumanTakeover(
+                    'Incomplete restaurant plan; preserve existing buffers, hard floors and menus')
             with self.config.multi_set():
                 self.config.cross_set("IslandProductionPlanner.Storage.Storage.IslandTechnologyStatus", technology_status)
                 self.config.cross_set("IslandProduction.IslandProduction.DailyBufferItems", inventory_levels_yaml_text)

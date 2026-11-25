@@ -134,6 +134,11 @@ class GitManager(DeployConfig):
             Progress.GitShowVersion()
             return
 
+        if self.Branch.startswith('codex/kr-'):
+            from deploy.kr_update import fast_forward
+            fast_forward(self.git, self.Branch, self.Repository)
+            Progress.GitShowVersion()
+            return
         if self.GitOverCdn:
             if self.goc_client.update():
                 return

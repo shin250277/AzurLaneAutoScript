@@ -11,6 +11,9 @@ import module.config.server as server
 from module.base.button import ButtonGrid
 from module.base.decorator import cached_property, del_cached_property
 from module.base.timer import Timer
+from module.base.utils import color_similarity_2d, extract_letters, random_rectangle_vector_opted
+from module.exception import GameTooManyClickError, RequestHumanTakeover
+from module.island.data import DIC_ISLAND_ITEM, DIC_ISLAND_RECIPE, DIC_ISLAND_SHOP_ITEM_TO_RECIPE, DIC_ISLAND_SLOT
 from module.base.utils import area_offset, color_similarity_2d, extract_letters, random_rectangle_vector_opted
 from module.exception import GameTooManyClickError
 from module.island.data import (
@@ -63,7 +66,14 @@ elif server.server == 'tw':
 else:
     lang = 'cnocr'
 RECIPE_PRODUCT_NAME_OCR = Ocr([], lang=lang, letter=(57, 59, 61), threshold=160, name='product_name_ocr')
+if server.server == 'kr':
+    from module.island_handler.korean_ocr import KoreanIslandNameOcr
+    RECIPE_PRODUCT_NAME_OCR = KoreanIslandNameOcr([], name='product_name_ocr_kr')
 RECIPE_PRODUCT_STOCK_OCR = Digit([], lang='cnocr', letter=(80, 80, 80), threshold=160, name='product_stock_ocr')
+if server.server == 'kr':
+    from module.island_handler.korean_stock import KoreanRecipeStockDigit
+    RECIPE_PRODUCT_STOCK_OCR = KoreanRecipeStockDigit(
+        [], lang='cnocr', letter=(80, 80, 80), threshold=160, name='product_stock_ocr')
 ISLAND_RECIPE_AMOUNT_OCR = Digit(ISLAND_RECIPE_AMOUNT, letter=(50, 50, 57), name='recipe_amount_ocr')
 
 
@@ -117,8 +127,12 @@ class IslandReversedDigitCounter(Ocr):
         total = int(match.group(1))
         if match.group(4) is not None:
             current = int(match.group(4))
+            components = (current, 0)
         else:
             current = int(match.group(2)) + int(match.group(3))
+            components = (int(match.group(2)), int(match.group(3)))
+        if hasattr(self, 'observed_components'):
+            self.observed_components.append(components)
         return total, current, total - current
 
 
@@ -231,6 +245,10 @@ def get_optional_recipe_entry_weight(entry):
     )
 
 
+class KoreanRecipeNameUnknown(RequestHumanTakeover):
+    """Read-only name recognition failed; never authorize a production start."""
+
+
 def recipe_product_name_to_recipe_id(name, slotcode=None):
     if server.server == 'jp':
         # While we have 果樹園二重奏 and 朝光活力コンビ, the problem of カニ as 力二 is worse,
@@ -245,6 +263,15 @@ def recipe_product_name_to_recipe_id(name, slotcode=None):
         recipe_lists = get_slot_recipe_ids(slotcode, None, include_inactive=True)
     else:
         recipe_lists = DIC_ISLAND_RECIPE.keys()
+
+    if server.server == 'kr':
+        normalized = re.sub(r'\s+', '', name or '')
+        matches = [recipe_id for recipe_id in recipe_lists if normalized and normalized ==
+                   re.sub(r'\s+', '', DIC_ISLAND_ITEM[get_recipe_product_id(recipe_id)]['name'].get('kr', ''))]
+        if len(matches) == 1:
+            return matches[0]
+        logger.warning('KR recipe name is empty, unknown or ambiguous; do not guess a product')
+        return None
 
     for recipe_id in recipe_lists:
         product_id = get_recipe_product_id(recipe_id)
@@ -299,6 +326,9 @@ class IslandRecipe(IslandExchange, IslandShop):
     def recipe_grid(self):
         for _ in self.loop(timeout=2):
             grid = self.get_recipe_grid()
+            if (len(grid.buttons) >= 3 or getattr(grid, 'kr_scrollable', False)
+                    or len(grid.buttons) == 1 and self.working_slot_id in [9031, 9032, 9033, 9034]):
+                return grid
             if len(grid.buttons) >= 3:
                 return grid
             if self._recipe_list_is_short(grid) and self.appear(ISLAND_RECIPE_AMOUNT_MAX, offset=(20, 20)):
@@ -309,6 +339,36 @@ class IslandRecipe(IslandExchange, IslandShop):
         rows = self._get_recipe_buttons()
         count = len(rows)
         delta_y = RECIPE_DELTA[1]
+        if server.server == 'kr' and count >= 4:
+            # A weak anchor can match a decoration above a selected recipe.
+            # Remove it only when one unique lattice has >=3 observed rows;
+            # never synthesize a missing row or change foreign-server geometry.
+            ys = rows[:, 1]
+            groups = {tuple(i for i, y in enumerate(ys) if
+                            abs((y - base) / delta_y - round((y - base) / delta_y)) * delta_y <= 3)
+                      for base in ys}
+            best_size = max(map(len, groups))
+            best = [group for group in groups if len(group) == best_size]
+            if (len(best) == 1 and 3 <= best_size < count
+                    and all(abs(step - delta_y) <= 3 for step in np.diff(ys[list(best[0])]))):
+                logger.info('KR recipe lattice excludes off-grid decoration: {}'.format(ys.tolist()))
+                rows = rows[list(best[0])]
+                count = len(rows)
+        slot = DIC_ISLAND_SLOT.get(getattr(self, 'working_slot_id', None), {})
+        if (server.server == 'kr' and slot.get('place') == 102
+                and len(slot.get('formula', []) + slot.get('activity_formula', [])) == 1
+                and count > 1):
+            # The empty ranch panel can resemble the weak recipe anchor.
+            # Only discard off-grid hits when the known single recipe has
+            # its normal top anchor; never infer an unobserved first row.
+            ys = sorted(rows[:, 1])
+            top = 114 - RECIPE_DETECT_AREA[1]
+            if abs(ys[0] - top) <= 3 and all(
+                    abs((y - ys[0]) / delta_y - round((y - ys[0]) / delta_y)) * delta_y > 5
+                    for y in ys[1:]):
+                logger.info('Ignore off-grid empty-panel anchors for single KR ranch recipe')
+                rows = rows[:1]
+                count = 1
         if count > 4:
             logger.warning(f'Found {count} recipe anchors, which is more than expected, fixing count to 4')
             count = 4
@@ -317,14 +377,26 @@ class IslandRecipe(IslandExchange, IslandShop):
             # Fit the shared origin so one noisy anchor cannot shift the grid.
             row_offsets = np.rint((y_list - y_list.min()) / delta_y) * delta_y
             origin_y = round(float(np.median(y_list - row_offsets))) + RECIPE_DETECT_AREA[1]
+            if server.server == 'kr' and 2 <= len(rows) <= 4:
+                # The KR header mask is calibrated to observed anchors, not a
+                # fitted off-screen origin when a middle row is missing.
+                origin_y = int(y_list.min()) + RECIPE_DETECT_AREA[1]
         else:
             logger.warning('Unable to find recipe anchors, assume recipes are at top')
             origin_y = RECIPE_GRID_TOP_ORIGIN[1]
 
+        raw_count = count
+        if server.server == 'kr' and count > 1 and origin_y + RECIPE_PRODUCT_NAME_AREA[1] < 110:
+            # The fixed translucent header overprints a scrolled first name.
+            # Read/select only unobscured rows; a later scroll exposes the
+            # skipped product normally. Apply the same grid to names/stocks.
+            origin_y += delta_y
+            count -= 1
         recipe_grid = ButtonGrid(
             origin=(181, origin_y), delta=(0, delta_y), button_shape=RECIPE_SIZE,
             grid_shape=(1, count), name='RECIPE_GRID'
         )
+        recipe_grid.kr_scrollable = server.server == 'kr' and raw_count >= 3
         return recipe_grid
 
     def _recipe_list_is_short(self, grid):
@@ -348,21 +420,103 @@ class IslandRecipe(IslandExchange, IslandShop):
         return self.get_recipe_ids()
 
     def get_recipe_ids(self):
-        product_name_grid = self.recipe_grid.crop(RECIPE_PRODUCT_NAME_AREA, name='RECIPE_PRODUCT_NAME_GRID')
+        # KR Hangul/underline can touch the 23px crop after anchor rounding.
+        # Retain surrounding pixels for OCR/template context, not new click
+        # or stock coordinates. Other servers keep their original crop.
+        name_area = (123, 19, 269, 50) if server.server == 'kr' else RECIPE_PRODUCT_NAME_AREA
+        product_name_grid = self.recipe_grid.crop(name_area, name='RECIPE_PRODUCT_NAME_GRID')
         product_name_images = [self.image_crop(button.area, copy=True) for button in product_name_grid.buttons]
         product_names = RECIPE_PRODUCT_NAME_OCR.ocr(product_name_images, direct_ocr=True)
         corrected_ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in product_names]
+        if server.server == 'kr' and (not corrected_ids or None in corrected_ids):
+            # Translucent labels/scrolling long text can be caught between
+            # rasterization frames. Retry observations only, never clicks or
+            # name correction. Require unchanged row geometry, no conflicting
+            # known identity and two consecutive complete matching reads.
+            areas = [tuple(button.area) for button in product_name_grid.buttons]
+            known = list(corrected_ids)
+            previous_complete = None
+            for _ in range(3):
+                self.device.sleep(.35)
+                self.device.screenshot()
+                if not self.is_in_recipe_menu():
+                    break
+                fresh_recipe_grid = self.get_recipe_grid()
+                fresh_grid = fresh_recipe_grid.crop(name_area, name='RECIPE_PRODUCT_NAME_GRID')
+                if [tuple(button.area) for button in fresh_grid.buttons] != areas:
+                    break
+                frames = [self.image_crop(button.area, copy=True) for button in fresh_grid.buttons]
+                names = RECIPE_PRODUCT_NAME_OCR.ocr(frames, direct_ocr=True)
+                ids = [recipe_product_name_to_recipe_id(name, slotcode=self.working_slot_id) for name in names]
+                if None in ids and self.working_slot_id in DIC_ISLAND_SLOT:
+                    from module.island_handler.korean_recipe_icon import resolve_recipe_icons
+                    icon_grid = fresh_recipe_grid.crop((20, 20, 115, 115), name='KR_RECIPE_ICON_GRID')
+                    icons = [self.image_crop(button.area, copy=True) for button in icon_grid.buttons]
+                    confirmed = resolve_recipe_icons(names, ids, icons, self.working_slot_id, labels=frames)
+                    if confirmed != ids:
+                        logger.info('KR recipe icon and visible long text agree: %s' % confirmed)
+                    ids = confirmed
+                if len(ids) != len(known) or any(a is not None and b is not None and a != b
+                                                for a, b in zip(known, ids)):
+                    break
+                known = [a if a is not None else b for a, b in zip(known, ids)]
+                if ids and None not in ids and len(set(ids)) == len(ids):
+                    if ids == previous_complete:
+                        logger.info('KR recipe names recovered by two stable read-only captures')
+                        return ids
+                    previous_complete = ids
+                # A missing OCR result supplies no contradictory identity.
+                # Keep the last complete observation within this fixed three-
+                # capture window. Any known-name conflict, changed row geometry
+                # or page already aborts above. Two complete identical reads
+                # are still required; never merge partial reads to authorize.
+            self.device.image_save('./log/kr_island_recipe_unknown.png')
+            raise KoreanRecipeNameUnknown('Korean recipe names are not all uniquely recognized; no production started')
         return corrected_ids
 
     def get_recipe_product_stocks(self):
-        stock_grid = self.recipe_grid.crop(RECIPE_PRODUCT_STOCK_AREA, name='RECIPE_PRODUCT_STOCK_GRID')
+        # KR scroll rounding can remove the bottom context of repeated digits
+        # (observed 1311 -> 131). Preserve the original top/left prefix geometry.
+        stock_area = (212, 92, 275, 114) if server.server == 'kr' else RECIPE_PRODUCT_STOCK_AREA
+        stock_grid = self.recipe_grid.crop(stock_area, name='RECIPE_PRODUCT_STOCK_GRID')
         stock_images = [self.image_crop(button.area, copy=True) for button in stock_grid.buttons]
         stocks = RECIPE_PRODUCT_STOCK_OCR.ocr(stock_images, direct_ocr=True)
         return stocks
 
+    def settle_korean_recipe_grid(self):
+        """Wait for three row geometries within two pixels; never add input."""
+        observations = []
+        # KR inertia can expose a fourth row only on observation five.
+        # Keep the same three-read criterion, with a bounded extra two reads.
+        for _ in range(8):
+            if not self.is_in_recipe_menu():
+                raise RequestHumanTakeover('KR recipe page changed while waiting for scroll')
+            grid = self.get_recipe_grid()
+            areas = [tuple(button.area) for button in grid.buttons]
+            logger.attr('KR recipe row geometry', areas)
+            observations.append(areas)
+            observations = observations[-3:]
+            stable = (len(observations) == 3 and areas
+                      and all(len(old) == len(areas) for old in observations))
+            if stable:
+                for rows in zip(*observations):
+                    if (len({(r[0], r[2]) for r in rows}) != 1
+                            or any(max(r[i] for r in rows)-min(r[i] for r in rows) > 2
+                                   for i in (1, 3))):
+                        stable = False
+                        break
+            if stable:
+                # Names and stocks must use this same settled observation.
+                self.recipe_grid = grid
+                return
+            self.device.sleep(.25)
+            self.device.screenshot()
+        self.device.image_save('./log/kr_island_recipe_unsettled.png')
+        raise RequestHumanTakeover('KR recipe rows did not settle; no reading or production')
+
     def next_recipe_page(self):
         grid = self.recipe_grid
-        if len(grid.buttons) < 3 or self._recipe_list_is_short(grid):
+        if not getattr(grid, 'kr_scrollable', False) and (len(grid.buttons) < 3 or self._recipe_list_is_short(grid)):
             logger.info('No need to swipe to next recipe page')
             return
         else:
@@ -372,9 +526,12 @@ class IslandRecipe(IslandExchange, IslandShop):
             del_cached_property(self, 'recipe_ids')
             self.device.screenshot()
 
+            if server.server == 'kr':
+                self.settle_korean_recipe_grid()
+
     def prev_recipe_page(self):
         grid = self.recipe_grid
-        if len(grid.buttons) < 3 or self._recipe_list_is_short(grid):
+        if not getattr(grid, 'kr_scrollable', False) and (len(grid.buttons) < 3 or self._recipe_list_is_short(grid)):
             logger.info('No need to swipe to previous recipe page')
             return
         else:
@@ -383,6 +540,8 @@ class IslandRecipe(IslandExchange, IslandShop):
             del_cached_property(self, 'recipe_grid')
             del_cached_property(self, 'recipe_ids')
             self.device.screenshot()
+            if server.server == 'kr':
+                self.settle_korean_recipe_grid()
 
     def scan_all_recipe_stocks(self):
         for _ in self.loop(timeout=3):
@@ -392,10 +551,22 @@ class IslandRecipe(IslandExchange, IslandShop):
         all_stocks = {}
         confirm_bottom = False
         for _ in self.loop(timeout=30):
-            new_stocks = dict(zip(self.recipe_ids, self.get_recipe_product_stocks()))
+            recipe_ids = self.recipe_ids
+            stocks = self.get_recipe_product_stocks()
+            if server.server == 'kr':
+                from module.island.kr_preflight import verified_recipe_stocks
+                new_stocks = verified_recipe_stocks(recipe_ids, stocks, all_stocks)
+                if new_stocks is None:
+                    self.device.image_save('./log/kr_island_stock_unknown.png')
+                    raise RequestHumanTakeover('KR recipe stock evidence incomplete or conflicting; no spending')
+                # Keep the preceding accepted page locally so an overlap
+                # mismatch has both observations, not only the second one.
+                self.device.image_save('./log/kr_island_stock_previous.png')
+            else:
+                new_stocks = dict(zip(recipe_ids, stocks))
             all_stocks.update(new_stocks)
             at_bottom = self.recipe_at_bottom()
-            if at_bottom and (self._recipe_list_is_short(self.recipe_grid)
+            if at_bottom and ((server.server != 'kr' and self._recipe_list_is_short(self.recipe_grid))
                               or confirm_bottom and self.appear(ISLAND_RECIPE_DRAG_CHECK, offset=(20, 20))):
                 logger.info('Reached recipe list bottom')
                 self.device.click_record_clear()
@@ -409,6 +580,10 @@ class IslandRecipe(IslandExchange, IslandShop):
             # Rescan even if sparse recognition prevented a drag.
             del_cached_property(self, 'recipe_grid')
             del_cached_property(self, 'recipe_ids')
+        else:
+            if server.server == 'kr':
+                self.device.image_save('./log/kr_island_stock_unknown.png')
+                raise RequestHumanTakeover('KR recipe list bottom not confirmed; inventory scan incomplete')
         return all_stocks
 
     @cached_property
@@ -652,6 +827,7 @@ class IslandRecipe(IslandExchange, IslandShop):
             return None
 
     def get_recipe_ingredient_counters(self):
+        self.recipe_ingredient_components = None
         active_recipe_id = self.get_active_recipe_id()
         ingredient_grids = self.get_recipe_ingredient_grids(active_recipe_id)
         if ingredient_grids is None:
@@ -660,7 +836,9 @@ class IslandRecipe(IslandExchange, IslandShop):
         counter_grids = ingredient_grids.crop((-10, 66, 92, 84), name='counter_grids')
         for _ in self.loop(timeout=3):
             counter_images = [self.image_crop(button.area, copy=True) for button in counter_grids.buttons]
+            RECIPE_INGREDIENT_COUNTER_OCR.observed_components = []
             counters = RECIPE_INGREDIENT_COUNTER_OCR.ocr(counter_images, direct_ocr=True)
+            self.recipe_ingredient_components = list(RECIPE_INGREDIENT_COUNTER_OCR.observed_components)
             if (0, 0, 0) not in counters:
                 break
         return counters
@@ -708,6 +886,8 @@ class IslandRecipe(IslandExchange, IslandShop):
     def goto_ingredient_shop_page(self, entrance_button):
         click_timer = Timer(1, count=3).reset()
         for _ in self.loop(timeout=15):
+            if self.config.SERVER == 'kr' and self.ui_page_appear(page_island_shop, offset=(0, 20)):
+                return True
             if self.appear(ISLAND_INFO_GOTO_SHOP, offset=(20, 20)):
                 break
             if self.is_in_recipe_menu():
@@ -715,6 +895,8 @@ class IslandRecipe(IslandExchange, IslandShop):
                     self.device.click(entrance_button)
         else:
             logger.warning('Unable to find ingredient button, failed to goto ingredient shop page')
+            if self.config.SERVER == 'kr':
+                self.device.image_save('./log/kr_ingredient_shop_navigation_failed.png')
             return False
         for _ in self.loop(timeout=15, skip_first=False):
             if self.appear_then_click(ISLAND_INFO_GOTO_SHOP, offset=(20, 20), interval=2):
@@ -726,6 +908,46 @@ class IslandRecipe(IslandExchange, IslandShop):
             return False
 
     def prepare_ingredients(self, recipe_id, batch_count=float('inf'), mode=None):
+        if self.config.SERVER == 'kr':
+            # Never enter the foreign-server purchasing/exchange branches.
+            # The selected recipe and a one-batch display must agree first.
+            from module.island.kr_preflight import owned_batch_limit, verified_owned_unit_cost
+            self.kr_owned_cost = None
+            self.kr_owned_protected = None
+            if (self.get_active_recipe_id() != recipe_id
+                    or ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image) != 1):
+                return False, 0
+            floors, reserves, buffers = self.production_floor_items
+            tasks = self.get_task_target_items()
+            cost = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
+            protected = {}
+            for item in cost:
+                values = (floors.get(item, 0), reserves.get(item, 0), buffers.get(item, 0),
+                          tasks.get(item, {}).get('total_need_count', 0))
+                from numbers import Integral
+                if any(isinstance(v, bool) or not isinstance(v, Integral) or v < 0 for v in values):
+                    return False, 0
+                protected[item] = sum(values)
+            counters = self.get_recipe_ingredient_counters()
+            # Only ranch formulas have the observed base+surcharge display.
+            parts = (getattr(self, 'recipe_ingredient_components', None)
+                     if recipe_id in (101013, 101015, 101016, 101018) else None)
+            actual_cost = verified_owned_unit_cost(cost, counters, parts)
+            if actual_cost is None:
+                return False, 0
+            # Only observed ordinary-coin material dialogs are connected here.
+            # Composite ingredients and surplus-buffer work stay owned-only.
+            from module.island_handler.kr_coin_material import replenish_for_recipe
+            counters = replenish_for_recipe(self, recipe_id, actual_cost, counters,
+                                            protected, batch_count, mode)
+            if counters is None:
+                return False, 0
+            count = owned_batch_limit(actual_cost, counters,
+                                      batch_count, DIC_ISLAND_RECIPE[recipe_id]['production_limit'],
+                                      protected)
+            self.kr_owned_cost = (recipe_id, actual_cost)
+            self.kr_owned_protected = protected
+            return count == batch_count and count > 0, count
         # use this before setting recipe batch count to read out current ingredient need per batch,
         # since ranch recipes may have boosted ingredient requirement for higher batch production.
         counters = self.get_recipe_ingredient_counters()
@@ -868,11 +1090,26 @@ class IslandRecipe(IslandExchange, IslandShop):
         return success, real_count
 
     def set_recipe_batch_count(self, batch_count=float('inf')):
-        if batch_count != 1:
-            for _ in self.loop():
-                if self.appear_then_click(ISLAND_RECIPE_AMOUNT_MAX, offset=(20, 20)):
-                    self.device.screenshot()
-                    break
+        if self.config.SERVER == 'kr':
+            from numbers import Integral
+            if isinstance(batch_count, bool) or not isinstance(batch_count, Integral) or batch_count <= 0:
+                return False
+            # Do not jump to MAX or issue a blind multi-click sequence on KR.
+            for _ in self.loop(skip_first=False, timeout=30):
+                if not self.is_in_recipe_menu():
+                    return False
+                current = ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image)
+                if isinstance(current, bool) or not isinstance(current, Integral) or current <= 0:
+                    return False
+                if current == batch_count:
+                    return True
+                button = ISLAND_RECIPE_AMOUNT_PLUS if current < batch_count else ISLAND_RECIPE_AMOUNT_MINUS
+                self.appear_then_click(button, offset=(20, 20), interval=0.3)
+            return False
+        for _ in self.loop():
+            if self.appear_then_click(ISLAND_RECIPE_AMOUNT_MAX, offset=(20, 20)):
+                self.device.screenshot()
+                break
         if batch_count == float('inf'):
             logger.info('Set recipe amount to max')
             return True
@@ -917,6 +1154,9 @@ class IslandRecipe(IslandExchange, IslandShop):
                 f'Failed to set recipe to {format_recipe_with_product(recipe_id)}, cannot run recipe'
             )
             return None
+        if self.config.SERVER == 'kr' and not self.set_recipe_batch_count(1):
+            logger.warning('KR one-batch baseline could not be verified; no ingredient planning or start')
+            return None
         success, real_count = self.prepare_ingredients(
             recipe_id,
             batch_count=batch_count,
@@ -941,6 +1181,34 @@ class IslandRecipe(IslandExchange, IslandShop):
         remain_time = self.get_recipe_remain_time()
         logger.attr('Recipe_remain_time', remain_time)
         if remain_time is not None:
+            if self.config.SERVER == 'kr':
+                from module.island.kr_preflight import owned_start_verified, validate_recipe_counters
+                from module.exception import RequestHumanTakeover
+                # Do not use the repeating foreign-server start-click loop.
+                self.device.screenshot()
+                protected = getattr(self, 'kr_owned_protected', None)
+                evidence = getattr(self, 'kr_owned_cost', None)
+                counters = self.get_recipe_ingredient_counters()
+                declared = DIC_ISLAND_RECIPE[recipe_id]['commission_cost']
+                parts = (getattr(self, 'recipe_ingredient_components', None)
+                         if recipe_id in (101013, 101015, 101016, 101018) else None)
+                if (protected is None or self.get_active_recipe_id() != recipe_id
+                        or evidence is None or evidence[0] != recipe_id
+                        or ISLAND_RECIPE_AMOUNT_OCR.ocr(self.device.image) != real_count
+                        or remain_time.total_seconds() <= 0
+                        or (declared and not validate_recipe_counters(
+                            declared, real_count, counters, require_available=False, components=parts))
+                        or not owned_start_verified(
+                            evidence[1], counters, real_count, protected)):
+                    raise RequestHumanTakeover('KR final production evidence changed; no start')
+                self.device.click(ISLAND_RECIPE_TIME_ANCHOR)
+                for _ in self.loop(timeout=15):
+                    if self.match_template_color(page_island_manage.check_button, offset=(0, 20)):
+                        self.kr_last_consumption = (recipe_id, real_count,
+                            {item: counter[1] for item, counter in zip(evidence[1], counters)})
+                        logger.info(f'KR owned recipe {recipe_id} started once, amount {real_count}')
+                        return remain_time, real_count
+                raise RequestHumanTakeover('KR production start outcome uncertain; no repeated start click')
             for _ in self.loop():
                 if self.appear_then_click(ISLAND_RECIPE_TIME_ANCHOR, offset=(100, 20), interval=2):
                     continue
@@ -956,8 +1224,15 @@ class IslandRecipe(IslandExchange, IslandShop):
             return None
 
     def update_recipe_id_sequence_and_stock(self, recipe_id, batch_count):
-        recipe_cost = get_recipe_data(recipe_id)['commission_cost']
-        consumed_items = {item_id: amount * batch_count for item_id, amount in recipe_cost.items()}
+        if self.config.SERVER == 'kr':
+            evidence = getattr(self, 'kr_last_consumption', None)
+            if evidence is None or evidence[:2] != (recipe_id, batch_count):
+                raise RequestHumanTakeover('KR production consumption evidence missing')
+            consumed_items = evidence[2]
+            self.kr_last_consumption = None
+        else:
+            recipe_cost = get_recipe_data(recipe_id)['commission_cost']
+            consumed_items = {item_id: amount * batch_count for item_id, amount in recipe_cost.items()}
         for old_recipe_id, info in self.recipe_info_by_id.items():
             product_id = get_recipe_product_id(old_recipe_id)
             if old_recipe_id == recipe_id:
@@ -993,6 +1268,13 @@ class IslandRecipe(IslandExchange, IslandShop):
         available_workload = emotion * 3000
         del_cached_property(self, 'recipe_grid')
         del_cached_property(self, 'recipe_ids')
+        if server.server == 'kr':
+            # The ingredient probe can leave a selected-card animation behind.
+            # Rebuilding the grid from that first frame may turn a single ranch
+            # recipe into three decorative anchors. Settle fresh observations
+            # before any identity lookup or purchase/start; never reuse an ID
+            # from the earlier audit to authorize the new screen.
+            self.settle_korean_recipe_grid()
         while self.recipe_id_sequence:
             for recipe_id, info, mode in self.recipe_id_sequence:
                 recipe = get_recipe_data(recipe_id)

@@ -67,6 +67,7 @@ class OpsiDaily(OSMap):
         if self.config.OpsiDaily_UseTuningSample:
             self.tuning_sample_use()
 
+        stalled_rounds = 0
         while True:
             # If unable to receive more dailies, finish them and try again.
             success = self.os_mission_overview_accept()
@@ -75,11 +76,20 @@ class OpsiDaily(OSMap):
             # need to confirm that the animation has ended,
             # or it will click on MAP_GOTO_GLOBE
             self.zone_init()
-            self.os_finish_daily_mission()
+            finished = self.os_finish_daily_mission()
             if self.is_in_opsi_explore():
                 self.os_port_mission()
                 break
             if success:
                 break
+            if finished:
+                stalled_rounds = 0
+            else:
+                stalled_rounds += 1
+                if stalled_rounds >= 2:
+                    logger.warning(
+                        'Unable to accept more OS missions and no active mission was detected; '
+                        'stop OpsiDaily to avoid retrying forever')
+                    break
 
         self.config.task_delay(server_update=True)

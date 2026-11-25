@@ -27,6 +27,10 @@ EVENT_SHOP_SCROLL = ShopScroll(
 )
 EVENT_SHOP_SCROLL.drag_threshold = 0.08
 EVENT_SHOP_SCROLL.edge_threshold = 0.1
+if server.server == 'kr':
+    # Edge drags deliberately overshoot. A target of 0.9 can settle at 0.99;
+    # accept that endpoint instead of repeatedly dragging an already full bar.
+    EVENT_SHOP_SCROLL.drag_threshold = 0.11
 
 if server.server == 'tw':
     EVENT_SHOP_DEADLINE_COLOR = (102, 204, 255)

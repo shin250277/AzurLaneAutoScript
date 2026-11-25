@@ -13,10 +13,10 @@ from module.logger import logger
 from module.map.map_grids import SelectedGrids
 from module.ocr.ocr import DigitCounter, Duration, Ocr
 from module.retire.assets import DOCK_CHECK, DOCK_EMPTY, SHIP_CONFIRM
-from module.retire.dock import CARD_GRIDS, CARD_LEVEL_GRIDS, Dock
+from module.retire.dock import CARD_GRIDS, CARD_LEVEL_GRIDS, DOCK_FAVOURITE, Dock
 from module.tactical.assets import *
 from module.ui.assets import BACK_ARROW, REWARD_CHECK, REWARD_GOTO_TACTICAL, TACTICAL_CHECK, TACTICAL_CHECK_2
-from module.ui.page import page_reward, page_tactical
+from module.ui.page import page_dock, page_reward, page_tactical
 from module.ui_white.assets import REWARD_2_WHITE, REWARD_GOTO_TACTICAL_WHITE
 
 SKILL_GRIDS = ButtonGrid(origin=(315, 140), delta=(621, 132), button_shape=(621, 119), grid_shape=(1, 3), name='SKILL')
@@ -24,6 +24,35 @@ if server.server != 'jp':
     SKILL_LEVEL_GRIDS = SKILL_GRIDS.crop(area=(406, 98, 618, 116), name='EXP')
 else:
     SKILL_LEVEL_GRIDS = SKILL_GRIDS.crop(area=(406, 98, 621, 118), name='EXP')
+
+KR_ADD_NEW_STUDENT = [
+    Button(
+        area=(410, 365, 450, 410), color=(64, 70, 89),
+        button=(400, 350, 600, 430), name='KR_ADD_NEW_STUDENT_1'),
+    Button(
+        area=(630, 365, 680, 410), color=(63, 70, 90),
+        button=(620, 350, 820, 430), name='KR_ADD_NEW_STUDENT_2'),
+]
+KR_TACTICAL_REWARD_CARD = Button(
+    area=(76, 360, 186, 413), color=(0, 0, 0),
+    button=(402, 395, 528, 435),
+    file='./assets/kr/tactical/KR_TACTICAL_REWARD_CARD.png',
+    name='KR_TACTICAL_REWARD_CARD')
+KR_SHIP_CONFIRM = Button(
+    area=(935, 610, 1110, 700), color=(64, 123, 194),
+    button=(952, 650, 1092, 690), name='KR_SHIP_CONFIRM')
+KR_SKILL_CONFIRM = Button(
+    area=(552, 550, 728, 610), color=(64, 123, 194),
+    button=(552, 550, 728, 610), name='KR_SKILL_CONFIRM')
+KR_TACTICAL_CLASS_START = Button(
+    area=(1023, 590, 1198, 650), color=(64, 123, 194),
+    button=(1023, 590, 1198, 650), name='KR_TACTICAL_CLASS_START')
+KR_TACTICAL_FINISH_HEADER = Button(
+    area=(580, 174, 890, 215), color=(73, 117, 175),
+    button=(), name='KR_TACTICAL_FINISH_HEADER')
+KR_TACTICAL_FINISH_CONFIRM = Button(
+    area=(556, 486, 723, 537), color=(64, 123, 194),
+    button=(570, 492, 710, 532), name='KR_TACTICAL_FINISH_CONFIRM')
 
 
 class ExpOnBookSelect(DigitCounter):
@@ -196,9 +225,64 @@ class Book:
 
 
 class RewardTacticalClass(Dock):
+    def _handle_kr_tactical_reward_entry(self):
+        """Anchor the action to the tactical title, including its vertical shift."""
+        if self.config.SERVER != 'kr':
+            return False
+        if not self.appear(KR_TACTICAL_REWARD_CARD, offset=(20, 150), interval=3):
+            return False
+        area = KR_TACTICAL_REWARD_CARD.button
+        if not any(self.image_color_count(area, color=color, threshold=25, count=1000)
+                   for color in [(254, 176, 54), (50, 184, 235)]):
+            return False
+        self.device.click(KR_TACTICAL_REWARD_CARD)
+        return True
+
     books: SelectedGrids
     tactical_finish = []
     dock_select_index = 0
+
+    def handle_kr_tactical_finish(self):
+        # KR's level-up receipt has a single blue button higher than the
+        # ordinary skill-selection dialog. Restrict this to Tactical and
+        # require both the information header and the receipt button.
+        if self.config.SERVER != 'kr':
+            return False
+        if not self.image_color_count(
+                KR_TACTICAL_FINISH_HEADER, color=KR_TACTICAL_FINISH_HEADER.color,
+                threshold=35, count=3000):
+            return False
+        if not self.image_color_count(
+                KR_TACTICAL_FINISH_CONFIRM, color=KR_TACTICAL_FINISH_CONFIRM.color,
+                threshold=35, count=1500):
+            return False
+        self.device.click(KR_TACTICAL_FINISH_CONFIRM)
+        return True
+
+    def ui_additional(self, get_ship=True):
+        # Also recover when a run is restarted on this receipt.
+        if self.handle_kr_tactical_finish():
+            return True
+        return super().ui_additional(get_ship=get_ship)
+
+    def _tactical_skill_confirm_appear(self, interval=0):
+        if self.appear(SKILL_CONFIRM, offset=(20, 20), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                KR_SKILL_CONFIRM, color=KR_SKILL_CONFIRM.color,
+                threshold=35, count=1000):
+            return True
+        return False
+
+    def _tactical_class_start_appear(self, interval=0):
+        if self.appear(TACTICAL_CLASS_START, offset=(30, 30), interval=interval):
+            return True
+        if self.config.SERVER == 'kr' and self.image_color_count(
+                KR_TACTICAL_CLASS_START,
+                color=KR_TACTICAL_CLASS_START.color,
+                threshold=35, count=1000):
+            return True
+        return False
 
     def _tactical_books_get(self, skip_first_screenshot=True):
         """
@@ -221,7 +305,7 @@ class RewardTacticalClass(Dock):
                 self.device.screenshot()
 
             self.handle_info_bar()  # info_bar appears when get ship in Launch Ceremony commissions
-            if not self.appear(TACTICAL_CLASS_START, offset=(30, 30)):
+            if not self._tactical_class_start_appear():
                 logger.info('Not in TACTICAL_CLASS_START anymore, exit')
                 return False
 
@@ -343,8 +427,12 @@ class RewardTacticalClass(Dock):
             else:
                 logger.info('Choose first book')
                 self._tactical_book_select(first)
-            logger.info(f'_tactical_books_choose -> {TACTICAL_CLASS_START}')
-            self.device.click(TACTICAL_CLASS_START)
+            if self.config.SERVER == 'kr':
+                logger.info(f'_tactical_books_choose -> {KR_TACTICAL_CLASS_START}')
+                self.device.click(KR_TACTICAL_CLASS_START)
+            else:
+                logger.info(f'_tactical_books_choose -> {TACTICAL_CLASS_START}')
+                self.device.click(TACTICAL_CLASS_START)
         else:
             logger.info('Cancel tactical')
             logger.info(f'_tactical_books_choose -> {TACTICAL_CLASS_CANCEL}')
@@ -425,6 +513,9 @@ class RewardTacticalClass(Dock):
             else:
                 self.device.screenshot()
 
+            if self.handle_kr_tactical_finish():
+                continue
+
             # End
             if received and self.appear(REWARD_CHECK, offset=(20, 20)):
                 break
@@ -432,6 +523,21 @@ class RewardTacticalClass(Dock):
             # Learn new skills
             if not study_finished and self.ui_page_appear(page_tactical, offset=(20, 20)):
                 # Tactical page, has empty position
+                if self.config.SERVER == 'kr':
+                    kr_student_clicked = False
+                    for button in KR_ADD_NEW_STUDENT:
+                        if self.image_color_count(
+                                button, color=button.color, threshold=20, count=50):
+                            self.device.click(button)
+                            kr_student_clicked = True
+                            self.device.sleep(1)
+                            self.interval_reset([TACTICAL_CHECK, RAPID_TRAINING])
+                            self.interval_clear([
+                                POPUP_CONFIRM, POPUP_CANCEL, GET_MISSION,
+                                DOCK_CHECK, SKILL_CONFIRM])
+                            break
+                    if kr_student_clicked:
+                        continue
                 if self.appear_then_click(ADD_NEW_STUDENT, offset=(800, 20), interval=1):
                     self.interval_reset([TACTICAL_CHECK, TACTICAL_CHECK_2, RAPID_TRAINING])
                     self.interval_clear([POPUP_CONFIRM, POPUP_CANCEL, GET_MISSION, DOCK_CHECK, SKILL_CONFIRM])
@@ -444,7 +550,7 @@ class RewardTacticalClass(Dock):
             # Get finish time
             # sometimes you have TACTICAL_CHECK without black-blurred background
             # TACTICAL_CLASS_CANCEL and TACTICAL_CHECK appears
-            if not self.appear(TACTICAL_CLASS_START, offset=(20, 20)) \
+            if not self._tactical_class_start_appear() \
                     and self.ui_page_appear(page_tactical, offset=(20, 20), interval=2):
                 self.interval_clear([POPUP_CONFIRM, POPUP_CANCEL, GET_MISSION])
                 if book_empty:
@@ -468,16 +574,18 @@ class RewardTacticalClass(Dock):
                 empty_confirm.reset()
 
             # Popups
-            if self.appear_then_click(REWARD_2, offset=(20, 20), interval=3):
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_2, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_2_WHITE)
                 continue
-            if self.appear_then_click(REWARD_2_WHITE, offset=(20, 20), interval=3):
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_2_WHITE, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_2)
                 continue
-            if self.appear_then_click(REWARD_GOTO_TACTICAL, offset=(20, 20), interval=3):
+            if self._handle_kr_tactical_reward_entry():
+                continue
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_GOTO_TACTICAL, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_GOTO_TACTICAL_WHITE)
                 continue
-            if self.appear_then_click(REWARD_GOTO_TACTICAL_WHITE, offset=(20, 20), interval=3):
+            if self.config.SERVER != 'kr' and self.appear_then_click(REWARD_GOTO_TACTICAL_WHITE, offset=(20, 20), interval=3):
                 self.interval_reset(REWARD_GOTO_TACTICAL)
                 continue
             if self.ui_main_appear_then_click(page_reward, interval=3):
@@ -495,7 +603,7 @@ class RewardTacticalClass(Dock):
             if self.appear(MISSION_POPUP_GO, offset=self._popup_offset, interval=2):
                 self.device.click(MISSION_POPUP_ACK)
                 continue
-            if self.appear(TACTICAL_CLASS_START, offset=(30, 30), interval=2):
+            if self._tactical_class_start_appear(interval=2):
                 if self._tactical_books_choose():
                     self.dock_select_index = 0
                     self.interval_reset([TACTICAL_CLASS_START, BOOK_EMPTY_POPUP])
@@ -506,8 +614,9 @@ class RewardTacticalClass(Dock):
             # 2025.05.29 game tips that infos skin feature when you enter dock
             if self.handle_game_tips():
                 return True
-            if self.appear(DOCK_CHECK, offset=(20, 20), interval=3):
-                if self.dock_selected():
+            if self.appear(DOCK_CHECK, offset=(20, 20), interval=3) or (
+                    self.config.SERVER == 'kr' and self.ui_page_appear(page_dock)):
+                if self.config.SERVER != 'kr' and self.dock_selected():
                     # When you click a ship from page_main -> dock,
                     # this ship will be selected default in tactical dock,
                     # so we need click BACK_ARROW to clear selected state
@@ -530,7 +639,7 @@ class RewardTacticalClass(Dock):
                 self.interval_timer.pop(DOCK_CHECK.name, None)
                 self.interval_reset([BOOK_EMPTY_POPUP, DOCK_CHECK], interval=3)
                 continue
-            if self.appear(SKILL_CONFIRM, offset=(20, 20), interval=3):
+            if self._tactical_skill_confirm_appear(interval=3):
                 # If not enable or can not find a skill
                 if self.config.AddNewStudent_Enable:
                     if self._tactical_skill_choose():
@@ -626,13 +735,25 @@ class RewardTacticalClass(Dock):
     def select_suitable_ship(self):
         logger.hr(f'Select suitable ship')
 
-        # Set if favorite from config
-        self.dock_favourite_set(enable=self.config.AddNewStudent_Favorite, wait_loading=False)
+        if self.config.SERVER == 'kr':
+            if self.config.AddNewStudent_Favorite:
+                self.dock_favourite_set(enable=True)
+                self.device.screenshot()
+                if DOCK_FAVOURITE.get(main=self) != 'on':
+                    logger.warning('Favourite-only dock not confirmed; no student selected')
+                    return False
+            # The localized dock filter button does not match the inherited
+            # assets. The list is already level-sorted; META skills are
+            # rejected later by the existing TACTICAL_META handler.
+            logger.info('Skip localized KR dock filter reset')
+        else:
+            # Set if favorite from config
+            self.dock_favourite_set(enable=self.config.AddNewStudent_Favorite, wait_loading=False)
 
-        # reset filter; naturally skip meta ships this way
-        self.dock_filter_set(
-            faction=[v for k, v in self.dock_filter.settings if k == 'faction' and v not in ['all', 'meta']]
-        )
+            # reset filter; naturally skip meta ships this way
+            self.dock_filter_set(
+                faction=[v for k, v in self.dock_filter.settings if k == 'faction' and v not in ['all', 'meta']]
+            )
 
         # No ship in dock
         if self.appear(DOCK_EMPTY, offset=(30, 30)):
@@ -676,7 +797,14 @@ class RewardTacticalClass(Dock):
             return False
 
         # select a ship
-        self.dock_select_one(should_select_button)
+        if self.config.SERVER == 'kr':
+            # KR's selected-count OCR and confirm button use a different
+            # layout from the inherited dock assets.
+            self.device.click(should_select_button)
+            self.device.sleep((0.5, 0.7))
+            self.device.click(KR_SHIP_CONFIRM)
+        else:
+            self.dock_select_one(should_select_button)
         # Confirm selected ship
         # Clear interval if alas have just selected and exited from a meta skill
         self.interval_clear(SHIP_CONFIRM)
@@ -684,7 +812,7 @@ class RewardTacticalClass(Dock):
         # Removed the use of TACTICAL_SKILL_LIST, cause EN uses "Select skills"
         # in normal skill list but "Choose skills" in META skill list
         def check_button():
-            if self.appear(SKILL_CONFIRM, offset=(30, 30)):
+            if self._tactical_skill_confirm_appear():
                 return True
             if self.appear(TACTICAL_META, offset=(200, 30)):
                 return True

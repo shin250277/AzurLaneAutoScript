@@ -1,9 +1,28 @@
 import module.config.server as server
+from module.base.button import Button
 from module.ocr.ocr import Digit, DigitCounter
 from module.private_quarters.assets import *
 from module.shop.shop_status import ShopStatus
 
-if server.server in ['cn', 'jp', 'tw']:
+if server.server == 'kr':
+    # KR places its "remaining/total" counter farther to the left.
+    class KRDailyCount(DigitCounter):
+        def after_process(self, result):
+            # The small slash is commonly discarded by the OCR model.
+            if result.isdigit() and len(result) == 2:
+                result = f'{result[0]}/{result[1]}'
+            return super().after_process(result)
+
+    OCR_DAILY_COUNT = KRDailyCount(
+        Button(
+            area=(100, 125, 155, 157),
+            color=(105, 109, 114),
+            button=(100, 125, 155, 157),
+            name='KR_PRIVATE_QUARTERS_DAILY_COUNT',
+        ),
+        letter=(255, 247, 247),
+    )
+elif server.server in ['cn', 'jp', 'tw']:
     OCR_DAILY_COUNT = DigitCounter(PRIVATE_QUARTERS_DAILY_COUNT, letter=(218, 219, 221))
 else:
     OCR_DAILY_COUNT = DigitCounter(PRIVATE_QUARTERS_DAILY_COUNT, letter=(255, 247, 247))
